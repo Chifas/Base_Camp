@@ -8,9 +8,9 @@
 
 # GuidePath
 
-**Marketplace que conecta personas que buscan orientación con profesionales certificados: psicólogos, coaches de vida, mentores de carrera y nutricionistas.**
+**Marketplace que conecta profesionales con expertos del mundo laboral: mentores de carrera, coaches ejecutivos, especialistas sectoriales y psicólogos laborales.**
 
-Sesiones por videollamada, desde la comodidad de tu hogar. Pago seguro, profesionales verificados y una experiencia premium.
+Sesiones por videollamada, sin desplazamientos. Pago seguro, profesionales verificados y una experiencia premium enfocada al crecimiento profesional.
 
 ---
 
@@ -36,9 +36,11 @@ Sesiones por videollamada, desde la comodidad de tu hogar. Pago seguro, profesio
 
 GuidePath es una plataforma web tipo marketplace donde:
 
-- **Clientes** encuentran profesionales verificados, reservan sesiones por videollamada y dejan reseñas tras cada sesión.
-- **Profesionales** (psicólogos, coaches, mentores, nutricionistas) gestionan su disponibilidad, aceptan sesiones, reciben pagos y construyen su reputación.
+- **Profesionales** (empleados, managers, founders, freelancers) encuentran expertos verificados, reservan sesiones por videollamada y dejan reseñas tras cada sesión.
+- **Expertos** (mentores de carrera, coaches ejecutivos, especialistas sectoriales, psicólogos laborales) gestionan su disponibilidad, aceptan sesiones, reciben pagos y construyen su reputación.
 - **La plataforma** cobra una comisión por cada sesión completada mediante Stripe Connect.
+
+Todo el universo de GuidePath gira en torno al **mundo laboral y profesional**: cambios de carrera, desarrollo del liderazgo, burnout, dinámicas de equipo, expertise sectorial.
 
 El diseño sigue una estética premium y minimalista inspirada en aplicaciones como Linear.app y Notion, con modo oscuro/claro, animaciones suaves y una experiencia completamente responsive.
 
@@ -274,10 +276,10 @@ La base de datos utiliza **PostgreSQL** con **Prisma ORM**. Los modelos principa
 
 ### Categorías profesionales
 
-- `PSYCHOLOGIST` — Psicólogo/a
-- `COACH` — Coach de Vida
 - `CAREER_MENTOR` — Mentor de Carrera
-- `NUTRITIONIST` — Nutricionista
+- `EXECUTIVE_COACH` — Coach Ejecutivo
+- `SECTOR_EXPERT` — Experto Sectorial
+- `WORK_PSYCHOLOGIST` — Psicólogo/a Laboral
 
 ### Comandos de base de datos
 
