@@ -46,37 +46,63 @@ prisma/
 ## Architecture Decisions
 1. **App Router** — uses Next.js 14 app directory for layouts, server components, and streaming
 2. **Schema-first DB** — Prisma schema defines all models; migrations via `prisma migrate dev`
-3. **Mock data first** — All pages use hardcoded Spanish-language mock data; API integration comes later
+3. **Mock data first** — All pages use hardcoded Spanish-language mock data (`src/data/mock.ts`); API integration comes later
 4. **Stripe Connect** — Marketplace model where platform takes a commission per session
 5. **Embedded video** — Daily.co SDK renders inside the app (no external redirects)
 6. **Dark/light mode** — next-themes with class strategy, CSS variables for colors
+7. **Auth wired** — Login and register forms are fully functional; dashboards still use mock data
 
 ## How to Run
 ```bash
 # Install dependencies
 npm install
 
-# Set up environment variables
+# Copy env file (DATABASE_URL already set for Docker local)
 cp .env.example .env
-# Fill in your actual keys in .env
 
-# Generate Prisma client
-npm run db:generate
+# Start Docker containers (PostgreSQL + pgAdmin)
+docker compose up -d
 
-# Push schema to database (development)
+# Generate Prisma client + apply schema
 npm run db:push
+
+# Seed test users into the database
+npm run db:seed
 
 # Start development server
 npm run dev
 ```
 
-## Environment Variables
-See `.env.example` for all required keys. For local development:
-- **DATABASE_URL**: Use Supabase free tier or local PostgreSQL
-- **NEXTAUTH_SECRET**: Generate with `openssl rand -base64 32`
+## Local Development Environment
+
+### Docker Setup (IMPORTANT)
+- The machine has **PostgreSQL installed locally on Windows** (port 5432)
+- Docker is configured to expose PostgreSQL on **port 5433** to avoid conflict
+- `docker-compose.yml` is at the project root
+- Containers: `guidepath_db` (postgres:16-alpine) and `guidepath_pgadmin` (dpage/pgadmin4)
+- pgAdmin: http://localhost:5050 → `admin@guidepath.dev` / `admin`
+- Connect pgAdmin to DB using hostname `guidepath_db`, port `5432` (internal)
+
+### Environment Variables
+The `.env` file (gitignored) must exist at project root. Key values for local:
+- **DATABASE_URL**: `postgresql://guidepath:guidepath_dev@localhost:5433/guidepath`
+- **NEXTAUTH_SECRET**: Already generated and set in `.env`
 - **STRIPE_***: Use Stripe test mode keys
 - **DAILY_API_KEY**: Free tier from daily.co dashboard
 - **RESEND_API_KEY**: Free tier from resend.com
+
+### Test Users (seeded via `npm run db:seed`)
+| Email | Password | Role |
+|-------|----------|------|
+| `cliente@guidepath.dev` | `password123` | CLIENT |
+| `profesional@guidepath.dev` | `password123` | PROFESSIONAL |
+
+## Auth Implementation
+- **Login** (`/auth/login`): calls `signIn('credentials', ...)` from `next-auth/react`, redirects to `/dashboard/client`
+- **Register** (`/auth/register`): calls `POST /api/register`, then redirects to `/auth/login`
+- **API endpoint**: `src/app/api/register/route.ts` — creates user with bcrypt-hashed password
+- **NextAuth config**: `src/lib/auth.ts` — CredentialsProvider + PrismaAdapter + JWT strategy
+- Google OAuth configured but requires `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` to work
 
 ## Design System
 - **Colors**: Neutral base (white ↔ zinc-950) + indigo-600 accent
