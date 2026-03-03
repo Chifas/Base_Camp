@@ -1,14 +1,19 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import localFont from "next/font/local";
 import { ThemeProvider } from "@/components/layout/theme-provider";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import "./globals.css";
 
-const inter = Inter({
-  subsets: ["latin"],
+const inter = localFont({
+  src: [
+    {
+      path: "./fonts/InterVariable.woff2",
+      style: "normal",
+    },
+  ],
   variable: "--font-sans",
+  display: "swap",
 });
 
 const geist = localFont({
@@ -20,7 +25,6 @@ const geist = localFont({
   ],
   variable: "--font-heading",
   display: "swap",
-  preload: true,
 });
 
 export const metadata: Metadata = {
