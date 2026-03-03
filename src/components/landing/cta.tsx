@@ -19,11 +19,10 @@ export function CTA() {
 
             <div className="relative">
               <h2 className="font-heading text-3xl font-bold tracking-tight text-primary-foreground sm:text-4xl lg:text-5xl">
-                ¿Listo para encontrar tu camino?
+                ¿Listo para dar el siguiente paso en tu carrera?
               </h2>
               <p className="mx-auto mt-4 max-w-xl text-lg text-primary-foreground/80">
-                Da el primer paso hoy. Explora profesionales, reserva tu sesión
-                y empieza a transformar tu vida.
+                Conecta con el mentor o coach que necesitas. Reserva tu primera sesión hoy y empieza a construir la carrera que mereces.
               </p>
               <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
                 <Button

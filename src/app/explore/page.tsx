@@ -26,10 +26,10 @@ import { formatCurrency } from "@/lib/utils";
 
 const categories: { value: string; label: string }[] = [
   { value: "ALL", label: "Todas las categorías" },
-  { value: "PSYCHOLOGIST", label: "Psicólogo/a" },
-  { value: "COACH", label: "Coach de Vida" },
   { value: "CAREER_MENTOR", label: "Mentor de Carrera" },
-  { value: "NUTRITIONIST", label: "Nutricionista" },
+  { value: "COACH", label: "Coach Profesional" },
+  { value: "EXECUTIVE_COACH", label: "Coach Ejecutivo" },
+  { value: "ENTREPRENEUR", label: "Mentor de Emprendimiento" },
 ];
 
 export default function ExplorePage() {
@@ -82,8 +82,7 @@ export default function ExplorePage() {
           Explorar profesionales
         </h1>
         <p className="mt-2 text-lg text-muted-foreground">
-          Encuentra al profesional perfecto para ti entre nuestros expertos
-          verificados.
+          Mentores y coaches del mundo laboral verificados, listos para impulsar tu carrera.
         </p>
       </motion.div>
 
