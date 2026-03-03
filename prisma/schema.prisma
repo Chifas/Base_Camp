@@ -1,0 +1,155 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  CLIENT
+  PROFESSIONAL
+  ADMIN
+}
+
+enum ProfessionalCategory {
+  PSYCHOLOGIST
+  COACH
+  CAREER_MENTOR
+  NUTRITIONIST
+}
+
+enum SessionStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  password      String?
+  image         String?
+  bio           String?
+  role          UserRole  @default(CLIENT)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts           Account[]
+  sessions           AuthSession[]
+  professionalProfile ProfessionalProfile?
+  clientSessions     Session[]  @relation("ClientSessions")
+  reviews            Review[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model AuthSession {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("auth_sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+model ProfessionalProfile {
+  id              String               @id @default(cuid())
+  userId          String               @unique
+  category        ProfessionalCategory
+  headline        String?
+  hourlyRate      Float
+  stripeAccountId String?
+  rating          Float                @default(0)
+  reviewCount     Int                  @default(0)
+  verified        Boolean              @default(false)
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  availability  Availability[]
+  sessions      Session[]      @relation("ProfessionalSessions")
+
+  @@map("professional_profiles")
+}
+
+model Session {
+  id                    String        @id @default(cuid())
+  clientId              String
+  professionalId        String
+  scheduledAt           DateTime
+  duration              Int           @default(60) // minutes
+  status                SessionStatus @default(PENDING)
+  dailyRoomUrl          String?
+  stripePaymentIntentId String?
+  price                 Float
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  client       User                @relation("ClientSessions", fields: [clientId], references: [id])
+  professional ProfessionalProfile @relation("ProfessionalSessions", fields: [professionalId], references: [id])
+  review       Review?
+
+  @@map("sessions")
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  sessionId String   @unique
+  userId    String
+  rating    Int      // 1-5
+  comment   String?
+  createdAt DateTime @default(now())
+
+  session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@map("reviews")
+}
+
+model Availability {
+  id              String @id @default(cuid())
+  professionalId  String
+  dayOfWeek       Int    // 0=Sunday, 6=Saturday
+  startTime       String // "09:00" format
+  endTime         String // "17:00" format
+
+  professional ProfessionalProfile @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+
+  @@map("availability")
+}
