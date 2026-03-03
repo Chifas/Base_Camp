@@ -28,7 +28,7 @@ export default function RegisterPage() {
             Crea tu cuenta
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Empieza tu camino hacia el bienestar
+            Da el siguiente paso en tu desarrollo profesional
           </p>
         </div>
 
@@ -45,7 +45,7 @@ export default function RegisterPage() {
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              Busco ayuda
+              Busco mentor
             </button>
             <button
               type="button"
@@ -170,11 +170,11 @@ export default function RegisterPage() {
           {/* Terms */}
           <p className="text-center text-xs text-muted-foreground">
             Al registrarte, aceptas nuestros{" "}
-            <Link href="#" className="text-primary hover:underline">
+            <Link href="/legal/terminos" className="text-primary hover:underline">
               Términos de uso
             </Link>{" "}
             y{" "}
-            <Link href="#" className="text-primary hover:underline">
+            <Link href="/legal/privacidad" className="text-primary hover:underline">
               Política de privacidad
             </Link>
           </p>

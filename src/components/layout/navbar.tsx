@@ -3,17 +3,26 @@
 import Link from "next/link";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Compass } from "lucide-react";
+import { Menu, X, Compass, LogOut, LayoutDashboard } from "lucide-react";
+import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./theme-toggle";
 
-const navLinks = [
+const publicNavLinks = [
   { href: "/explore", label: "Explorar" },
-  { href: "/dashboard/client", label: "Mi Panel" },
 ];
 
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { data: session, status } = useSession();
+
+  const isAuthenticated = status === "authenticated";
+  const isLoading = status === "loading";
+  const userRole = (session?.user as { role?: string } | null)?.role;
+  const dashboardHref =
+    userRole === "PROFESSIONAL" ? "/dashboard/professional" : "/dashboard/client";
+
+  const handleSignOut = () => signOut({ callbackUrl: "/" });
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-lg supports-[backdrop-filter]:bg-background/60">
@@ -30,7 +39,7 @@ export function Navbar() {
 
         {/* Desktop nav */}
         <nav className="hidden items-center gap-1 md:flex">
-          {navLinks.map((link) => (
+          {publicNavLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
@@ -39,14 +48,49 @@ export function Navbar() {
               {link.label}
             </Link>
           ))}
+
+          {isAuthenticated && (
+            <Link
+              href={dashboardHref}
+              className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Mi Panel
+            </Link>
+          )}
+
           <ThemeToggle />
+
           <div className="ml-2 flex items-center gap-2">
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/auth/login">Iniciar sesión</Link>
-            </Button>
-            <Button size="sm" asChild>
-              <Link href="/auth/register">Registrarse</Link>
-            </Button>
+            {isLoading ? (
+              <div className="h-8 w-32 animate-pulse rounded-lg bg-muted" />
+            ) : isAuthenticated ? (
+              <>
+                <Button variant="ghost" size="sm" asChild>
+                  <Link href={dashboardHref}>
+                    <LayoutDashboard className="mr-1.5 h-4 w-4" />
+                    {session?.user?.name?.split(" ")[0] ?? "Mi Panel"}
+                  </Link>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSignOut}
+                  className="gap-1.5"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Salir
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="ghost" size="sm" asChild>
+                  <Link href="/auth/login">Iniciar sesión</Link>
+                </Button>
+                <Button size="sm" asChild>
+                  <Link href="/auth/register">Registrarse</Link>
+                </Button>
+              </>
+            )}
           </div>
         </nav>
 
@@ -78,7 +122,7 @@ export function Navbar() {
             className="border-t md:hidden"
           >
             <nav className="mx-auto flex max-w-7xl flex-col gap-1 px-4 py-4">
-              {navLinks.map((link) => (
+              {publicNavLinks.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
@@ -88,13 +132,41 @@ export function Navbar() {
                   {link.label}
                 </Link>
               ))}
+
+              {isAuthenticated && (
+                <Link
+                  href={dashboardHref}
+                  onClick={() => setMobileOpen(false)}
+                  className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                >
+                  Mi Panel
+                </Link>
+              )}
+
               <div className="mt-2 flex flex-col gap-2">
-                <Button variant="outline" asChild>
-                  <Link href="/auth/login">Iniciar sesión</Link>
-                </Button>
-                <Button asChild>
-                  <Link href="/auth/register">Registrarse</Link>
-                </Button>
+                {isAuthenticated ? (
+                  <Button
+                    variant="outline"
+                    onClick={() => { setMobileOpen(false); handleSignOut(); }}
+                    className="gap-2"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Cerrar sesión
+                  </Button>
+                ) : (
+                  <>
+                    <Button variant="outline" asChild>
+                      <Link href="/auth/login" onClick={() => setMobileOpen(false)}>
+                        Iniciar sesión
+                      </Link>
+                    </Button>
+                    <Button asChild>
+                      <Link href="/auth/register" onClick={() => setMobileOpen(false)}>
+                        Registrarse
+                      </Link>
+                    </Button>
+                  </>
+                )}
               </div>
             </nav>
           </motion.div>
