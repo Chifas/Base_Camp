@@ -27,7 +27,7 @@ export function Hero() {
                 <Shield className="h-3 w-3 text-green-600" />
               </div>
               <span className="text-muted-foreground">
-                Profesionales verificados y certificados
+                Mentores del mundo empresarial verificados
               </span>
             </div>
           </motion.div>
@@ -52,9 +52,7 @@ export function Hero() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground sm:text-xl"
           >
-            Conectamos personas que buscan orientación con psicólogos, coaches,
-            mentores y nutricionistas. Sesiones por videollamada, desde la
-            comodidad de tu hogar.
+            Conectamos profesionales con coaches y mentores especializados en desarrollo de carrera, liderazgo y emprendimiento. Sesiones por videollamada, cuando tú quieras.
           </motion.p>
 
           {/* CTA Buttons */}
@@ -98,7 +96,7 @@ export function Hero() {
                 </span>
               </div>
               <p className="mt-1 text-sm text-muted-foreground">
-                Clientes satisfechos
+                Profesionales acelerados
               </p>
             </div>
             <div className="text-center">
@@ -109,7 +107,7 @@ export function Hero() {
                 </span>
               </div>
               <p className="mt-1 text-sm text-muted-foreground">
-                Profesionales verificados
+                Mentores y coaches
               </p>
             </div>
             <div className="text-center">

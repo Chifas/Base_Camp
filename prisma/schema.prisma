@@ -14,10 +14,10 @@ enum UserRole {
 }
 
 enum ProfessionalCategory {
-  PSYCHOLOGIST
-  COACH
   CAREER_MENTOR
-  NUTRITIONIST
+  COACH
+  EXECUTIVE_COACH
+  ENTREPRENEUR
 }
 
 enum SessionStatus {
