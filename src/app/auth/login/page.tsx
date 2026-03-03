@@ -97,7 +97,7 @@ export default function LoginPage() {
                   Contraseña
                 </label>
                 <Link
-                  href="#"
+                  href="/auth/forgot-password"
                   className="text-xs text-primary hover:underline"
                 >
                   ¿Olvidaste tu contraseña?
