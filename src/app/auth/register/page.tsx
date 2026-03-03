@@ -2,14 +2,43 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Compass, Mail, Lock, Eye, EyeOff, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 export default function RegisterPage() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState<"CLIENT" | "PROFESSIONAL">("CLIENT");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    const res = await fetch("/api/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email, password, role }),
+    });
+
+    setLoading(false);
+
+    if (!res.ok) {
+      const data = await res.json();
+      setError(data.error || "Error al crear la cuenta");
+      return;
+    }
+
+    router.push("/auth/login");
+  }
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-12">
@@ -96,7 +125,13 @@ export default function RegisterPage() {
           </div>
 
           {/* Registration form */}
-          <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+          <form className="space-y-4" onSubmit={handleSubmit}>
+            {error && (
+              <p className="rounded-lg bg-destructive/10 px-4 py-2 text-sm text-destructive">
+                {error}
+              </p>
+            )}
+
             <div className="space-y-2">
               <label
                 htmlFor="name"
@@ -111,6 +146,9 @@ export default function RegisterPage() {
                   type="text"
                   placeholder="Tu nombre"
                   className="pl-10"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
                 />
               </div>
             </div>
@@ -129,6 +167,9 @@ export default function RegisterPage() {
                   type="email"
                   placeholder="tu@email.com"
                   className="pl-10"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
                 />
               </div>
             </div>
@@ -147,6 +188,10 @@ export default function RegisterPage() {
                   type={showPassword ? "text" : "password"}
                   placeholder="Mínimo 8 caracteres"
                   className="pl-10 pr-10"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  minLength={8}
+                  required
                 />
                 <button
                   type="button"
@@ -162,8 +207,8 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            <Button type="submit" className="w-full" size="lg">
-              Crear cuenta
+            <Button type="submit" className="w-full" size="lg" disabled={loading}>
+              {loading ? "Creando cuenta..." : "Crear cuenta"}
             </Button>
           </form>
 
