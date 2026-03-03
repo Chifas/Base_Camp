@@ -19,6 +19,31 @@ export interface User {
   role: UserRole;
   image?: string;
   bio?: string;
+  isStudent: boolean;
+}
+
+export interface PriceRule {
+  id: string;
+  professionalId: string;
+  name: string;
+  description: string | null;
+  price: number;
+  /** null = no limit; 0 = first session only */
+  maxPreviousBookings: number | null;
+  requiresStudent: boolean;
+  active: boolean;
+}
+
+export interface UserPricingContext {
+  isAuthenticated: boolean;
+  isStudent: boolean;
+  completedBookingsCount: number;
+  isFirstSession: boolean;
+}
+
+export interface AvailablePricesResponse {
+  prices: PriceRule[];
+  context: UserPricingContext;
 }
 
 export interface Professional {
