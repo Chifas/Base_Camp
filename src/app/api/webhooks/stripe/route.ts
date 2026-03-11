@@ -2,10 +2,21 @@ import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { stripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
+import { sendBookingEmails, sendCancellationEmails } from "@/lib/emails";
 
 // Must read raw body — no JSON parsing by Next.js
 export const runtime = "nodejs";
 export const dynamic  = "force-dynamic";
+
+/** Shared include shape for session + user emails */
+const SESSION_WITH_USERS = {
+  client: { select: { name: true, email: true } },
+  professional: {
+    include: {
+      user: { select: { name: true, email: true } },
+    },
+  },
+} as const;
 
 export async function POST(req: Request) {
   const body      = await req.text();
@@ -23,30 +34,66 @@ export async function POST(req: Request) {
 
   try {
     switch (event.type) {
+      // ── Payment succeeded: confirm session + send emails ─────────────────
       case "payment_intent.succeeded": {
         const pi = event.data.object as { id: string };
-        // Confirm the session once payment succeeds
-        await prisma.session.updateMany({
-          where: { stripePaymentIntentId: pi.id },
-          data:  { status: "CONFIRMED" },
+
+        const session = await prisma.session.findFirst({
+          where:   { stripePaymentIntentId: pi.id },
+          include: SESSION_WITH_USERS,
         });
-        console.log(`[webhook] Session CONFIRMED for PI ${pi.id}`);
+
+        if (session) {
+          await prisma.session.update({
+            where: { id: session.id },
+            data:  { status: "CONFIRMED" },
+          });
+          console.log(`[webhook] Session CONFIRMED: ${session.id}`);
+
+          // Fire-and-forget: errors are logged inside sendBookingEmails
+          void sendBookingEmails({
+            id:           session.id,
+            scheduledAt:  session.scheduledAt,
+            price:        session.price,
+            client:       session.client as { name: string | null; email: string },
+            professional: session.professional as {
+              user: { name: string | null; email: string };
+            },
+          });
+        }
         break;
       }
 
+      // ── Payment failed: cancel session + notify client ───────────────────
       case "payment_intent.payment_failed": {
         const pi = event.data.object as { id: string };
-        // Cancel the session if payment fails definitively
-        await prisma.session.updateMany({
-          where: { stripePaymentIntentId: pi.id },
-          data:  { status: "CANCELLED" },
+
+        const session = await prisma.session.findFirst({
+          where:   { stripePaymentIntentId: pi.id },
+          include: SESSION_WITH_USERS,
         });
-        console.log(`[webhook] Session CANCELLED for PI ${pi.id}`);
+
+        if (session) {
+          await prisma.session.update({
+            where: { id: session.id },
+            data:  { status: "CANCELLED" },
+          });
+          console.log(`[webhook] Session CANCELLED (payment failed): ${session.id}`);
+
+          void sendCancellationEmails({
+            id:           session.id,
+            scheduledAt:  session.scheduledAt,
+            price:        session.price,
+            client:       session.client as { name: string | null; email: string },
+            professional: session.professional as {
+              user: { name: string | null; email: string };
+            },
+          });
+        }
         break;
       }
 
       default:
-        // Ignore other events
         break;
     }
 

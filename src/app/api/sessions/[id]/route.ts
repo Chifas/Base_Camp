@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { sendCancellationEmails } from "@/lib/emails";
 
 // GET /api/sessions/[id] — load a single session for participants only
 export async function GET(
@@ -67,9 +68,17 @@ export async function PATCH(
     }
 
     // Verify the requesting user owns this session (as professional or client)
+    // Include user emails so we can send notifications
     const existing = await prisma.session.findUnique({
-      where: { id: params.id },
-      include: { professional: true },
+      where:   { id: params.id },
+      include: {
+        professional: {
+          include: {
+            user: { select: { id: true, name: true, email: true } },
+          },
+        },
+        client: { select: { id: true, name: true, email: true } },
+      },
     });
 
     if (!existing) {
@@ -93,8 +102,21 @@ export async function PATCH(
 
     const updated = await prisma.session.update({
       where: { id: params.id },
-      data: { status },
+      data:  { status },
     });
+
+    // Fire-and-forget email on cancellation
+    if (status === "CANCELLED") {
+      void sendCancellationEmails({
+        id:           existing.id,
+        scheduledAt:  existing.scheduledAt,
+        price:        existing.price,
+        client:       existing.client as { name: string | null; email: string },
+        professional: existing.professional as {
+          user: { name: string | null; email: string };
+        },
+      });
+    }
 
     return NextResponse.json(updated);
   } catch {
