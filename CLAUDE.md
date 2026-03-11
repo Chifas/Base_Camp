@@ -1,7 +1,7 @@
 # GuidePath — Architecture & Development Guide
 
 ## Overview
-GuidePath is a marketplace connecting people seeking personal/professional guidance with certified professionals (psychologists, life coaches, career mentors, nutritionists). Built as a modern web application with a premium, minimalist design.
+GuidePath is a marketplace connecting professionals seeking career and workplace guidance with certified experts: career mentors, executive coaches, sector specialists, and work psychologists. Everything is anchored to the professional world — career transitions, leadership development, burnout, team dynamics, sector expertise. Built as a modern web application with a premium, minimalist design.
 
 ## Tech Stack
 | Layer | Technology |

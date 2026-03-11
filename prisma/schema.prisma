@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 enum UserRole {
@@ -15,9 +16,9 @@ enum UserRole {
 
 enum ProfessionalCategory {
   CAREER_MENTOR
-  COACH
   EXECUTIVE_COACH
-  ENTREPRENEUR
+  SECTOR_EXPERT
+  WORK_PSYCHOLOGIST
 }
 
 enum SessionStatus {
@@ -36,15 +37,14 @@ model User {
   image         String?
   bio           String?
   role          UserRole  @default(CLIENT)
-  isStudent     Boolean   @default(false)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  accounts            Account[]
-  sessions            AuthSession[]
+  accounts           Account[]
+  sessions           AuthSession[]
   professionalProfile ProfessionalProfile?
-  clientSessions      Session[]  @relation("ClientSessions")
-  reviews             Review[]
+  clientSessions     Session[]  @relation("ClientSessions")
+  reviews            Review[]
 
   @@map("users")
 }
@@ -105,7 +105,6 @@ model ProfessionalProfile {
   user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   availability  Availability[]
   sessions      Session[]      @relation("ProfessionalSessions")
-  priceRules    PriceRule[]
 
   @@map("professional_profiles")
 }
@@ -114,7 +113,6 @@ model Session {
   id                    String        @id @default(cuid())
   clientId              String
   professionalId        String
-  priceRuleId           String?
   scheduledAt           DateTime
   duration              Int           @default(60) // minutes
   status                SessionStatus @default(PENDING)
@@ -126,7 +124,6 @@ model Session {
 
   client       User                @relation("ClientSessions", fields: [clientId], references: [id])
   professional ProfessionalProfile @relation("ProfessionalSessions", fields: [professionalId], references: [id])
-  priceRule    PriceRule?          @relation(fields: [priceRuleId], references: [id])
   review       Review?
 
   @@map("sessions")
@@ -156,23 +153,4 @@ model Availability {
   professional ProfessionalProfile @relation(fields: [professionalId], references: [id], onDelete: Cascade)
 
   @@map("availability")
-}
-
-model PriceRule {
-  id                  String   @id @default(cuid())
-  professionalId      String
-  name                String
-  description         String?
-  price               Float
-  // null = no previous-session limit; 0 = only applies on first session
-  maxPreviousBookings Int?
-  requiresStudent     Boolean  @default(false)
-  active              Boolean  @default(true)
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
-
-  professional ProfessionalProfile @relation(fields: [professionalId], references: [id], onDelete: Cascade)
-  sessions     Session[]
-
-  @@map("price_rules")
 }

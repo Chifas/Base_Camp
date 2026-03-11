@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 import { motion } from "framer-motion";
-import { Compass, Mail, Lock, Eye, EyeOff, User } from "lucide-react";
+import { Compass, Mail, Lock, Eye, EyeOff, User, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -21,6 +22,12 @@ export default function RegisterPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+
+    if (password.length < 8) {
+      setError("La contraseña debe tener al menos 8 caracteres");
+      return;
+    }
+
     setLoading(true);
 
     const res = await fetch("/api/register", {
@@ -29,15 +36,34 @@ export default function RegisterPage() {
       body: JSON.stringify({ name, email, password, role }),
     });
 
-    setLoading(false);
+    const data = await res.json();
 
     if (!res.ok) {
-      const data = await res.json();
-      setError(data.error || "Error al crear la cuenta");
+      setError(data.error ?? "Error al crear la cuenta");
+      setLoading(false);
       return;
     }
 
-    router.push("/auth/login");
+    // Auto sign-in after registration
+    const result = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+    });
+
+    setLoading(false);
+
+    if (result?.error) {
+      // Account created but sign-in failed: redirect to login
+      router.push("/auth/login");
+      return;
+    }
+
+    router.push(role === "PROFESSIONAL" ? "/dashboard/professional" : "/dashboard/client");
+  }
+
+  async function handleGoogleSignIn() {
+    await signIn("google", { callbackUrl: "/dashboard/client" });
   }
 
   return (
@@ -57,7 +83,7 @@ export default function RegisterPage() {
             Crea tu cuenta
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Da el siguiente paso en tu desarrollo profesional
+            Empieza tu camino en el mundo profesional
           </p>
         </div>
 
@@ -74,7 +100,7 @@ export default function RegisterPage() {
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              Busco mentor
+              Busco orientación
             </button>
             <button
               type="button"
@@ -90,7 +116,13 @@ export default function RegisterPage() {
           </div>
 
           {/* Google OAuth */}
-          <Button variant="outline" className="w-full" size="lg">
+          <Button
+            variant="outline"
+            className="w-full"
+            size="lg"
+            onClick={handleGoogleSignIn}
+            type="button"
+          >
             <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
               <path
                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
@@ -124,14 +156,16 @@ export default function RegisterPage() {
             </div>
           </div>
 
+          {/* Error message */}
+          {error && (
+            <div className="flex items-center gap-2 rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              {error}
+            </div>
+          )}
+
           {/* Registration form */}
           <form className="space-y-4" onSubmit={handleSubmit}>
-            {error && (
-              <p className="rounded-lg bg-destructive/10 px-4 py-2 text-sm text-destructive">
-                {error}
-              </p>
-            )}
-
             <div className="space-y-2">
               <label
                 htmlFor="name"
@@ -149,6 +183,7 @@ export default function RegisterPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
+                  autoComplete="name"
                 />
               </div>
             </div>
@@ -170,6 +205,7 @@ export default function RegisterPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  autoComplete="email"
                 />
               </div>
             </div>
@@ -190,8 +226,8 @@ export default function RegisterPage() {
                   className="pl-10 pr-10"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  minLength={8}
                   required
+                  autoComplete="new-password"
                 />
                 <button
                   type="button"
@@ -207,7 +243,12 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            <Button type="submit" className="w-full" size="lg" disabled={loading}>
+            <Button
+              type="submit"
+              className="w-full"
+              size="lg"
+              disabled={loading}
+            >
               {loading ? "Creando cuenta..." : "Crear cuenta"}
             </Button>
           </form>
@@ -215,11 +256,11 @@ export default function RegisterPage() {
           {/* Terms */}
           <p className="text-center text-xs text-muted-foreground">
             Al registrarte, aceptas nuestros{" "}
-            <Link href="/legal/terminos" className="text-primary hover:underline">
+            <Link href="#" className="text-primary hover:underline">
               Términos de uso
             </Link>{" "}
             y{" "}
-            <Link href="/legal/privacidad" className="text-primary hover:underline">
+            <Link href="#" className="text-primary hover:underline">
               Política de privacidad
             </Link>
           </p>
