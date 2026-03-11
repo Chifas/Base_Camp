@@ -26,10 +26,7 @@ import { formatCurrency } from "@/lib/utils";
 
 const categories: { value: string; label: string }[] = [
   { value: "ALL", label: "Todas las categorías" },
-  { value: "PSYCHOLOGIST", label: "Psicólogo/a" },
-  { value: "COACH", label: "Coach de Vida" },
-  { value: "CAREER_MENTOR", label: "Mentor de Carrera" },
-  { value: "NUTRITIONIST", label: "Nutricionista" },
+  ...Object.entries(CATEGORY_LABELS).map(([value, label]) => ({ value, label })),
 ];
 
 export default function ExplorePage() {
