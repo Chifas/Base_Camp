@@ -1,0 +1,60 @@
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+
+// PATCH /api/sessions/[id] — update status (accept / reject)
+export async function PATCH(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+    }
+
+    const { status } = await req.json();
+    const allowed = ["CONFIRMED", "CANCELLED", "COMPLETED"];
+    if (!allowed.includes(status)) {
+      return NextResponse.json({ error: "Estado no válido" }, { status: 400 });
+    }
+
+    // Verify the requesting user owns this session (as professional or client)
+    const existing = await prisma.session.findUnique({
+      where: { id: params.id },
+      include: { professional: true },
+    });
+
+    if (!existing) {
+      return NextResponse.json({ error: "Sesión no encontrada" }, { status: 404 });
+    }
+
+    const isClient       = existing.clientId === session.user.id;
+    const isProfessional = existing.professional.userId === session.user.id;
+
+    if (!isClient && !isProfessional) {
+      return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
+    }
+
+    // Only the professional can confirm; either party can cancel
+    if (status === "CONFIRMED" && !isProfessional) {
+      return NextResponse.json(
+        { error: "Solo el profesional puede confirmar sesiones" },
+        { status: 403 }
+      );
+    }
+
+    const updated = await prisma.session.update({
+      where: { id: params.id },
+      data: { status },
+    });
+
+    return NextResponse.json(updated);
+  } catch {
+    return NextResponse.json(
+      { error: "Error al actualizar la sesión" },
+      { status: 500 }
+    );
+  }
+}
