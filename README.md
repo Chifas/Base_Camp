@@ -224,12 +224,15 @@ Crea un archivo `.env` en la raíz del proyecto con las siguientes variables:
 NEXTAUTH_SECRET=          # Generar con: openssl rand -base64 32
 NEXTAUTH_URL=http://localhost:3000
 
-# ─── Base de datos ────────────────────────────────
-DATABASE_URL=postgresql://usuario:contraseña@host:5432/guidepath
+# ─── Base de datos (Supabase) ─────────────────────
+# DATABASE_URL → pooler (puerto 6543) — para queries en runtime
+# DIRECT_URL   → conexión directa (puerto 5432) — para db:push y migraciones
+DATABASE_URL=postgresql://postgres.[ref]:[password]@aws-0-[region].pooler.supabase.com:6543/postgres?pgbouncer=true
+DIRECT_URL=postgresql://postgres.[ref]:[password]@aws-0-[region].pooler.supabase.com:5432/postgres
 
-# ─── Stripe (modo marketplace) ───────────────────
+# ─── Stripe ──────────────────────────────────────
 STRIPE_SECRET_KEY=sk_test_...
-STRIPE_PUBLISHABLE_KEY=pk_test_...
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...   # NEXT_PUBLIC_ es obligatorio para acceso desde el cliente
 STRIPE_WEBHOOK_SECRET=whsec_...
 
 # ─── Daily.co (videollamadas) ────────────────────
@@ -237,6 +240,7 @@ DAILY_API_KEY=tu-clave-daily-aquí
 
 # ─── Resend (email) ─────────────────────────────
 RESEND_API_KEY=re_...
+RESEND_FROM_EMAIL=GuidePath <onboarding@resend.dev>   # Usar onboarding@resend.dev en local (tier gratuito)
 
 # ─── Google OAuth ────────────────────────────────
 GOOGLE_CLIENT_ID=tu-google-client-id
@@ -248,12 +252,14 @@ GOOGLE_CLIENT_SECRET=tu-google-client-secret
 | Variable | Cómo obtenerla |
 |---|---|
 | `NEXTAUTH_SECRET` | Ejecuta `openssl rand -base64 32` en tu terminal |
-| `DATABASE_URL` | Copia la cadena de conexión de Supabase (Settings > Database > Connection string) |
+| `DATABASE_URL` | Supabase → Settings → Database → Connection string → **Session mode** (puerto 6543) |
+| `DIRECT_URL` | Supabase → Settings → Database → Connection string → **Direct connection** (puerto 5432) |
 | `STRIPE_SECRET_KEY` | Panel de Stripe > Developers > API keys (usa las de test) |
-| `STRIPE_PUBLISHABLE_KEY` | Mismo lugar que la anterior |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Mismo lugar que la anterior — el prefijo `NEXT_PUBLIC_` es obligatorio |
 | `STRIPE_WEBHOOK_SECRET` | Stripe CLI: `stripe listen --forward-to localhost:3000/api/webhooks/stripe` |
 | `DAILY_API_KEY` | Panel de Daily.co > Developers > API Keys |
 | `RESEND_API_KEY` | Panel de Resend > API Keys |
+| `RESEND_FROM_EMAIL` | En local usa `GuidePath <onboarding@resend.dev>`; en producción, dominio verificado en Resend |
 | `GOOGLE_CLIENT_ID` / `SECRET` | Google Cloud Console > APIs & Services > Credentials > OAuth 2.0 Client |
 
 ---
@@ -403,15 +409,25 @@ npx vercel --prod
 
 ## Estado actual
 
-Este proyecto es un **MVP scaffolded** (estructura completa con datos de prueba). Las páginas utilizan datos mock en español para demostración. Los siguientes pasos para completar la integración serían:
+La aplicación es un **MVP funcional end-to-end**. Todas las integraciones principales están operativas:
 
-1. Conectar NextAuth.js con la base de datos real (Prisma Adapter ya incluido como dependencia)
-2. Crear las API routes para CRUD de sesiones, profesionales y reseñas
-3. Integrar Stripe Connect para pagos reales
-4. Integrar Daily.co SDK para videollamadas reales
-5. Configurar Resend para emails transaccionales
-6. Añadir validación de formularios (por ejemplo, con Zod)
-7. Implementar protección de rutas según el rol del usuario
+| Capa | Estado |
+|------|--------|
+| Autenticación (NextAuth + Prisma Adapter) | ✅ Implementado |
+| API routes (sesiones, profesionales, reseñas, disponibilidad) | ✅ Implementado |
+| Pago con Stripe (PaymentIntent + webhook) | ✅ Implementado |
+| Videollamadas con Daily.co | ✅ Implementado |
+| Emails transaccionales con Resend | ✅ Implementado |
+| Sistema de reseñas con valoración agregada | ✅ Implementado |
+| Gestión de disponibilidad semanal | ✅ Implementado |
+| Stripe Connect (pagos a profesionales) | ⏳ Pendiente |
+| Middleware de protección de rutas | ⏳ Pendiente |
+| Onboarding del profesional tras registro | ⏳ Pendiente |
+| Validación de formularios con Zod | ⏳ Pendiente |
+
+### Rama activa: `develop`
+
+Usa la rama `develop` para pruebas y desarrollo. Contiene todo el trabajo de integración. La rama `main` es la base scaffolded original.
 
 ---
 
