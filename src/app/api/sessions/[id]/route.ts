@@ -3,6 +3,52 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+// GET /api/sessions/[id] — load a single session for participants only
+export async function GET(
+  _req: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+    }
+
+    const dbSession = await prisma.session.findUnique({
+      where: { id: params.id },
+      include: {
+        professional: {
+          include: {
+            user: { select: { id: true, name: true, image: true } },
+          },
+        },
+        client: { select: { id: true, name: true, image: true } },
+      },
+    });
+
+    if (!dbSession) {
+      return NextResponse.json({ error: "Sesión no encontrada" }, { status: 404 });
+    }
+
+    const isClient       = dbSession.clientId === session.user.id;
+    const isProfessional = dbSession.professional.userId === session.user.id;
+
+    if (!isClient && !isProfessional) {
+      return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
+    }
+
+    return NextResponse.json({
+      ...dbSession,
+      role: isClient ? "client" : "professional",
+    });
+  } catch {
+    return NextResponse.json(
+      { error: "Error al obtener la sesión" },
+      { status: 500 }
+    );
+  }
+}
+
 // PATCH /api/sessions/[id] — update status (accept / reject)
 export async function PATCH(
   req: Request,
