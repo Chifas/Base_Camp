@@ -5,7 +5,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import {
   Calendar, Clock, DollarSign, TrendingUp, Users,
-  Video, Check, X,
+  Video, Check, X, Loader2, CheckCircle2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -37,10 +37,14 @@ const defaultAvailability = [
 ];
 
 export default function ProfessionalDashboard() {
-  const [sessions, setSessions]       = useState<ApiSession[]>([]);
-  const [loading, setLoading]         = useState(true);
-  const [availability, setAvailability] = useState(defaultAvailability);
+  const [sessions, setSessions]           = useState<ApiSession[]>([]);
+  const [loading, setLoading]             = useState(true);
+  const [availability, setAvailability]   = useState(defaultAvailability);
+  const [savingAvail, setSavingAvail]     = useState(false);
+  const [availSaved, setAvailSaved]       = useState(false);
+  const [availError, setAvailError]       = useState("");
 
+  // Load sessions
   useEffect(() => {
     fetch("/api/sessions?role=professional")
       .then((r) => r.json())
@@ -48,6 +52,43 @@ export default function ProfessionalDashboard() {
       .catch(() => setSessions([]))
       .finally(() => setLoading(false));
   }, []);
+
+  // Load saved availability from the API and merge into local state
+  useEffect(() => {
+    fetch("/api/availability")
+      .then((r) => r.ok ? r.json() : null)
+      .then((saved: { dayOfWeek: number; startTime: string; endTime: string }[] | null) => {
+        if (!saved || saved.length === 0) return; // keep defaults if no saved data
+        setAvailability(defaultAvailability.map((def) => {
+          const match = saved.find((s) => s.dayOfWeek === def.dayOfWeek);
+          return match
+            ? { ...def, startTime: match.startTime, endTime: match.endTime, enabled: true }
+            : { ...def, enabled: false };
+        }));
+      })
+      .catch(() => {}); // keep defaults on error
+  }, []);
+
+  async function saveAvailability() {
+    setSavingAvail(true);
+    setAvailError("");
+    setAvailSaved(false);
+    try {
+      const res = await fetch("/api/availability", {
+        method:  "PUT",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ slots: availability }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Error al guardar");
+      setAvailSaved(true);
+      setTimeout(() => setAvailSaved(false), 3000);
+    } catch (e: unknown) {
+      setAvailError((e as Error).message);
+    } finally {
+      setSavingAvail(false);
+    }
+  }
 
   async function updateSessionStatus(id: string, status: "CONFIRMED" | "CANCELLED") {
     const res = await fetch(`/api/sessions/${id}`, {
@@ -263,7 +304,23 @@ export default function ProfessionalDashboard() {
                 ))}
               </div>
               <Separator className="my-6" />
-              <Button>Guardar disponibilidad</Button>
+              {availError && (
+                <p className="mb-3 text-sm text-destructive">{availError}</p>
+              )}
+              <div className="flex items-center gap-3">
+                <Button onClick={saveAvailability} disabled={savingAvail}>
+                  {savingAvail ? (
+                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Guardando…</>
+                  ) : (
+                    "Guardar disponibilidad"
+                  )}
+                </Button>
+                {availSaved && (
+                  <span className="flex items-center gap-1 text-sm text-green-600">
+                    <CheckCircle2 className="h-4 w-4" /> Guardado
+                  </span>
+                )}
+              </div>
             </div>
           </TabsContent>
 
