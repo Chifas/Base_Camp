@@ -9,15 +9,20 @@ export async function GET(
     const professional = await prisma.professionalProfile.findUnique({
       where: { id: params.id },
       include: {
-        user: { select: { id: true, name: true, image: true, bio: true } },
-        availability: { orderBy: { dayOfWeek: "asc" } },
+        user: {
+          select: { id: true, name: true, image: true, bio: true },
+        },
+        availability: true,
         sessions: {
-          where: { review: { isNot: null } },
+          where: { status: "COMPLETED" },
           include: {
-            review: true,
-            client: { select: { name: true, image: true } },
+            review: {
+              include: {
+                user: { select: { name: true, image: true } },
+              },
+            },
           },
-          orderBy: { createdAt: "desc" },
+          orderBy: { scheduledAt: "desc" },
           take: 10,
         },
       },
@@ -30,10 +35,42 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(professional);
-  } catch {
+    const reviews = professional.sessions
+      .filter((s) => s.review)
+      .map((s) => ({
+        id: s.review!.id,
+        sessionId: s.id,
+        userName: s.review!.user.name ?? "Usuario",
+        userImage: s.review!.user.image ?? "",
+        rating: s.review!.rating,
+        comment: s.review!.comment ?? "",
+        createdAt: s.review!.createdAt.toISOString(),
+      }));
+
+    return NextResponse.json({
+      id: professional.id,
+      userId: professional.userId,
+      name: professional.user.name ?? "",
+      image: professional.user.image ?? "",
+      bio: professional.user.bio ?? "",
+      headline: professional.headline ?? "",
+      category: professional.category,
+      hourlyRate: professional.hourlyRate,
+      rating: professional.rating,
+      reviewCount: professional.reviewCount,
+      verified: professional.verified,
+      availability: professional.availability.map((a) => ({
+        id: a.id,
+        dayOfWeek: a.dayOfWeek,
+        startTime: a.startTime,
+        endTime: a.endTime,
+      })),
+      reviews,
+    });
+  } catch (error) {
+    console.error("[/api/professionals/[id]]", error);
     return NextResponse.json(
-      { error: "Error al obtener el perfil" },
+      { error: "Error al obtener el profesional" },
       { status: 500 }
     );
   }

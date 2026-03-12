@@ -1,38 +1,41 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import type { ProfessionalCategory } from "@prisma/client";
 
-export async function GET(req: Request) {
+export async function GET() {
   try {
-    const { searchParams } = new URL(req.url);
-    const query    = searchParams.get("q") ?? "";
-    const category = searchParams.get("category") ?? "";
-    const sortBy   = searchParams.get("sort") ?? "rating";
-
     const professionals = await prisma.professionalProfile.findMany({
-      where: {
-        ...(category && { category: category as ProfessionalCategory }),
-        ...(query && {
-          OR: [
-            { user: { name: { contains: query, mode: "insensitive" } } },
-            { headline: { contains: query, mode: "insensitive" } },
-            { user: { bio: { contains: query, mode: "insensitive" } } },
-          ],
-        }),
-      },
       include: {
-        user: { select: { id: true, name: true, image: true, bio: true } },
+        user: {
+          select: { id: true, name: true, image: true, bio: true },
+        },
         availability: true,
       },
-      orderBy:
-        sortBy === "price-low"  ? { hourlyRate: "asc" }  :
-        sortBy === "price-high" ? { hourlyRate: "desc" } :
-        sortBy === "reviews"    ? { reviewCount: "desc" } :
-                                  { rating: "desc" },
+      orderBy: { rating: "desc" },
     });
 
-    return NextResponse.json(professionals);
-  } catch {
+    const data = professionals.map((p) => ({
+      id: p.id,
+      userId: p.userId,
+      name: p.user.name ?? "",
+      image: p.user.image ?? "",
+      bio: p.user.bio ?? "",
+      headline: p.headline ?? "",
+      category: p.category,
+      hourlyRate: p.hourlyRate,
+      rating: p.rating,
+      reviewCount: p.reviewCount,
+      verified: p.verified,
+      availability: p.availability.map((a) => ({
+        id: a.id,
+        dayOfWeek: a.dayOfWeek,
+        startTime: a.startTime,
+        endTime: a.endTime,
+      })),
+    }));
+
+    return NextResponse.json(data);
+  } catch (error) {
+    console.error("[/api/professionals]", error);
     return NextResponse.json(
       { error: "Error al obtener profesionales" },
       { status: 500 }
