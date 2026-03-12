@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Compass, LayoutDashboard, LogOut, User } from "lucide-react";
+import { Menu, X, Compass, LayoutDashboard, LogOut } from "lucide-react";
+import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./theme-toggle";
 
@@ -11,10 +12,16 @@ const navLinks = [
   { href: "/explore", label: "Explorar" },
 ];
 
-// Mock logged-in state for development — replace with real auth later
-const MOCK_USER = { name: "Ana López", initials: "AL" };
-
 export function Navbar() {
+  const { data: session } = useSession();
+  const user = session?.user;
+  const initials = user?.name
+    ? user.name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()
+    : "?";
+  const dashboardHref = (user as { role?: string })?.role === "PROFESSIONAL"
+    ? "/dashboard/professional"
+    : "/dashboard/client";
+
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -56,14 +63,24 @@ export function Navbar() {
           ))}
           <ThemeToggle />
 
-          {/* Profile avatar + dropdown */}
+          {/* Auth / Profile */}
+          {!user ? (
+            <div className="ml-2 flex items-center gap-2">
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/auth/login">Iniciar sesión</Link>
+              </Button>
+              <Button size="sm" asChild>
+                <Link href="/auth/register">Registrarse</Link>
+              </Button>
+            </div>
+          ) : (
           <div className="relative ml-2" ref={profileRef}>
             <button
               onClick={() => setProfileOpen(!profileOpen)}
               className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-semibold transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
               aria-label="Menú de perfil"
             >
-              {MOCK_USER.initials}
+              {initials}
             </button>
 
             <AnimatePresence>
@@ -77,32 +94,34 @@ export function Navbar() {
                 >
                   {/* User info */}
                   <div className="px-4 py-3 border-b">
-                    <p className="text-sm font-semibold truncate">{MOCK_USER.name}</p>
-                    <p className="text-xs text-muted-foreground">Cliente</p>
+                    <p className="text-sm font-semibold truncate">{user?.name ?? ""}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {(user as { role?: string })?.role === "PROFESSIONAL" ? "Profesional" : "Cliente"}
+                    </p>
                   </div>
                   {/* Menu items */}
                   <div className="py-1">
                     <Link
-                      href="/dashboard/client"
+                      href={dashboardHref}
                       onClick={() => setProfileOpen(false)}
                       className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-accent transition-colors"
                     >
                       <LayoutDashboard className="h-4 w-4 text-muted-foreground" />
                       Mi panel
                     </Link>
-                    <Link
-                      href="/auth/login"
-                      onClick={() => setProfileOpen(false)}
-                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-destructive hover:bg-accent transition-colors"
+                    <button
+                      onClick={() => { setProfileOpen(false); signOut({ callbackUrl: "/" }); }}
+                      className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-destructive hover:bg-accent transition-colors"
                     >
                       <LogOut className="h-4 w-4" />
                       Cerrar sesión
-                    </Link>
+                    </button>
                   </div>
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
+          )}
         </nav>
 
         {/* Mobile menu button */}
@@ -143,34 +162,46 @@ export function Navbar() {
                   {link.label}
                 </Link>
               ))}
-              {/* Profile section mobile */}
+              {/* Auth / Profile mobile */}
+              {!user ? (
+                <div className="mt-2 flex flex-col gap-2">
+                  <Button variant="outline" asChild className="w-full">
+                    <Link href="/auth/login" onClick={() => setMobileOpen(false)}>Iniciar sesión</Link>
+                  </Button>
+                  <Button asChild className="w-full">
+                    <Link href="/auth/register" onClick={() => setMobileOpen(false)}>Registrarse</Link>
+                  </Button>
+                </div>
+              ) : (
               <div className="mt-2 rounded-lg border bg-card p-3">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-semibold">
-                    {MOCK_USER.initials}
+                    {initials}
                   </div>
                   <div>
-                    <p className="text-sm font-semibold">{MOCK_USER.name}</p>
-                    <p className="text-xs text-muted-foreground">Cliente</p>
+                    <p className="text-sm font-semibold">{user?.name ?? ""}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {(user as { role?: string })?.role === "PROFESSIONAL" ? "Profesional" : "Cliente"}
+                    </p>
                   </div>
                 </div>
                 <Link
-                  href="/dashboard/client"
+                  href={dashboardHref}
                   onClick={() => setMobileOpen(false)}
                   className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent"
                 >
                   <LayoutDashboard className="h-4 w-4 text-muted-foreground" />
                   Mi panel
                 </Link>
-                <Link
-                  href="/auth/login"
-                  onClick={() => setMobileOpen(false)}
-                  className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-destructive transition-colors hover:bg-accent"
+                <button
+                  onClick={() => { setMobileOpen(false); signOut({ callbackUrl: "/" }); }}
+                  className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-destructive transition-colors hover:bg-accent"
                 >
                   <LogOut className="h-4 w-4" />
                   Cerrar sesión
-                </Link>
+                </button>
               </div>
+              )}
             </nav>
           </motion.div>
         )}

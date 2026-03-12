@@ -17,8 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { FadeIn } from "@/components/shared/motion-wrapper";
-import { CLIENT_SESSIONS } from "@/data/mock";
-import { STATUS_LABELS } from "@/types";
+import { STATUS_LABELS, type Session } from "@/types";
 import { formatCurrency, formatDate, formatTime } from "@/lib/utils";
 
 const statusColors: Record<string, string> = {
@@ -48,7 +47,17 @@ function timeUntilEnabled(scheduledAt: string): string {
 }
 
 export default function ClientDashboard() {
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [loadingSessions, setLoadingSessions] = useState(true);
   const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    fetch("/api/sessions")
+      .then((r) => r.ok ? r.json() : [])
+      .then((data) => setSessions(Array.isArray(data) ? data : []))
+      .catch(() => setSessions([]))
+      .finally(() => setLoadingSessions(false));
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => setNow(Date.now()), 30000);
@@ -57,18 +66,18 @@ export default function ClientDashboard() {
 
   const upcomingSessions = useMemo(
     () =>
-      CLIENT_SESSIONS.filter(
+      sessions.filter(
         (s) => s.status === "CONFIRMED" || s.status === "PENDING"
       ),
-    []
+    [sessions]
   );
 
   const pastSessions = useMemo(
     () =>
-      CLIENT_SESSIONS.filter(
+      sessions.filter(
         (s) => s.status === "COMPLETED" || s.status === "CANCELLED"
       ),
-    []
+    [sessions]
   );
 
   return (
@@ -98,7 +107,7 @@ export default function ClientDashboard() {
           {[
             { label: "Próximas sesiones", value: upcomingSessions.length.toString(), icon: Calendar },
             { label: "Sesiones completadas", value: pastSessions.filter((s) => s.status === "COMPLETED").length.toString(), icon: Clock },
-            { label: "Total invertido", value: formatCurrency(CLIENT_SESSIONS.reduce((acc, s) => acc + (s.status === "COMPLETED" ? s.price : 0), 0)), icon: Star },
+            { label: "Total invertido", value: formatCurrency(sessions.reduce((acc, s) => acc + (s.status === "COMPLETED" ? s.price : 0), 0)), icon: Star },
             { label: "Reseñas dejadas", value: "2", icon: MessageSquare },
           ].map((stat) => (
             <div

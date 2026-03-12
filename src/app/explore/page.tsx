@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
@@ -9,6 +9,7 @@ import {
   Star,
   CheckCircle2,
   SlidersHorizontal,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,8 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PROFESSIONALS } from "@/data/mock";
-import { CATEGORY_LABELS, type ProfessionalCategory } from "@/types";
+import { CATEGORY_LABELS, type ProfessionalCategory, type Professional } from "@/types";
 import { formatCurrency } from "@/lib/utils";
 
 const categories: { value: string; label: string }[] = [
@@ -33,12 +33,22 @@ const categories: { value: string; label: string }[] = [
 ];
 
 export default function ExplorePage() {
+  const [professionals, setProfessionals] = useState<Professional[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("ALL");
   const [sortBy, setSortBy] = useState("rating");
 
+  useEffect(() => {
+    fetch("/api/professionals")
+      .then((r) => r.json())
+      .then((data) => setProfessionals(Array.isArray(data) ? data : []))
+      .catch(() => setProfessionals([]))
+      .finally(() => setLoading(false));
+  }, []);
+
   const filteredProfessionals = useMemo(() => {
-    let result = [...PROFESSIONALS];
+    let result = [...professionals];
 
     // Filter by search
     if (searchQuery) {
@@ -68,7 +78,7 @@ export default function ExplorePage() {
     }
 
     return result;
-  }, [searchQuery, selectedCategory, sortBy]);
+  }, [professionals, searchQuery, selectedCategory, sortBy]);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
@@ -141,7 +151,15 @@ export default function ExplorePage() {
         {filteredProfessionals.length !== 1 ? "s" : ""}
       </p>
 
+      {/* Loading */}
+      {loading && (
+        <div className="mt-16 flex justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      )}
+
       {/* Grid */}
+      {!loading && (
       <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {filteredProfessionals.map((pro, i) => (
           <motion.div
@@ -234,9 +252,10 @@ export default function ExplorePage() {
           </motion.div>
         ))}
       </div>
+      )}
 
       {/* Empty state */}
-      {filteredProfessionals.length === 0 && (
+      {!loading && filteredProfessionals.length === 0 && (
         <div className="mt-16 text-center">
           <Search className="mx-auto h-12 w-12 text-muted-foreground/40" />
           <h3 className="mt-4 font-heading text-lg font-semibold">

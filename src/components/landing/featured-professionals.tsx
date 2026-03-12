@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
@@ -7,12 +8,18 @@ import { Star, ArrowRight, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FadeIn } from "@/components/shared/motion-wrapper";
-import { PROFESSIONALS } from "@/data/mock";
-import { CATEGORY_LABELS } from "@/types";
+import { CATEGORY_LABELS, type Professional } from "@/types";
 import { formatCurrency } from "@/lib/utils";
 
 export function FeaturedProfessionals() {
-  const featured = PROFESSIONALS.slice(0, 4);
+  const [featured, setFeatured] = useState<Professional[]>([]);
+
+  useEffect(() => {
+    fetch("/api/professionals")
+      .then((r) => r.ok ? r.json() : [])
+      .then((data: Professional[]) => setFeatured(data.slice(0, 4)))
+      .catch(() => setFeatured([]));
+  }, []);
 
   return (
     <section className="py-20 sm:py-28">

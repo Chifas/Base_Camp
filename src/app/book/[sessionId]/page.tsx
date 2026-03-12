@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import {
@@ -17,22 +18,46 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { PROFESSIONALS } from "@/data/mock";
-import { CATEGORY_LABELS } from "@/types";
+import { CATEGORY_LABELS, type Professional } from "@/types";
 import { formatCurrency } from "@/lib/utils";
 
-export default function BookingPage() {
-  const [step, setStep] = useState<"review" | "payment" | "confirmed">(
-    "review"
-  );
-  const [isProcessing, setIsProcessing] = useState(false);
+function addHour(time: string): string {
+  const [h, m] = time.split(":").map(Number);
+  return `${String(h + 1).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
 
-  // Mock booking data
-  const professional = PROFESSIONALS[0];
-  const bookingDate = "Lunes, 20 de enero de 2025";
-  const bookingTime = "10:00 - 11:00";
-  const platformFee = professional.hourlyRate * 0.1;
-  const total = professional.hourlyRate;
+export default function BookingPage() {
+  const searchParams = useSearchParams();
+  const [step, setStep] = useState<"review" | "payment" | "confirmed">("review");
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [professional, setProfessional] = useState<Professional | null>(null);
+
+  const professionalId = searchParams.get("professional");
+  const dateParam = searchParams.get("date");
+  const timeParam = searchParams.get("time");
+
+  useEffect(() => {
+    if (!professionalId) return;
+    fetch(`/api/professionals/${professionalId}`)
+      .then((r) => r.ok ? r.json() : null)
+      .then(setProfessional)
+      .catch(() => setProfessional(null));
+  }, [professionalId]);
+
+  const bookingDate = dateParam
+    ? new Date(dateParam).toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long", year: "numeric" })
+    : "";
+  const bookingTime = timeParam ? `${timeParam} - ${addHour(timeParam)}` : "";
+  const platformFee = professional ? professional.hourlyRate * 0.1 : 0;
+  const total = professional?.hourlyRate ?? 0;
+
+  if (!professional) {
+    return (
+      <div className="mx-auto max-w-2xl px-4 py-20 text-center">
+        <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
 
   const handlePayment = () => {
     setIsProcessing(true);
