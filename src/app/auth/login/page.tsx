@@ -2,20 +2,32 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { motion } from "framer-motion";
 import { Compass, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
+const OAUTH_ERRORS: Record<string, string> = {
+  OAuthAccountNotLinked:
+    "Este email ya está registrado con contraseña. Inicia sesión con email y contraseña.",
+  OAuthSignin: "Error al iniciar sesión con Google. Inténtalo de nuevo.",
+  OAuthCallback: "Error al conectar con Google. Inténtalo de nuevo.",
+  Default: "Ha ocurrido un error. Inténtalo de nuevo.",
+};
+
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const oauthError = searchParams.get("error");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError] = useState(
+    oauthError ? (OAUTH_ERRORS[oauthError] ?? OAUTH_ERRORS.Default) : ""
+  );
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
