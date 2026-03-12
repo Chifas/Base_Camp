@@ -56,10 +56,14 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session: updatedSession }) {
       if (user) {
         token.id = user.id;
         token.role = (user as { role?: string }).role ?? "CLIENT";
+      }
+      // Handle manual session update (e.g., after Google OAuth role assignment)
+      if (trigger === "update" && updatedSession?.role) {
+        token.role = updatedSession.role;
       }
       return token;
     },
