@@ -122,11 +122,11 @@ export default function RegisterPage() {
             variant="outline"
             className="w-full"
             size="lg"
-            onClick={() =>
-              signIn("google", {
-                callbackUrl: `/auth/complete-profile?role=${role}`,
-              })
-            }
+            onClick={() => {
+              // sessionStorage survives the Google OAuth redirect (same tab)
+              sessionStorage.setItem("guidepath-pending-role", role);
+              signIn("google", { callbackUrl: "/auth/complete-profile" });
+            }}
           >
             <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
               <path

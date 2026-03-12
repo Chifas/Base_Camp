@@ -2,47 +2,57 @@
 
 import { useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Compass, Loader2 } from "lucide-react";
 
 export default function CompleteProfilePage() {
   const { data: session, status, update } = useSession();
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const role = searchParams.get("role") as "CLIENT" | "PROFESSIONAL" | null;
 
   useEffect(() => {
     if (status === "loading") return;
 
     if (!session) {
-      router.replace("/auth/login");
+      window.location.href = "/auth/login";
       return;
     }
 
     async function finalize() {
-      // Only update role when explicitly requested (new Google registration)
-      if (role === "CLIENT" || role === "PROFESSIONAL") {
+      // Read role from sessionStorage (set before Google OAuth) or URL param fallback
+      const pendingRole =
+        sessionStorage.getItem("guidepath-pending-role") ||
+        searchParams.get("role");
+
+      sessionStorage.removeItem("guidepath-pending-role");
+
+      if (pendingRole === "CLIENT" || pendingRole === "PROFESSIONAL") {
+        // Update role in DB
         await fetch("/api/auth/update-role", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ role }),
+          body: JSON.stringify({ role: pendingRole }),
         });
-        // Refresh JWT so middleware sees the new role
-        await update({ role });
+        // Update the JWT cookie so middleware sees the new role
+        await update({ role: pendingRole });
+
+        // Hard redirect so the browser sends the updated JWT cookie
+        window.location.href =
+          pendingRole === "PROFESSIONAL"
+            ? "/dashboard/professional"
+            : "/dashboard/client";
+      } else {
+        // Returning user — just redirect based on existing session role
+        const currentRole =
+          (session?.user as { role?: string })?.role ?? "CLIENT";
+        window.location.href =
+          currentRole === "PROFESSIONAL"
+            ? "/dashboard/professional"
+            : "/dashboard/client";
       }
-
-      const effectiveRole =
-        role ?? (session?.user as { role?: string })?.role ?? "CLIENT";
-
-      router.replace(
-        effectiveRole === "PROFESSIONAL"
-          ? "/dashboard/professional"
-          : "/dashboard/client"
-      );
     }
 
     finalize();
-  }, [status, session, role, router, update]);
+  }, [status, session, searchParams, update]);
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
