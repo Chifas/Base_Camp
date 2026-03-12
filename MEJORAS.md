@@ -9,26 +9,26 @@ Este documento recoge las mejoras recomendadas para `GuidePath`, priorizadas par
 ## 🚨 Prioridad Alta
 
 ### 1. Seguridad y control de acceso
-- [ ] Crear `middleware.ts` para proteger rutas privadas como `/dashboard`, `/session` y futuras rutas internas
-- [ ] Validar permisos por rol (`CLIENT`, `PROFESSIONAL`, `ADMIN`) antes de renderizar páginas sensibles
-- [ ] Revisar el flujo de autenticación para evitar accesos directos a páginas privadas sin sesión iniciada
+- [x] Crear `middleware.ts` para proteger rutas privadas como `/dashboard`, `/session` y futuras rutas internas
+- [x] Validar permisos por rol (`CLIENT`, `PROFESSIONAL`, `ADMIN`) antes de renderizar páginas sensibles
+- [x] Revisar el flujo de autenticación para evitar accesos directos a páginas privadas sin sesión iniciada
 
 ### 2. Manejo de errores
-- [ ] Añadir `src/app/error.tsx`
-- [ ] Añadir `src/app/not-found.tsx`
+- [x] Añadir `src/app/error.tsx`
+- [x] Añadir `src/app/not-found.tsx`
 - [ ] Crear estados vacíos y mensajes de error consistentes para páginas dinámicas
 - [ ] Definir una estrategia de errores de backend y frontend
 
 ### 3. Base de datos — índices
-- [ ] Añadir índices en Prisma para consultas frecuentes:
-  - [ ] `Session.clientId`
-  - [ ] `Session.professionalId`
-  - [ ] `ProfessionalProfile.category`
+- [x] Añadir índices en Prisma para consultas frecuentes:
+  - [x] `Session.clientId`
+  - [x] `Session.professionalId`
+  - [x] `ProfessionalProfile.category`
 - [ ] Revisar relaciones para asegurar cascadas y consistencia de datos
 
 ### 4. Validación de entorno
-- [ ] Añadir validación tipada de variables de entorno con Zod o solución similar
-- [ ] Fallar en build si falta una variable crítica
+- [x] Añadir validación tipada de variables de entorno con Zod o solución similar
+- [x] Fallar en build si falta una variable crítica
 - [ ] Separar variables públicas y privadas correctamente
 
 ---
@@ -93,11 +93,11 @@ Este documento recoge las mejoras recomendadas para `GuidePath`, priorizadas par
 
 ## 🗺️ Propuesta de fases
 
-### Fase 1 — Base sólida
-- [ ] Middleware de autenticación
-- [ ] `error.tsx` y `not-found.tsx`
-- [ ] Validación de variables de entorno
-- [ ] Índices en Prisma
+### Fase 1 — Base sólida ✅
+- [x] Middleware de autenticación
+- [x] `error.tsx` y `not-found.tsx`
+- [x] Validación de variables de entorno
+- [x] Índices en Prisma
 
 ### Fase 2 — Calidad y visibilidad
 - [ ] SEO dinámico
