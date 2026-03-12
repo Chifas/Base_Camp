@@ -1,25 +1,148 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import DailyIframe, { type DailyCall } from "@daily-co/daily-js";
 import {
-  Mic,
-  MicOff,
-  VideoIcon,
-  VideoOff,
   PhoneOff,
-  MessageSquare,
-  Maximize2,
   Clock,
   ChevronLeft,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+interface RoomData {
+  url: string;
+  session: {
+    id: string;
+    professionalName: string;
+    professionalImage: string;
+    clientName: string;
+    clientImage: string;
+    scheduledAt: string;
+    duration: number;
+  };
+}
+
 export default function VideoSessionPage() {
-  const [isMuted, setIsMuted] = useState(false);
-  const [isVideoOn, setIsVideoOn] = useState(true);
-  const [isChatOpen, setIsChatOpen] = useState(false);
+  const params = useParams();
+  const router = useRouter();
+  const { data: authSession } = useSession();
+
+  const [roomData, setRoomData] = useState<RoomData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [callJoined, setCallJoined] = useState(false);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const callRef = useRef<DailyCall | null>(null);
+
+  const dashboardHref =
+    (authSession?.user as { role?: string })?.role === "PROFESSIONAL"
+      ? "/dashboard/professional"
+      : "/dashboard/client";
+
+  // Fetch room data
+  useEffect(() => {
+    if (!params.id) return;
+
+    fetch(`/api/sessions/${params.id}/room`)
+      .then((r) => {
+        if (!r.ok) throw new Error("No se pudo obtener la sala");
+        return r.json();
+      })
+      .then((data: RoomData) => {
+        setRoomData(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError(err.message);
+        setLoading(false);
+      });
+  }, [params.id]);
+
+  // Handle leaving the call
+  const handleLeave = useCallback(() => {
+    if (callRef.current) {
+      callRef.current.destroy();
+      callRef.current = null;
+    }
+    router.push(dashboardHref);
+  }, [router, dashboardHref]);
+
+  // Join Daily.co room when URL is available
+  useEffect(() => {
+    if (!roomData?.url || !containerRef.current || callJoined) return;
+
+    const userName =
+      (authSession?.user as { role?: string })?.role === "PROFESSIONAL"
+        ? roomData.session.professionalName
+        : roomData.session.clientName;
+
+    const call = DailyIframe.createFrame(containerRef.current, {
+      iframeStyle: {
+        width: "100%",
+        height: "100%",
+        border: "0",
+        borderRadius: "0",
+      },
+      showLeaveButton: true,
+      showFullscreenButton: true,
+      showParticipantsBar: true,
+    });
+
+    call.join({
+      url: roomData.url,
+      userName: userName || "Participante",
+    });
+
+    call.on("left-meeting", () => {
+      handleLeave();
+    });
+
+    callRef.current = call;
+    setCallJoined(true);
+
+    return () => {
+      if (callRef.current) {
+        callRef.current.destroy();
+        callRef.current = null;
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roomData?.url]);
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="flex h-[calc(100vh-4rem)] items-center justify-center bg-zinc-950">
+        <div className="text-center">
+          <Loader2 className="mx-auto h-10 w-10 animate-spin text-primary" />
+          <p className="mt-4 text-sm text-zinc-400">
+            Conectando a la videollamada...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="flex h-[calc(100vh-4rem)] items-center justify-center bg-zinc-950">
+        <div className="text-center">
+          <AlertCircle className="mx-auto h-10 w-10 text-red-500" />
+          <p className="mt-4 text-sm text-zinc-400">{error}</p>
+          <Button className="mt-4" variant="outline" asChild>
+            <Link href={dashboardHref}>Volver al dashboard</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-[calc(100vh-4rem)] flex-col bg-zinc-950">
@@ -27,184 +150,42 @@ export default function VideoSessionPage() {
       <div className="flex items-center justify-between border-b border-zinc-800 px-4 py-3">
         <div className="flex items-center gap-3">
           <Link
-            href="/dashboard/client"
+            href={dashboardHref}
             className="text-zinc-400 hover:text-white transition-colors"
           >
             <ChevronLeft className="h-5 w-5" />
           </Link>
           <div>
             <h1 className="text-sm font-semibold text-white">
-              Sesión con Dra. Elena Martínez
+              Sesión con{" "}
+              {(authSession?.user as { role?: string })?.role === "PROFESSIONAL"
+                ? roomData?.session.clientName
+                : roomData?.session.professionalName}
             </h1>
             <div className="flex items-center gap-1.5 text-xs text-zinc-400">
               <span className="flex h-2 w-2 rounded-full bg-green-500" />
               En curso
               <span className="ml-1 flex items-center gap-1">
                 <Clock className="h-3 w-3" />
-                45:12
+                {roomData?.session.duration} min
               </span>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-zinc-400 hover:text-white hover:bg-zinc-800"
-            onClick={() => setIsChatOpen(!isChatOpen)}
-          >
-            <MessageSquare className="h-5 w-5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-zinc-400 hover:text-white hover:bg-zinc-800"
-          >
-            <Maximize2 className="h-5 w-5" />
-          </Button>
-        </div>
-      </div>
-
-      {/* Main content */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Video area */}
-        <div className="relative flex-1">
-          {/* Remote video (placeholder) */}
-          <div className="flex h-full items-center justify-center bg-zinc-900">
-            <div className="text-center">
-              <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-zinc-800">
-                <span className="font-heading text-3xl font-bold text-zinc-500">
-                  EM
-                </span>
-              </div>
-              <p className="mt-4 text-sm text-zinc-500">
-                Dra. Elena Martínez
-              </p>
-              <p className="mt-1 text-xs text-zinc-600">
-                La videollamada se conectará automáticamente con Daily.co
-              </p>
-            </div>
-          </div>
-
-          {/* Local video (picture-in-picture) */}
-          <motion.div
-            drag
-            dragMomentum={false}
-            className="absolute bottom-4 right-4 h-36 w-48 cursor-move overflow-hidden rounded-xl border-2 border-zinc-700 bg-zinc-800 shadow-lg"
-          >
-            <div className="flex h-full items-center justify-center">
-              {isVideoOn ? (
-                <div className="text-center">
-                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-zinc-700">
-                    <span className="font-heading text-lg font-bold text-zinc-400">
-                      TÚ
-                    </span>
-                  </div>
-                </div>
-              ) : (
-                <VideoOff className="h-8 w-8 text-zinc-600" />
-              )}
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Chat sidebar */}
-        {isChatOpen && (
-          <motion.div
-            initial={{ width: 0, opacity: 0 }}
-            animate={{ width: 320, opacity: 1 }}
-            exit={{ width: 0, opacity: 0 }}
-            className="flex flex-col border-l border-zinc-800 bg-zinc-900"
-          >
-            <div className="border-b border-zinc-800 p-4">
-              <h2 className="text-sm font-semibold text-white">
-                Chat de sesión
-              </h2>
-            </div>
-
-            {/* Messages */}
-            <div className="flex-1 space-y-3 overflow-y-auto p-4">
-              <div className="rounded-lg bg-zinc-800 p-3">
-                <p className="text-xs font-medium text-primary">
-                  Dra. Elena Martínez
-                </p>
-                <p className="mt-1 text-sm text-zinc-300">
-                  Bienvenido/a a la sesión. ¿Cómo te encuentras hoy?
-                </p>
-                <p className="mt-1 text-xs text-zinc-600">10:02</p>
-              </div>
-              <div className="ml-8 rounded-lg bg-primary/20 p-3">
-                <p className="text-xs font-medium text-primary">Tú</p>
-                <p className="mt-1 text-sm text-zinc-300">
-                  Hola Elena, hoy estoy mejor que la semana pasada. He intentado aplicar lo que hablamos.
-                </p>
-                <p className="mt-1 text-xs text-zinc-600">10:03</p>
-              </div>
-            </div>
-
-            {/* Input */}
-            <div className="border-t border-zinc-800 p-3">
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Escribe un mensaje..."
-                  className="flex-1 rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:ring-1 focus:ring-primary"
-                />
-                <Button size="sm">Enviar</Button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </div>
-
-      {/* Controls bar */}
-      <div className="flex items-center justify-center gap-4 border-t border-zinc-800 px-4 py-4">
         <Button
           variant="ghost"
-          size="icon"
-          className={`h-12 w-12 rounded-full ${
-            isMuted
-              ? "bg-red-600 text-white hover:bg-red-700"
-              : "bg-zinc-800 text-white hover:bg-zinc-700"
-          }`}
-          onClick={() => setIsMuted(!isMuted)}
+          size="sm"
+          className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
+          onClick={handleLeave}
         >
-          {isMuted ? (
-            <MicOff className="h-5 w-5" />
-          ) : (
-            <Mic className="h-5 w-5" />
-          )}
-        </Button>
-
-        <Button
-          variant="ghost"
-          size="icon"
-          className={`h-12 w-12 rounded-full ${
-            !isVideoOn
-              ? "bg-red-600 text-white hover:bg-red-700"
-              : "bg-zinc-800 text-white hover:bg-zinc-700"
-          }`}
-          onClick={() => setIsVideoOn(!isVideoOn)}
-        >
-          {isVideoOn ? (
-            <VideoIcon className="h-5 w-5" />
-          ) : (
-            <VideoOff className="h-5 w-5" />
-          )}
-        </Button>
-
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-12 w-12 rounded-full bg-red-600 text-white hover:bg-red-700"
-          asChild
-        >
-          <Link href="/dashboard/client">
-            <PhoneOff className="h-5 w-5" />
-          </Link>
+          <PhoneOff className="mr-2 h-4 w-4" />
+          Salir
         </Button>
       </div>
+
+      {/* Daily.co video container */}
+      <div ref={containerRef} className="flex-1" />
     </div>
   );
 }
