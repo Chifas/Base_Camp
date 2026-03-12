@@ -2,12 +2,10 @@
 
 import { useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
-import { useSearchParams } from "next/navigation";
 import { Compass, Loader2 } from "lucide-react";
 
 export default function CompleteProfilePage() {
-  const { data: session, status, update } = useSession();
-  const searchParams = useSearchParams();
+  const { data: session, status } = useSession();
   const processedRef = useRef(false);
 
   useEffect(() => {
@@ -19,45 +17,27 @@ export default function CompleteProfilePage() {
       return;
     }
 
-    // Prevent double execution (update ref changes on each render)
     processedRef.current = true;
 
     async function finalize() {
-      const pendingRole =
-        localStorage.getItem("guidepath-pending-role") ||
-        searchParams.get("role");
-
+      const pendingRole = localStorage.getItem("guidepath-pending-role");
       localStorage.removeItem("guidepath-pending-role");
 
       if (pendingRole === "CLIENT" || pendingRole === "PROFESSIONAL") {
-        // 1. Update role in DB
         await fetch("/api/auth/update-role", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ role: pendingRole }),
         });
-
-        // 2. Trigger JWT refresh — the jwt callback re-reads role from DB
-        await update();
-
-        // 3. Hard redirect so the browser sends the updated JWT cookie
-        window.location.href =
-          pendingRole === "PROFESSIONAL"
-            ? "/dashboard/professional"
-            : "/dashboard/client";
-      } else {
-        // Returning user — redirect based on existing session role
-        const currentRole =
-          (session?.user as { role?: string })?.role ?? "CLIENT";
-        window.location.href =
-          currentRole === "PROFESSIONAL"
-            ? "/dashboard/professional"
-            : "/dashboard/client";
       }
+
+      // Redirect to /dashboard — the router page will read fresh role from
+      // session (jwt callback always re-reads from DB) and redirect correctly
+      window.location.href = "/dashboard";
     }
 
     finalize();
-  }, [status, session, searchParams, update]);
+  }, [status, session]);
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
