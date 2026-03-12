@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { Compass, Loader2 } from "lucide-react";
@@ -8,17 +8,21 @@ import { Compass, Loader2 } from "lucide-react";
 export default function CompleteProfilePage() {
   const { data: session, status, update } = useSession();
   const searchParams = useSearchParams();
+  const processedRef = useRef(false);
 
   useEffect(() => {
     if (status === "loading") return;
+    if (processedRef.current) return;
 
     if (!session) {
       window.location.href = "/auth/login";
       return;
     }
 
+    // Prevent double execution (update ref changes on each render)
+    processedRef.current = true;
+
     async function finalize() {
-      // localStorage is more reliable than sessionStorage for OAuth redirects
       const pendingRole =
         localStorage.getItem("guidepath-pending-role") ||
         searchParams.get("role");
