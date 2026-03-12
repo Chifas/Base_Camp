@@ -2,106 +2,129 @@ import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { stripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
-import { sendBookingEmails, sendCancellationEmails } from "@/lib/emails";
-
-// Must read raw body — no JSON parsing by Next.js
-export const runtime = "nodejs";
-export const dynamic  = "force-dynamic";
-
-/** Shared include shape for session + user emails */
-const SESSION_WITH_USERS = {
-  client: { select: { name: true, email: true } },
-  professional: {
-    include: {
-      user: { select: { name: true, email: true } },
-    },
-  },
-} as const;
+import { env } from "@/lib/env";
+import { sendBookingConfirmation } from "@/lib/email";
+import type Stripe from "stripe";
 
 export async function POST(req: Request) {
-  const body      = await req.text();
-  const signature = headers().get("stripe-signature") ?? "";
-  const secret    = process.env.STRIPE_WEBHOOK_SECRET ?? "";
+  if (!stripe) {
+    return NextResponse.json(
+      { error: "Stripe no configurado" },
+      { status: 503 }
+    );
+  }
 
-  // Verify the event came from Stripe
-  let event: ReturnType<typeof stripe.webhooks.constructEvent>;
+  const body = await req.text();
+  const signature = headers().get("stripe-signature");
+
+  if (!signature || !env.STRIPE_WEBHOOK_SECRET) {
+    return NextResponse.json(
+      { error: "Falta firma o webhook secret" },
+      { status: 400 }
+    );
+  }
+
+  let event: Stripe.Event;
+
   try {
-    event = stripe.webhooks.constructEvent(body, signature, secret);
+    event = stripe.webhooks.constructEvent(
+      body,
+      signature,
+      env.STRIPE_WEBHOOK_SECRET
+    );
   } catch (err) {
-    console.error("[webhook] Invalid Stripe signature:", err);
-    return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+    const message = err instanceof Error ? err.message : "Error desconocido";
+    console.error("[Stripe Webhook] Firma inválida:", message);
+    return NextResponse.json(
+      { error: `Firma inválida: ${message}` },
+      { status: 400 }
+    );
   }
 
   try {
     switch (event.type) {
-      // ── Payment succeeded: confirm session + send emails ─────────────────
-      case "payment_intent.succeeded": {
-        const pi = event.data.object as { id: string };
+      case "checkout.session.completed": {
+        const checkoutSession = event.data
+          .object as Stripe.Checkout.Session;
+        const sessionId = checkoutSession.metadata?.sessionId;
 
-        const session = await prisma.session.findFirst({
-          where:   { stripePaymentIntentId: pi.id },
-          include: SESSION_WITH_USERS,
+        if (!sessionId) {
+          console.error("[Stripe Webhook] No sessionId in metadata");
+          break;
+        }
+
+        // Update session status to CONFIRMED
+        const updatedSession = await prisma.session.update({
+          where: { id: sessionId },
+          data: {
+            status: "CONFIRMED",
+            stripePaymentIntentId:
+              typeof checkoutSession.payment_intent === "string"
+                ? checkoutSession.payment_intent
+                : checkoutSession.payment_intent?.id ?? null,
+          },
+          include: {
+            client: { select: { name: true, email: true } },
+            professional: {
+              include: {
+                user: { select: { name: true } },
+              },
+            },
+          },
         });
 
-        if (session) {
-          await prisma.session.update({
-            where: { id: session.id },
-            data:  { status: "CONFIRMED" },
-          });
-          console.log(`[webhook] Session CONFIRMED: ${session.id}`);
+        console.log(
+          `✅ Sesión ${sessionId} confirmada (payment: ${updatedSession.stripePaymentIntentId})`
+        );
 
-          // Fire-and-forget: errors are logged inside sendBookingEmails
-          void sendBookingEmails({
-            id:           session.id,
-            scheduledAt:  session.scheduledAt,
-            price:        session.price,
-            client:       session.client as { name: string | null; email: string },
-            professional: session.professional as {
-              user: { name: string | null; email: string };
-            },
+        // Send confirmation email
+        if (updatedSession.client.email) {
+          await sendBookingConfirmation({
+            to: updatedSession.client.email,
+            clientName: updatedSession.client.name ?? "Cliente",
+            professionalName:
+              updatedSession.professional.user.name ?? "Profesional",
+            date: updatedSession.scheduledAt.toLocaleDateString("es-ES", {
+              weekday: "long",
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            }),
+            time: updatedSession.scheduledAt.toLocaleTimeString("es-ES", {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+            price: updatedSession.price,
           });
         }
+
         break;
       }
 
-      // ── Payment failed: cancel session + notify client ───────────────────
-      case "payment_intent.payment_failed": {
-        const pi = event.data.object as { id: string };
+      case "checkout.session.expired": {
+        const expiredSession = event.data
+          .object as Stripe.Checkout.Session;
+        const sessionId = expiredSession.metadata?.sessionId;
 
-        const session = await prisma.session.findFirst({
-          where:   { stripePaymentIntentId: pi.id },
-          include: SESSION_WITH_USERS,
-        });
-
-        if (session) {
+        if (sessionId) {
           await prisma.session.update({
-            where: { id: session.id },
-            data:  { status: "CANCELLED" },
+            where: { id: sessionId },
+            data: { status: "CANCELLED" },
           });
-          console.log(`[webhook] Session CANCELLED (payment failed): ${session.id}`);
-
-          void sendCancellationEmails({
-            id:           session.id,
-            scheduledAt:  session.scheduledAt,
-            price:        session.price,
-            client:       session.client as { name: string | null; email: string },
-            professional: session.professional as {
-              user: { name: string | null; email: string };
-            },
-          });
+          console.log(`❌ Sesión ${sessionId} cancelada (checkout expirado)`);
         }
         break;
       }
 
       default:
-        break;
+        console.log(`[Stripe Webhook] Evento no manejado: ${event.type}`);
     }
 
     return NextResponse.json({ received: true });
-  } catch (err) {
-    console.error("[webhook] Processing error:", err);
+  } catch (error) {
+    console.error("[Stripe Webhook] Error procesando evento:", error);
     return NextResponse.json(
-      { error: "Webhook handler failed" },
+      { error: "Error procesando webhook" },
       { status: 500 }
     );
   }

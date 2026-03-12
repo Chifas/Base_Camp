@@ -1,7 +1,13 @@
 import Stripe from "stripe";
+import { env } from "./env";
 
-// Server-side Stripe client singleton
-// Only import on the server — never bundle into client code
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  typescript: true,
-});
+if (!env.STRIPE_SECRET_KEY) {
+  console.warn("⚠️ STRIPE_SECRET_KEY no configurada — pagos deshabilitados");
+}
+
+export const stripe = env.STRIPE_SECRET_KEY
+  ? new Stripe(env.STRIPE_SECRET_KEY, {
+      apiVersion: "2024-04-10",
+      typescript: true,
+    })
+  : null;
