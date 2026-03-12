@@ -106,6 +106,7 @@ model ProfessionalProfile {
   availability  Availability[]
   sessions      Session[]      @relation("ProfessionalSessions")
 
+  @@index([category])
   @@map("professional_profiles")
 }
 
@@ -126,6 +127,9 @@ model Session {
   professional ProfessionalProfile @relation("ProfessionalSessions", fields: [professionalId], references: [id])
   review       Review?
 
+  @@index([clientId])
+  @@index([professionalId])
+  @@index([status])
   @@map("sessions")
 }
 

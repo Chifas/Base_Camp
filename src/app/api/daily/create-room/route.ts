@@ -60,8 +60,11 @@ export async function POST(req: Request) {
     // Room name: "gp-" + first 20 chars of session CUID (Daily name limit: 255 chars)
     const roomName = `gp-${sessionId.slice(0, 20)}`;
 
-    // Expiry: 4 hours after the scheduled start time
-    const exp = Math.floor(new Date(dbSession.scheduledAt).getTime() / 1000) + 4 * 60 * 60;
+    // Expiry: 4 hours after the scheduled start time, but always in the future.
+    // Using Math.max ensures rooms can still be created even for sessions whose
+    // scheduled time has already passed (e.g. during development/testing).
+    const scheduledSec = new Date(dbSession.scheduledAt).getTime() / 1000;
+    const exp = Math.floor(Math.max(scheduledSec, Date.now() / 1000) + 4 * 60 * 60);
 
     // Create room via Daily REST API
     const dailyRes = await fetch(`${DAILY_API}/rooms`, {

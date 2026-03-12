@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { motion } from "framer-motion";
-import { Compass, Mail, Lock, Eye, EyeOff, User, AlertCircle } from "lucide-react";
+import { Compass, Mail, Lock, Eye, EyeOff, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -13,33 +13,37 @@ export default function RegisterPage() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState<"CLIENT" | "PROFESSIONAL">("CLIENT");
+  const [loading, setLoading] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
 
+    if (!name || !email || !password) {
+      setError("Por favor, completa todos los campos.");
+      return;
+    }
     if (password.length < 8) {
-      setError("La contraseña debe tener al menos 8 caracteres");
+      setError("La contraseña debe tener al menos 8 caracteres.");
       return;
     }
 
     setLoading(true);
 
-    const res = await fetch("/api/register", {
+    // Create account
+    const res = await fetch("/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, email, password, role }),
     });
-
     const data = await res.json();
 
     if (!res.ok) {
-      setError(data.error ?? "Error al crear la cuenta");
+      setError(data.error ?? "Error al crear la cuenta.");
       setLoading(false);
       return;
     }
@@ -54,16 +58,14 @@ export default function RegisterPage() {
     setLoading(false);
 
     if (result?.error) {
-      // Account created but sign-in failed: redirect to login
-      router.push("/auth/login");
+      setError("Cuenta creada, pero error al iniciar sesión. Inténtalo manualmente.");
       return;
     }
 
-    router.push(role === "PROFESSIONAL" ? "/dashboard/professional" : "/dashboard/client");
-  }
-
-  async function handleGoogleSignIn() {
-    await signIn("google", { callbackUrl: "/dashboard/client" });
+    router.push(
+      role === "PROFESSIONAL" ? "/dashboard/professional" : "/dashboard/client"
+    );
+    router.refresh();
   }
 
   return (
@@ -83,7 +85,7 @@ export default function RegisterPage() {
             Crea tu cuenta
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Empieza tu camino en el mundo profesional
+            Empieza tu camino hacia el bienestar
           </p>
         </div>
 
@@ -100,7 +102,7 @@ export default function RegisterPage() {
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              Busco orientación
+              Busco ayuda
             </button>
             <button
               type="button"
@@ -120,8 +122,11 @@ export default function RegisterPage() {
             variant="outline"
             className="w-full"
             size="lg"
-            onClick={handleGoogleSignIn}
-            type="button"
+            onClick={() => {
+              // localStorage persists across OAuth redirects reliably
+              localStorage.setItem("guidepath-pending-role", role);
+              signIn("google", { callbackUrl: "/auth/complete-profile" });
+            }}
           >
             <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
               <path
@@ -156,16 +161,13 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          {/* Error message */}
-          {error && (
-            <div className="flex items-center gap-2 rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-              <AlertCircle className="h-4 w-4 shrink-0" />
-              {error}
-            </div>
-          )}
-
           {/* Registration form */}
           <form className="space-y-4" onSubmit={handleSubmit}>
+            {error && (
+              <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                {error}
+              </p>
+            )}
             <div className="space-y-2">
               <label
                 htmlFor="name"
@@ -183,7 +185,6 @@ export default function RegisterPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
-                  autoComplete="name"
                 />
               </div>
             </div>
@@ -205,7 +206,6 @@ export default function RegisterPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  autoComplete="email"
                 />
               </div>
             </div>
@@ -227,7 +227,6 @@ export default function RegisterPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  autoComplete="new-password"
                 />
                 <button
                   type="button"
@@ -243,12 +242,7 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            <Button
-              type="submit"
-              className="w-full"
-              size="lg"
-              disabled={loading}
-            >
+            <Button type="submit" className="w-full" size="lg" disabled={loading}>
               {loading ? "Creando cuenta..." : "Crear cuenta"}
             </Button>
           </form>

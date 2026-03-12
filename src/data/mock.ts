@@ -169,7 +169,22 @@ export const REVIEWS: Review[] = [
   },
 ];
 
+// Dynamically compute a test session 1 hour from now
+const _oneHourFromNow = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+
 export const CLIENT_SESSIONS: Session[] = [
+  {
+    id: "sess-test-now",
+    clientId: "client-1",
+    professionalId: "prof-2",
+    professionalName: "Carlos Ruiz Pérez",
+    professionalImage: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face",
+    clientName: "Tú",
+    scheduledAt: _oneHourFromNow,
+    duration: 60,
+    status: "CONFIRMED",
+    price: 55,
+  },
   {
     id: "sess-upcoming-1",
     clientId: "client-1",
