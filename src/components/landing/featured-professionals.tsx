@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
@@ -11,15 +10,12 @@ import { FadeIn } from "@/components/shared/motion-wrapper";
 import { CATEGORY_LABELS, type Professional } from "@/types";
 import { formatCurrency } from "@/lib/utils";
 
-export function FeaturedProfessionals() {
-  const [featured, setFeatured] = useState<Professional[]>([]);
+interface FeaturedProfessionalsProps {
+  professionals: Professional[];
+}
 
-  useEffect(() => {
-    fetch("/api/professionals")
-      .then((r) => r.ok ? r.json() : [])
-      .then((data: Professional[]) => setFeatured(data.slice(0, 4)))
-      .catch(() => setFeatured([]));
-  }, []);
+export function FeaturedProfessionals({ professionals }: FeaturedProfessionalsProps) {
+  const featured = professionals;
 
   return (
     <section className="py-20 sm:py-28">
