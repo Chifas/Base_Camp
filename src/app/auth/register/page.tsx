@@ -123,8 +123,8 @@ export default function RegisterPage() {
             className="w-full"
             size="lg"
             onClick={() => {
-              // sessionStorage survives the Google OAuth redirect (same tab)
-              sessionStorage.setItem("guidepath-pending-role", role);
+              // localStorage persists across OAuth redirects reliably
+              localStorage.setItem("guidepath-pending-role", role);
               signIn("google", { callbackUrl: "/auth/complete-profile" });
             }}
           >

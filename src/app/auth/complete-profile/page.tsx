@@ -18,30 +18,31 @@ export default function CompleteProfilePage() {
     }
 
     async function finalize() {
-      // Read role from sessionStorage (set before Google OAuth) or URL param fallback
+      // localStorage is more reliable than sessionStorage for OAuth redirects
       const pendingRole =
-        sessionStorage.getItem("guidepath-pending-role") ||
+        localStorage.getItem("guidepath-pending-role") ||
         searchParams.get("role");
 
-      sessionStorage.removeItem("guidepath-pending-role");
+      localStorage.removeItem("guidepath-pending-role");
 
       if (pendingRole === "CLIENT" || pendingRole === "PROFESSIONAL") {
-        // Update role in DB
+        // 1. Update role in DB
         await fetch("/api/auth/update-role", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ role: pendingRole }),
         });
-        // Update the JWT cookie so middleware sees the new role
-        await update({ role: pendingRole });
 
-        // Hard redirect so the browser sends the updated JWT cookie
+        // 2. Trigger JWT refresh — the jwt callback re-reads role from DB
+        await update();
+
+        // 3. Hard redirect so the browser sends the updated JWT cookie
         window.location.href =
           pendingRole === "PROFESSIONAL"
             ? "/dashboard/professional"
             : "/dashboard/client";
       } else {
-        // Returning user — just redirect based on existing session role
+        // Returning user — redirect based on existing session role
         const currentRole =
           (session?.user as { role?: string })?.role ?? "CLIENT";
         window.location.href =

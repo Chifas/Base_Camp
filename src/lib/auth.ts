@@ -58,14 +58,18 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user, trigger, session: updatedSession }) {
+    async jwt({ token, user, trigger }) {
       if (user) {
         token.id = user.id;
         token.role = (user as { role?: string }).role ?? "CLIENT";
       }
-      // Handle manual session update (e.g., after Google OAuth role assignment)
-      if (trigger === "update" && updatedSession?.role) {
-        token.role = updatedSession.role;
+      // When update() is called from client, re-read role from DB (authoritative)
+      if (trigger === "update" && token.id) {
+        const fresh = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: { role: true },
+        });
+        if (fresh) token.role = fresh.role;
       }
       return token;
     },
