@@ -12,7 +12,7 @@ export const authOptions: NextAuthOptions = {
   secret: env.NEXTAUTH_SECRET,
   pages: {
     signIn: "/auth/login",
-    newUser: "/auth/register",
+    newUser: "/auth/complete-profile",
   },
   providers: [
     ...(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
