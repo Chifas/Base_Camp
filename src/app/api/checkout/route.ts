@@ -1,90 +1,107 @@
-import { NextRequest, NextResponse } from "next/server";
-import Stripe from "stripe";
+import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { stripe } from "@/lib/stripe";
+import { env } from "@/lib/env";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2024-04-10",
-});
-
-interface CheckoutBody {
-  professionalId: string;
-  priceRuleId: string;
-}
-
-export async function POST(request: NextRequest) {
+export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
 
-  if (!session?.user?.email) {
+  if (!session?.user?.id) {
     return NextResponse.json({ error: "No autenticado" }, { status: 401 });
   }
 
-  const body: CheckoutBody = await request.json();
-  const { professionalId, priceRuleId } = body;
-
-  if (!professionalId || !priceRuleId) {
-    return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
+  if (!stripe) {
+    return NextResponse.json(
+      { error: "Stripe no está configurado" },
+      { status: 503 }
+    );
   }
 
-  // Validate the price rule belongs to this professional and is active
-  const priceRule = await prisma.priceRule.findUnique({
-    where: { id: priceRuleId },
-    include: {
-      professional: {
-        select: { id: true, stripeAccountId: true, user: { select: { name: true } } },
+  try {
+    const body = await req.json();
+    const { professionalId, date, time, notes } = body;
+
+    if (!professionalId || !date || !time) {
+      return NextResponse.json(
+        { error: "Faltan datos requeridos" },
+        { status: 400 }
+      );
+    }
+
+    // Find professional
+    const professional = await prisma.professionalProfile.findUnique({
+      where: { id: professionalId },
+      include: { user: { select: { name: true } } },
+    });
+
+    if (!professional) {
+      return NextResponse.json(
+        { error: "Profesional no encontrado" },
+        { status: 404 }
+      );
+    }
+
+    // Build scheduled date
+    const [hours, minutes] = time.split(":").map(Number);
+    const scheduledAt = new Date(date);
+    scheduledAt.setHours(hours, minutes, 0, 0);
+
+    // Create session in DB
+    const dbSession = await prisma.session.create({
+      data: {
+        clientId: session.user.id,
+        professionalId: professional.id,
+        scheduledAt,
+        duration: 60,
+        status: "PENDING",
+        price: professional.hourlyRate,
       },
-    },
-  });
+    });
 
-  if (
-    !priceRule ||
-    !priceRule.active ||
-    priceRule.professionalId !== professionalId
-  ) {
-    return NextResponse.json({ error: "Tarifa inválida" }, { status: 400 });
-  }
+    // Create Stripe Checkout Session
+    const baseUrl = env.NEXTAUTH_URL || "http://localhost:3000";
 
-  const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
-  const amountCents = Math.round(priceRule.price * 100);
-  const platformFeeCents = Math.round(amountCents * 0.1); // 10% platform commission
-
-  const checkoutParams: Stripe.Checkout.SessionCreateParams = {
-    mode: "payment",
-    payment_method_types: ["card"],
-    line_items: [
-      {
-        price_data: {
-          currency: "eur",
-          product_data: {
-            name: priceRule.name,
-            ...(priceRule.description && { description: priceRule.description }),
+    const checkoutSession = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      line_items: [
+        {
+          price_data: {
+            currency: "eur",
+            product_data: {
+              name: `Sesión con ${professional.user.name}`,
+              description: `60 minutos — ${new Date(scheduledAt).toLocaleDateString("es-ES", {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+              })} a las ${time}`,
+            },
+            unit_amount: Math.round(professional.hourlyRate * 100), // cents
           },
-          unit_amount: amountCents,
+          quantity: 1,
         },
-        quantity: 1,
+      ],
+      mode: "payment",
+      metadata: {
+        sessionId: dbSession.id,
+        clientId: session.user.id,
+        professionalId: professional.id,
+        notes: notes || "",
       },
-    ],
-    metadata: {
-      professionalId,
-      priceRuleId,
-      clientEmail: session.user.email,
-    },
-    success_url: `${baseUrl}/dashboard/client?payment=success`,
-    cancel_url: `${baseUrl}/book/${professionalId}`,
-  };
+      success_url: `${baseUrl}/book/confirmed?session_id=${dbSession.id}`,
+      cancel_url: `${baseUrl}/explore`,
+    });
 
-  // Apply Stripe Connect transfer if the professional has a Stripe account
-  if (priceRule.professional.stripeAccountId) {
-    checkoutParams.payment_intent_data = {
-      application_fee_amount: platformFeeCents,
-      transfer_data: {
-        destination: priceRule.professional.stripeAccountId,
-      },
-    };
+    return NextResponse.json({
+      checkoutUrl: checkoutSession.url,
+      sessionId: dbSession.id,
+    });
+  } catch (error) {
+    console.error("[/api/checkout]", error);
+    return NextResponse.json(
+      { error: "Error al crear la sesión de pago" },
+      { status: 500 }
+    );
   }
-
-  const checkoutSession = await stripe.checkout.sessions.create(checkoutParams);
-
-  return NextResponse.json({ url: checkoutSession.url });
 }

@@ -2,40 +2,60 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { motion } from "framer-motion";
 import { Compass, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
+const OAUTH_ERRORS: Record<string, string> = {
+  OAuthAccountNotLinked:
+    "Este email ya está registrado con contraseña. Inicia sesión con email y contraseña.",
+  OAuthSignin: "Error al iniciar sesión con Google. Inténtalo de nuevo.",
+  OAuthCallback: "Error al conectar con Google. Inténtalo de nuevo.",
+  Default: "Ha ocurrido un error. Inténtalo de nuevo.",
+};
+
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const oauthError = searchParams.get("error");
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(
+    oauthError ? (OAUTH_ERRORS[oauthError] ?? OAUTH_ERRORS.Default) : ""
+  );
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    if (!email || !password) {
+      setError("Por favor, completa todos los campos.");
+      return;
+    }
     setLoading(true);
-
-    const res = await signIn("credentials", {
+    const result = await signIn("credentials", {
       email,
       password,
       redirect: false,
     });
-
     setLoading(false);
 
-    if (res?.error) {
-      setError("Email o contraseña incorrectos");
+    if (result?.error) {
+      setError("Email o contraseña incorrectos.");
       return;
     }
 
-    router.push("/dashboard/client");
+    // Redirect based on role
+    const sessionRes = await fetch("/api/auth/session");
+    const sessionData = await sessionRes.json();
+    const userRole = sessionData?.user?.role ?? "CLIENT";
+    router.push(
+      userRole === "PROFESSIONAL" ? "/dashboard/professional" : "/dashboard/client"
+    );
     router.refresh();
   }
 
@@ -63,7 +83,7 @@ export default function LoginPage() {
         {/* Form */}
         <div className="mt-8 space-y-6">
           {/* Google OAuth */}
-          <Button variant="outline" className="w-full" size="lg">
+          <Button variant="outline" className="w-full" size="lg" onClick={() => signIn("google", { callbackUrl: "/auth/complete-profile" })}>
             <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
               <path
                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
@@ -100,11 +120,10 @@ export default function LoginPage() {
           {/* Email/Password form */}
           <form className="space-y-4" onSubmit={handleSubmit}>
             {error && (
-              <p className="rounded-lg bg-destructive/10 px-4 py-2 text-sm text-destructive">
+              <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
                 {error}
               </p>
             )}
-
             <div className="space-y-2">
               <label
                 htmlFor="email"
@@ -135,7 +154,7 @@ export default function LoginPage() {
                   Contraseña
                 </label>
                 <Link
-                  href="/auth/forgot-password"
+                  href="#"
                   className="text-xs text-primary hover:underline"
                 >
                   ¿Olvidaste tu contraseña?

@@ -7,12 +7,15 @@ import { Star, ArrowRight, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FadeIn } from "@/components/shared/motion-wrapper";
-import { PROFESSIONALS } from "@/data/mock";
-import { CATEGORY_LABELS } from "@/types";
+import { CATEGORY_LABELS, type Professional } from "@/types";
 import { formatCurrency } from "@/lib/utils";
 
-export function FeaturedProfessionals() {
-  const featured = PROFESSIONALS.slice(0, 4);
+interface FeaturedProfessionalsProps {
+  professionals: Professional[];
+}
+
+export function FeaturedProfessionals({ professionals }: FeaturedProfessionalsProps) {
+  const featured = professionals;
 
   return (
     <section className="py-20 sm:py-28">

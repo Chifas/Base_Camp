@@ -1,110 +1,100 @@
-# GuidePath
+# GuidePath 🧭
 
-Marketplace que conecta profesionales con coaches y mentores especializados en desarrollo de carrera, liderazgo y emprendimiento. Sesiones por videollamada, cuando tú quieras.
+> Marketplace que conecta a personas en búsqueda de orientación personal o profesional con profesionales certificados: psicólogos, life coaches, mentores de carrera, nutricionistas y más.
 
-## Tech Stack
+## 🚀 Tech Stack
 
 | Capa | Tecnología |
-|------|-----------|
+|------|------------|
 | Frontend | Next.js 14 (App Router) + TypeScript + Tailwind CSS |
 | Animaciones | Framer Motion |
-| UI | shadcn/ui (Radix primitives) |
+| UI Components | shadcn/ui (Radix primitives) |
 | Base de datos | PostgreSQL + Prisma ORM |
-| Auth | NextAuth.js (email/password + Google OAuth) |
-| Pagos | Stripe Connect |
+| Autenticación | NextAuth.js (email/password + Google OAuth) |
+| Pagos | Stripe Connect (split payments) |
 | Videollamadas | Daily.co SDK |
 | Email | Resend |
 
-## Puesta en marcha local
+## 📁 Estructura del proyecto
 
-### Requisitos previos
-- Node.js >= 18.17
-- Docker Desktop
+```
+src/
+├── app/                    # Páginas (Next.js App Router)
+│   ├── layout.tsx          # Layout raíz
+│   ├── page.tsx            # Landing page
+│   ├── explore/            # Búsqueda de profesionales
+│   ├── professional/[id]/  # Perfil de profesional
+│   ├── book/[sessionId]/   # Flujo de reserva
+│   ├── dashboard/
+│   │   ├── client/         # Dashboard del cliente
+│   │   └── professional/   # Dashboard del profesional
+│   ├── session/[id]/       # Sala de videollamada
+│   └── auth/
+│       ├── login/
+│       └── register/
+├── components/
+│   ├── ui/                 # Componentes base shadcn/ui
+│   ├── layout/             # Navbar, Footer, ThemeToggle
+│   ├── landing/            # Secciones de la landing
+│   └── shared/             # Componentes reutilizables
+├── lib/                    # Utilidades (cn, prisma client…)
+├── data/                   # Mock data para desarrollo
+└── types/                  # Tipos TypeScript compartidos
+prisma/
+└── schema.prisma           # Esquema de la base de datos
+```
 
-### 1. Instalar dependencias
+## ⚙️ Instalación y puesta en marcha
 
 ```bash
+# 1. Instalar dependencias
 npm install
-```
 
-### 2. Variables de entorno
-
-```bash
+# 2. Configurar variables de entorno
 cp .env.example .env
-```
+# Rellena tus claves reales en el archivo .env
 
-El `.env` ya incluye la `DATABASE_URL` apuntando al contenedor Docker local. Edita el resto de claves según necesites.
+# 3. Generar el cliente de Prisma
+npm run db:generate
 
-### 3. Levantar la base de datos
+# 4. Aplicar el esquema a la base de datos (desarrollo)
+npm run db:push
 
-```bash
-docker compose up -d
-```
-
-Esto arranca:
-- **PostgreSQL** en `localhost:5433` (puerto 5433 para evitar conflicto con PostgreSQL local de Windows)
-- **pgAdmin** en `http://localhost:5050` → `admin@guidepath.dev` / `admin`
-
-### 4. Aplicar el schema y sembrar datos
-
-```bash
-npm run db:push    # Crea las tablas
-npm run db:seed    # Crea usuarios de prueba
-```
-
-### 5. Arrancar el servidor
-
-```bash
+# 5. Arrancar el servidor de desarrollo
 npm run dev
 ```
 
-La app estará disponible en **http://localhost:3000**
+Abre [http://localhost:3000](http://localhost:3000) en tu navegador.
 
----
+## 🔑 Variables de entorno
 
-## Usuarios de prueba
+Consulta `.env.example` para ver todas las variables necesarias:
 
-| Email | Contraseña | Rol |
-|-------|-----------|-----|
-| `cliente@guidepath.dev` | `password123` | Cliente |
-| `profesional@guidepath.dev` | `password123` | Profesional |
+| Variable | Descripción |
+|----------|-------------|
+| `DATABASE_URL` | Supabase (free tier) o PostgreSQL local |
+| `NEXTAUTH_SECRET` | Genera con `openssl rand -base64 32` |
+| `STRIPE_*` | Claves de Stripe en modo test |
+| `DAILY_API_KEY` | Free tier desde el dashboard de daily.co |
+| `RESEND_API_KEY` | Free tier desde resend.com |
 
----
+## 🎨 Sistema de diseño
 
-## Rutas principales
+- **Colores**: Base neutral (white ↔ zinc-950) + acento indigo-600
+- **Tipografía**: Inter (cuerpo) + Geist (títulos)
+- **Componentes**: shadcn/ui con tarjetas glassmorphism personalizadas
+- **Animaciones**: Framer Motion con triggers de scroll + micro-interacciones
+- **Responsive**: Mobile-first con breakpoints en sm/md/lg/xl
+- **Tema**: Dark/light mode con `next-themes` (estrategia por clase)
 
-| Ruta | Descripción |
-|------|-------------|
-| `/` | Landing page |
-| `/explore` | Catálogo de profesionales |
-| `/professional/[id]` | Perfil de profesional |
-| `/book/[sessionId]` | Flujo de reserva |
-| `/dashboard/client` | Dashboard de cliente |
-| `/dashboard/professional` | Dashboard de profesional |
-| `/session/[id]` | Sala de videollamada |
-| `/auth/login` | Inicio de sesión |
-| `/auth/register` | Registro |
+## 🌐 Idioma
 
----
+- **UI**: Español (España) — todo el texto visible para el usuario
+- **Código**: Inglés — variables, comentarios y documentación
 
-## Scripts disponibles
+## 📌 Ramas
 
-```bash
-npm run dev           # Servidor de desarrollo
-npm run build         # Build de producción
-npm run db:generate   # Generar cliente Prisma
-npm run db:push       # Aplicar schema a la BD
-npm run db:migrate    # Crear migración (producción)
-npm run db:seed       # Sembrar datos de prueba
-npm run db:studio     # Abrir Prisma Studio
-```
-
----
-
-## Estado del proyecto
-
-- Datos mock en español para todas las páginas
-- Auth funcional con NextAuth (email/password)
-- API de registro (`POST /api/register`)
-- Docker Compose para desarrollo local
-- Integración con Stripe, Daily.co y Resend pendiente de configurar
+| Rama | Propósito |
+|------|-----------|
+| `main` | Código estable / producción |
+| `Develop` | Rama principal de desarrollo |

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 import { motion } from "framer-motion";
 import { Compass, Mail, Lock, Eye, EyeOff, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,32 +13,59 @@ export default function RegisterPage() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState<"CLIENT" | "PROFESSIONAL">("CLIENT");
+  const [loading, setLoading] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+
+    if (!name || !email || !password) {
+      setError("Por favor, completa todos los campos.");
+      return;
+    }
+    if (password.length < 8) {
+      setError("La contraseña debe tener al menos 8 caracteres.");
+      return;
+    }
+
     setLoading(true);
 
-    const res = await fetch("/api/register", {
+    // Create account
+    const res = await fetch("/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, email, password, role }),
     });
-
-    setLoading(false);
+    const data = await res.json();
 
     if (!res.ok) {
-      const data = await res.json();
-      setError(data.error || "Error al crear la cuenta");
+      setError(data.error ?? "Error al crear la cuenta.");
+      setLoading(false);
       return;
     }
 
-    router.push("/auth/login");
+    // Auto sign-in after registration
+    const result = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+    });
+
+    setLoading(false);
+
+    if (result?.error) {
+      setError("Cuenta creada, pero error al iniciar sesión. Inténtalo manualmente.");
+      return;
+    }
+
+    router.push(
+      role === "PROFESSIONAL" ? "/dashboard/professional" : "/dashboard/client"
+    );
+    router.refresh();
   }
 
   return (
@@ -57,7 +85,7 @@ export default function RegisterPage() {
             Crea tu cuenta
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Da el siguiente paso en tu desarrollo profesional
+            Empieza tu camino hacia el bienestar
           </p>
         </div>
 
@@ -74,7 +102,7 @@ export default function RegisterPage() {
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              Busco mentor
+              Busco ayuda
             </button>
             <button
               type="button"
@@ -90,7 +118,16 @@ export default function RegisterPage() {
           </div>
 
           {/* Google OAuth */}
-          <Button variant="outline" className="w-full" size="lg">
+          <Button
+            variant="outline"
+            className="w-full"
+            size="lg"
+            onClick={() => {
+              // localStorage persists across OAuth redirects reliably
+              localStorage.setItem("guidepath-pending-role", role);
+              signIn("google", { callbackUrl: "/auth/complete-profile" });
+            }}
+          >
             <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
               <path
                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
@@ -127,11 +164,10 @@ export default function RegisterPage() {
           {/* Registration form */}
           <form className="space-y-4" onSubmit={handleSubmit}>
             {error && (
-              <p className="rounded-lg bg-destructive/10 px-4 py-2 text-sm text-destructive">
+              <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
                 {error}
               </p>
             )}
-
             <div className="space-y-2">
               <label
                 htmlFor="name"
@@ -190,7 +226,6 @@ export default function RegisterPage() {
                   className="pl-10 pr-10"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  minLength={8}
                   required
                 />
                 <button
@@ -215,11 +250,11 @@ export default function RegisterPage() {
           {/* Terms */}
           <p className="text-center text-xs text-muted-foreground">
             Al registrarte, aceptas nuestros{" "}
-            <Link href="/legal/terminos" className="text-primary hover:underline">
+            <Link href="#" className="text-primary hover:underline">
               Términos de uso
             </Link>{" "}
             y{" "}
-            <Link href="/legal/privacidad" className="text-primary hover:underline">
+            <Link href="#" className="text-primary hover:underline">
               Política de privacidad
             </Link>
           </p>

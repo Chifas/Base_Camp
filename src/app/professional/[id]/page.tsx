@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -19,8 +19,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { FadeIn } from "@/components/shared/motion-wrapper";
-import { PROFESSIONALS, REVIEWS, TIME_SLOTS } from "@/data/mock";
-import { CATEGORY_LABELS } from "@/types";
+import { CATEGORY_LABELS, type Professional, type Review } from "@/types";
+
+const TIME_SLOTS = [
+  "08:00","09:00","10:00","11:00","12:00","13:00",
+  "14:00","15:00","16:00","17:00","18:00","19:00","20:00",
+];
 import { formatCurrency, formatDate } from "@/lib/utils";
 
 const DAYS = [
@@ -46,9 +50,19 @@ function getNextDays(count: number) {
 
 export default function ProfessionalProfilePage() {
   const params = useParams();
-  const professional = PROFESSIONALS.find((p) => p.id === params.id);
+  const [professional, setProfessional] = useState<(Professional & { reviews: Review[] }) | null>(null);
+  const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!params.id) return;
+    fetch(`/api/professionals/${params.id}`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => setProfessional(data))
+      .catch(() => setProfessional(null))
+      .finally(() => setLoading(false));
+  }, [params.id]);
 
   const nextDays = useMemo(() => getNextDays(14), []);
 
@@ -74,6 +88,14 @@ export default function ProfessionalProfilePage() {
     );
   }, [professional, selectedDate]);
 
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-7xl px-4 py-20 text-center">
+        <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
   if (!professional) {
     return (
       <div className="mx-auto max-w-7xl px-4 py-20 text-center">
@@ -90,7 +112,7 @@ export default function ProfessionalProfilePage() {
     );
   }
 
-  const professionalReviews = REVIEWS.slice(0, 4);
+  const professionalReviews = professional.reviews?.slice(0, 4) ?? [];
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">

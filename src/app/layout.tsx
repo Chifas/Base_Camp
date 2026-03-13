@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { ThemeProvider } from "@/components/layout/theme-provider";
-import { SessionProvider } from "@/components/layout/session-provider";
+import { AuthSessionProvider } from "@/components/layout/session-provider";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import "./globals.css";
@@ -29,17 +29,17 @@ const geist = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "GuidePath — Impulsa tu carrera con mentores y coaches del mundo laboral",
+  title: "GuidePath — Encuentra tu camino con profesionales que te guían",
   description:
-    "Marketplace que conecta profesionales con mentores de carrera, coaches ejecutivos y expertos en emprendimiento. Sesiones por videollamada, fácil y seguro.",
+    "Marketplace que conecta personas que buscan orientación con psicólogos, coaches, mentores de carrera y nutricionistas certificados. Sesiones por videollamada, fácil y seguro.",
   keywords: [
+    "psicólogo online",
+    "coach de vida",
     "mentor de carrera",
-    "coach ejecutivo",
-    "mentor de emprendimiento",
-    "desarrollo profesional",
-    "cambio de trabajo",
-    "liderazgo",
-    "coaching laboral",
+    "nutricionista online",
+    "terapia online",
+    "bienestar",
+    "salud mental",
   ],
 };
 
@@ -51,20 +51,20 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
       <body className={`${inter.variable} ${geist.variable} font-sans antialiased`}>
-        <SessionProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <AuthSessionProvider>
             <div className="flex min-h-screen flex-col">
               <Navbar />
               <main className="flex-1">{children}</main>
               <Footer />
             </div>
-          </ThemeProvider>
-        </SessionProvider>
+          </AuthSessionProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import {
@@ -18,7 +18,6 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { FadeIn } from "@/components/shared/motion-wrapper";
-import { PROFESSIONAL_SESSIONS } from "@/data/mock";
 import { STATUS_LABELS } from "@/types";
 import { formatCurrency, formatDate, formatTime } from "@/lib/utils";
 
@@ -51,22 +50,33 @@ const defaultAvailability = [
 ];
 
 export default function ProfessionalDashboard() {
+  const [sessions, setSessions] = useState<{ id: string; clientId: string; professionalId: string; clientName: string; clientImage: string; scheduledAt: string; duration: number; status: string; price: number; dailyRoomUrl?: string | null }[]>([]);
+  const [loadingSessions, setLoadingSessions] = useState(true);
   const [availability, setAvailability] = useState(defaultAvailability);
 
+  useEffect(() => {
+    fetch("/api/sessions")
+      .then((r) => r.ok ? r.json() : [])
+      .then((data) => setSessions(Array.isArray(data) ? data : []))
+      .catch(() => setSessions([]))
+      .finally(() => setLoadingSessions(false));
+  }, []);
+
   const confirmedSessions = useMemo(
-    () => PROFESSIONAL_SESSIONS.filter((s) => s.status === "CONFIRMED"),
-    []
+    () => sessions.filter((s) => s.status === "CONFIRMED"),
+    [sessions]
   );
 
   const pendingSessions = useMemo(
-    () => PROFESSIONAL_SESSIONS.filter((s) => s.status === "PENDING"),
-    []
+    () => sessions.filter((s) => s.status === "PENDING"),
+    [sessions]
   );
 
-  // Mock earnings
-  const totalEarnings = 3250;
-  const monthlyEarnings = 780;
-  const totalSessions = 52;
+  const totalEarnings = useMemo(
+    () => sessions.filter((s) => s.status === "COMPLETED").reduce((acc, s) => acc + s.price, 0),
+    [sessions]
+  );
+  const totalSessions = sessions.filter((s) => s.status === "COMPLETED").length;
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
@@ -91,7 +101,7 @@ export default function ProfessionalDashboard() {
             },
             {
               label: "Este mes",
-              value: formatCurrency(monthlyEarnings),
+              value: formatCurrency(0),
               icon: TrendingUp,
               change: "+8%",
             },

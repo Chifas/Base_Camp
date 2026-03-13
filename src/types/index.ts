@@ -2,9 +2,9 @@ export type UserRole = "CLIENT" | "PROFESSIONAL" | "ADMIN";
 
 export type ProfessionalCategory =
   | "CAREER_MENTOR"
-  | "COACH"
   | "EXECUTIVE_COACH"
-  | "ENTREPRENEUR";
+  | "SECTOR_EXPERT"
+  | "WORK_PSYCHOLOGIST";
 
 export type SessionStatus =
   | "PENDING"
@@ -19,31 +19,6 @@ export interface User {
   role: UserRole;
   image?: string;
   bio?: string;
-  isStudent: boolean;
-}
-
-export interface PriceRule {
-  id: string;
-  professionalId: string;
-  name: string;
-  description: string | null;
-  price: number;
-  /** null = no limit; 0 = first session only */
-  maxPreviousBookings: number | null;
-  requiresStudent: boolean;
-  active: boolean;
-}
-
-export interface UserPricingContext {
-  isAuthenticated: boolean;
-  isStudent: boolean;
-  completedBookingsCount: number;
-  isFirstSession: boolean;
-}
-
-export interface AvailablePricesResponse {
-  prices: PriceRule[];
-  context: UserPricingContext;
 }
 
 export interface Professional {
@@ -94,9 +69,9 @@ export interface Review {
 
 export const CATEGORY_LABELS: Record<ProfessionalCategory, string> = {
   CAREER_MENTOR: "Mentor de Carrera",
-  COACH: "Coach Profesional",
   EXECUTIVE_COACH: "Coach Ejecutivo",
-  ENTREPRENEUR: "Mentor de Emprendimiento",
+  SECTOR_EXPERT: "Experto Sectorial",
+  WORK_PSYCHOLOGIST: "Psicólogo/a Laboral",
 };
 
 export const STATUS_LABELS: Record<SessionStatus, string> = {

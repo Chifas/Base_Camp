@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
@@ -17,8 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { FadeIn } from "@/components/shared/motion-wrapper";
-import { CLIENT_SESSIONS } from "@/data/mock";
-import { STATUS_LABELS } from "@/types";
+import { STATUS_LABELS, type Session } from "@/types";
 import { formatCurrency, formatDate, formatTime } from "@/lib/utils";
 
 const statusColors: Record<string, string> = {
@@ -28,21 +27,57 @@ const statusColors: Record<string, string> = {
   CANCELLED: "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400",
 };
 
+function isJoinEnabled(scheduledAt: string, durationMin: number): boolean {
+  const now = Date.now();
+  const sessionTime = new Date(scheduledAt).getTime();
+  const twoHoursBefore = sessionTime - 2 * 60 * 60 * 1000;
+  const sessionEnd = sessionTime + durationMin * 60 * 1000;
+  return now >= twoHoursBefore && now <= sessionEnd;
+}
+
+function timeUntilEnabled(scheduledAt: string): string {
+  const sessionTime = new Date(scheduledAt).getTime();
+  const twoHoursBefore = sessionTime - 2 * 60 * 60 * 1000;
+  const diff = twoHoursBefore - Date.now();
+  if (diff <= 0) return "";
+  const h = Math.floor(diff / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  if (h > 0) return `Disponible en ${h}h ${m}m`;
+  return `Disponible en ${m}m`;
+}
+
 export default function ClientDashboard() {
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [loadingSessions, setLoadingSessions] = useState(true);
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    fetch("/api/sessions")
+      .then((r) => r.ok ? r.json() : [])
+      .then((data) => setSessions(Array.isArray(data) ? data : []))
+      .catch(() => setSessions([]))
+      .finally(() => setLoadingSessions(false));
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => setNow(Date.now()), 30000);
+    return () => clearInterval(interval);
+  }, []);
+
   const upcomingSessions = useMemo(
     () =>
-      CLIENT_SESSIONS.filter(
+      sessions.filter(
         (s) => s.status === "CONFIRMED" || s.status === "PENDING"
       ),
-    []
+    [sessions]
   );
 
   const pastSessions = useMemo(
     () =>
-      CLIENT_SESSIONS.filter(
+      sessions.filter(
         (s) => s.status === "COMPLETED" || s.status === "CANCELLED"
       ),
-    []
+    [sessions]
   );
 
   return (
@@ -72,7 +107,7 @@ export default function ClientDashboard() {
           {[
             { label: "Próximas sesiones", value: upcomingSessions.length.toString(), icon: Calendar },
             { label: "Sesiones completadas", value: pastSessions.filter((s) => s.status === "COMPLETED").length.toString(), icon: Clock },
-            { label: "Total invertido", value: formatCurrency(CLIENT_SESSIONS.reduce((acc, s) => acc + (s.status === "COMPLETED" ? s.price : 0), 0)), icon: Star },
+            { label: "Total invertido", value: formatCurrency(sessions.reduce((acc, s) => acc + (s.status === "COMPLETED" ? s.price : 0), 0)), icon: Star },
             { label: "Reseñas dejadas", value: "2", icon: MessageSquare },
           ].map((stat) => (
             <div
@@ -152,21 +187,36 @@ export default function ClientDashboard() {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-col items-end gap-1.5 sm:items-center sm:flex-row sm:gap-3">
                       <Badge
                         className={statusColors[session.status]}
                         variant="secondary"
                       >
                         {STATUS_LABELS[session.status]}
                       </Badge>
-                      {session.status === "CONFIRMED" && (
-                        <Button size="sm" asChild>
-                          <Link href={`/session/${session.id}`}>
-                            <Video className="mr-2 h-4 w-4" />
-                            Unirse
-                          </Link>
-                        </Button>
-                      )}
+                      {session.status === "CONFIRMED" && (() => {
+                        void now; // re-render on tick
+                        const canJoin = isJoinEnabled(session.scheduledAt, session.duration);
+                        const waitMsg = timeUntilEnabled(session.scheduledAt);
+                        return canJoin ? (
+                          <Button size="sm" asChild>
+                            <Link href={`/session/${session.id}`}>
+                              <Video className="mr-2 h-4 w-4" />
+                              Unirse
+                            </Link>
+                          </Button>
+                        ) : (
+                          <div className="flex flex-col items-end gap-0.5">
+                            <Button size="sm" disabled>
+                              <Video className="mr-2 h-4 w-4" />
+                              Unirse
+                            </Button>
+                            {waitMsg && (
+                              <span className="text-xs text-muted-foreground">{waitMsg}</span>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
                   </motion.div>
                 ))}
