@@ -50,7 +50,7 @@ function getNextDays(count: number) {
 
 export default function ProfessionalProfilePage() {
   const params = useParams();
-  const [professional, setProfessional] = useState<(Professional & { reviews: Review[] }) | null>(null);
+  const [professional, setProfessional] = useState<(Professional & { reviews: Review[]; blockedDates?: { id: string; date: string; reason: string | null }[] }) | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
@@ -66,13 +66,22 @@ export default function ProfessionalProfilePage() {
 
   const nextDays = useMemo(() => getNextDays(14), []);
 
-  // Filter available days based on professional availability
+  // Filter available days based on professional availability and blocked dates
   const availableDays = useMemo(() => {
     if (!professional) return [];
     const availableDayOfWeek = professional.availability.map(
       (a) => a.dayOfWeek
     );
-    return nextDays.filter((d) => availableDayOfWeek.includes(d.getDay()));
+    const blockedDateStrings = new Set(
+      (professional.blockedDates ?? []).map((b) =>
+        new Date(b.date).toDateString()
+      )
+    );
+    return nextDays.filter(
+      (d) =>
+        availableDayOfWeek.includes(d.getDay()) &&
+        !blockedDateStrings.has(d.toDateString())
+    );
   }, [professional, nextDays]);
 
   // Filter available time slots for selected date

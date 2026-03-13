@@ -109,6 +109,7 @@ model ProfessionalProfile {
   user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   category      Category       @relation(fields: [categoryId], references: [id])
   availability  Availability[]
+  blockedDates  BlockedDate[]
   sessions      Session[]      @relation("ProfessionalSessions")
 
   @@index([categoryId])
@@ -162,4 +163,17 @@ model Availability {
   professional ProfessionalProfile @relation(fields: [professionalId], references: [id], onDelete: Cascade)
 
   @@map("availability")
+}
+
+model BlockedDate {
+  id              String   @id @default(cuid())
+  professionalId  String
+  date            DateTime @db.Date            // single blocked day
+  reason          String?                      // "Vacaciones", "Asunto personal"
+  createdAt       DateTime @default(now())
+
+  professional ProfessionalProfile @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+
+  @@unique([professionalId, date])
+  @@map("blocked_dates")
 }

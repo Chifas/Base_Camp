@@ -48,13 +48,58 @@ export async function POST(req: Request) {
     const scheduledAt = new Date(date);
     scheduledAt.setHours(hours, minutes, 0, 0);
 
+    const duration = 60; // minutes
+    const sessionEnd = new Date(scheduledAt.getTime() + duration * 60_000);
+
+    // Check if the date is blocked (vacation, personal, etc.)
+    const startOfDay = new Date(scheduledAt);
+    startOfDay.setHours(0, 0, 0, 0);
+    const blocked = await prisma.blockedDate.findUnique({
+      where: {
+        professionalId_date: {
+          professionalId: professional.id,
+          date: startOfDay,
+        },
+      },
+    });
+
+    if (blocked) {
+      return NextResponse.json(
+        { error: "El profesional no está disponible en esta fecha" },
+        { status: 409 }
+      );
+    }
+
+    // Check for overlapping sessions (duration-aware)
+    const conflict = await prisma.session.findFirst({
+      where: {
+        professionalId: professional.id,
+        status: { in: ["PENDING", "CONFIRMED"] },
+        // Overlap: existing session starts before new one ends
+        //          AND existing session ends after new one starts
+        scheduledAt: { lt: sessionEnd },
+        AND: {
+          scheduledAt: {
+            gte: new Date(scheduledAt.getTime() - duration * 60_000),
+          },
+        },
+      },
+    });
+
+    if (conflict) {
+      return NextResponse.json(
+        { error: "Este horario ya no está disponible" },
+        { status: 409 }
+      );
+    }
+
     // Create session in DB
     const dbSession = await prisma.session.create({
       data: {
         clientId: session.user.id,
         professionalId: professional.id,
         scheduledAt,
-        duration: 60,
+        duration,
         status: "PENDING",
         price: professional.hourlyRate,
       },

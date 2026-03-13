@@ -14,6 +14,10 @@ export async function GET(
         },
         category: true,
         availability: true,
+        blockedDates: {
+          where: { date: { gte: new Date() } },
+          orderBy: { date: "asc" },
+        },
         sessions: {
           where: { status: "COMPLETED" },
           include: {
@@ -66,6 +70,11 @@ export async function GET(
         dayOfWeek: a.dayOfWeek,
         startTime: a.startTime,
         endTime: a.endTime,
+      })),
+      blockedDates: professional.blockedDates.map((b) => ({
+        id: b.id,
+        date: b.date.toISOString(),
+        reason: b.reason,
       })),
       reviews,
     });
