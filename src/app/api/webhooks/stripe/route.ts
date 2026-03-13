@@ -116,6 +116,18 @@ export async function POST(req: Request) {
         break;
       }
 
+      case "account.updated": {
+        const account = event.data.object as Stripe.Account;
+        if (account.charges_enabled && account.payouts_enabled) {
+          await prisma.professionalProfile.updateMany({
+            where: { stripeAccountId: account.id },
+            data: { verified: true },
+          });
+          console.log(`✅ Cuenta Connect ${account.id} verificada`);
+        }
+        break;
+      }
+
       default:
         console.log(`[Stripe Webhook] Evento no manejado: ${event.type}`);
     }

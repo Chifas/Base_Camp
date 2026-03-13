@@ -108,7 +108,13 @@ export async function POST(req: Request) {
     // Create Stripe Checkout Session
     const baseUrl = env.NEXTAUTH_URL || "http://localhost:3000";
 
-    const checkoutSession = await stripe.checkout.sessions.create({
+    // Platform commission: 20%
+    const PLATFORM_FEE_PERCENT = 20;
+    const unitAmount = Math.round(professional.hourlyRate * 100); // cents
+    const applicationFee = Math.round(unitAmount * (PLATFORM_FEE_PERCENT / 100));
+
+    // Build checkout options
+    const checkoutOptions: Parameters<typeof stripe.checkout.sessions.create>[0] = {
       payment_method_types: ["card"],
       line_items: [
         {
@@ -122,7 +128,7 @@ export async function POST(req: Request) {
                 month: "long",
               })} a las ${time}`,
             },
-            unit_amount: Math.round(professional.hourlyRate * 100), // cents
+            unit_amount: unitAmount,
           },
           quantity: 1,
         },
@@ -136,7 +142,19 @@ export async function POST(req: Request) {
       },
       success_url: `${baseUrl}/book/confirmed?session_id=${dbSession.id}`,
       cancel_url: `${baseUrl}/explore`,
-    });
+    };
+
+    // Use Stripe Connect if professional has a connected account
+    if (professional.stripeAccountId) {
+      checkoutOptions.payment_intent_data = {
+        application_fee_amount: applicationFee,
+        transfer_data: {
+          destination: professional.stripeAccountId,
+        },
+      };
+    }
+
+    const checkoutSession = await stripe.checkout.sessions.create(checkoutOptions);
 
     return NextResponse.json({
       checkoutUrl: checkoutSession.url,
