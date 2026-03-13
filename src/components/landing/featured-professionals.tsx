@@ -1,12 +1,9 @@
-"use client";
-
 import Link from "next/link";
 import Image from "next/image";
-import { motion } from "framer-motion";
 import { Star, ArrowRight, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FadeIn } from "@/components/shared/motion-wrapper";
+import { FadeIn, StaggerContainer, StaggerItem } from "@/components/shared/motion-wrapper";
 import { CATEGORY_LABELS, type Professional } from "@/types";
 import { formatCurrency } from "@/lib/utils";
 
@@ -37,19 +34,9 @@ export function FeaturedProfessionals({ professionals }: FeaturedProfessionalsPr
           </Button>
         </FadeIn>
 
-        <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {featured.map((pro, i) => (
-            <motion.div
-              key={pro.id}
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{
-                duration: 0.5,
-                delay: i * 0.1,
-                ease: [0.21, 0.47, 0.32, 0.98],
-              }}
-            >
+        <StaggerContainer className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {featured.map((pro) => (
+            <StaggerItem key={pro.id}>
               <Link
                 href={`/professional/${pro.id}`}
                 className="group block"
@@ -111,9 +98,9 @@ export function FeaturedProfessionals({ professionals }: FeaturedProfessionalsPr
                   </div>
                 </div>
               </Link>
-            </motion.div>
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerContainer>
 
         {/* Mobile view all button */}
         <div className="mt-8 text-center md:hidden">

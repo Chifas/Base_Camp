@@ -48,8 +48,8 @@ Este documento recoge las mejoras recomendadas para `GuidePath`, priorizadas par
 - [ ] Revisar sitemap y robots cuando el proyecto esté más maduro
 
 ### 7. Rendimiento
-- [ ] Revisar qué componentes realmente necesitan `"use client"` (ej. `page.tsx` en landing no lo necesita)
-- [ ] Mantener páginas simples como Server Components siempre que sea posible
+- [x] Revisar qué componentes realmente necesitan `"use client"` (ej. `page.tsx` en landing no lo necesita)
+- [x] Mantener páginas simples como Server Components siempre que sea posible
 - [ ] Evaluar lazy loading en componentes pesados
 - [ ] Optimizar carga inicial de landing y dashboards
 
@@ -101,7 +101,7 @@ Este documento recoge las mejoras recomendadas para `GuidePath`, priorizadas par
 
 ### Fase 2 — Calidad y visibilidad
 - [x] SEO dinámico
-- [ ] Revisión de `"use client"`
+- [x] Revisión de `"use client"`
 - [x] Testing básico
 - [x] CI/CD con GitHub Actions
 

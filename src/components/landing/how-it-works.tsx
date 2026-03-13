@@ -1,5 +1,3 @@
-"use client";
-
 import { Search, CalendarCheck, Video } from "lucide-react";
 import {
   FadeIn,
