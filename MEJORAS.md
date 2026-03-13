@@ -24,12 +24,12 @@ Este documento recoge las mejoras recomendadas para `GuidePath`, priorizadas par
   - [x] `Session.clientId`
   - [x] `Session.professionalId`
   - [x] `ProfessionalProfile.category`
-- [ ] Revisar relaciones para asegurar cascadas y consistencia de datos
+- [x] Revisar relaciones para asegurar cascadas y consistencia de datos
 
 ### 4. Validación de entorno
 - [x] Añadir validación tipada de variables de entorno con Zod o solución similar
 - [x] Fallar en build si falta una variable crítica
-- [ ] Separar variables públicas y privadas correctamente
+- [x] Separar variables públicas y privadas correctamente
 
 ---
 
@@ -42,9 +42,9 @@ Este documento recoge las mejoras recomendadas para `GuidePath`, priorizadas par
 - [ ] Diseñar mejor el sistema de reservas para evitar solapes de horario
 
 ### 6. SEO y metadata
-- [ ] Usar `generateMetadata()` en perfiles de profesionales (`/professional/[id]`)
-- [ ] Añadir títulos y descripciones dinámicas por página
-- [ ] Mejorar Open Graph y Twitter Cards
+- [x] Usar `generateMetadata()` en perfiles de profesionales (`/professional/[id]`)
+- [x] Añadir títulos y descripciones dinámicas por página
+- [ ] Mejorar Open Graph y Twitter Cards (OG parcial, faltan Twitter Cards)
 - [ ] Revisar sitemap y robots cuando el proyecto esté más maduro
 
 ### 7. Rendimiento
@@ -55,8 +55,8 @@ Este documento recoge las mejoras recomendadas para `GuidePath`, priorizadas par
 
 ### 8. Emails, pagos y eventos
 - [ ] Diseñar flujo real de Stripe Connect con comisión de plataforma
-- [ ] Añadir webhooks de Stripe para confirmar pagos y cancelaciones
-- [ ] Crear sistema de emails transaccionales con plantillas claras (Resend)
+- [x] Añadir webhooks de Stripe para confirmar pagos y cancelaciones
+- [x] Crear sistema de emails transaccionales con plantillas claras (Resend)
 - [ ] Añadir trazabilidad para reservas, pagos y cancelaciones
 
 ---
@@ -70,24 +70,24 @@ Este documento recoge las mejoras recomendadas para `GuidePath`, priorizadas par
 - [ ] Crear `CHANGELOG.md`
 
 ### 10. Testing
-- [ ] Añadir tests unitarios para utilidades y lógica de negocio
+- [x] Añadir tests unitarios para utilidades y lógica de negocio (básicos: utils, env, professionals, sessions)
 - [ ] Añadir tests de integración para auth, reservas y pagos
 - [ ] Añadir tests E2E con Playwright para flujos principales
-- [ ] Definir datos seed consistentes para testing
+- [x] Definir datos seed consistentes para testing
 
 ### 11. CI/CD
-- [ ] Crear workflow de GitHub Actions con al menos:
-  - [ ] Instalación de dependencias
-  - [ ] Lint
-  - [ ] Build
-  - [ ] Validación de tipos TypeScript
+- [x] Crear workflow de GitHub Actions con al menos:
+  - [x] Instalación de dependencias
+  - [x] Lint
+  - [x] Build
+  - [x] Validación de tipos TypeScript
 - [ ] Añadir checks obligatorios antes de mergear a `Develop` o `main`
 
 ### 12. Documentación
-- [ ] Mantener actualizado `README.md`
-- [ ] Documentar arquitectura técnica
+- [x] Mantener actualizado `README.md`
+- [x] Documentar arquitectura técnica
 - [ ] Añadir guía de despliegue
-- [ ] Añadir guía de configuración local
+- [x] Añadir guía de configuración local
 
 ---
 
@@ -100,10 +100,10 @@ Este documento recoge las mejoras recomendadas para `GuidePath`, priorizadas par
 - [x] Índices en Prisma
 
 ### Fase 2 — Calidad y visibilidad
-- [ ] SEO dinámico
+- [x] SEO dinámico
 - [ ] Revisión de `"use client"`
-- [ ] Testing básico
-- [ ] CI/CD con GitHub Actions
+- [x] Testing básico
+- [x] CI/CD con GitHub Actions
 
 ### Fase 3 — Modelo de negocio
 - [ ] Refactor del modelo de categorías
@@ -122,10 +122,15 @@ Este documento recoge las mejoras recomendadas para `GuidePath`, priorizadas par
 ## 📌 Notas del estado actual
 
 - Next.js 14 con App Router
-- Prisma con PostgreSQL
-- Autenticación con NextAuth v4
-- Integración prevista con Stripe, Daily.co y Resend
-- La estructura base del proyecto está bien planteada y lista para evolucionar
+- Prisma con PostgreSQL (Supabase) con índices y cascadas configuradas
+- Autenticación con NextAuth v4 + middleware de protección de rutas
+- Stripe PaymentIntent + webhooks funcionales
+- Daily.co integrado para videollamadas
+- Resend con plantillas de email transaccional
+- CI/CD con GitHub Actions (lint, build, types, tests)
+- Tests unitarios básicos con Vitest
+- SEO dinámico con `generateMetadata()` en perfiles
+- Validación de variables de entorno con Zod
 
 ---
 
