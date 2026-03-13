@@ -50,34 +50,36 @@ export async function POST(req: Request) {
       );
     }
 
-    // Create the review
-    const review = await prisma.review.create({
-      data: {
-        sessionId,
-        userId:  session.user.id,
-        rating:  Math.round(rating),
-        comment: comment?.trim() || null,
-      },
-    });
-
-    // Update the professional's aggregate rating (incremental, no full scan)
-    const profile = await prisma.professionalProfile.findUnique({
-      where:  { id: dbSession.professionalId },
-      select: { rating: true, reviewCount: true },
-    });
-
-    if (profile) {
-      const newCount  = profile.reviewCount + 1;
-      const newRating = (profile.rating * profile.reviewCount + rating) / newCount;
-
-      await prisma.professionalProfile.update({
-        where: { id: dbSession.professionalId },
-        data:  {
-          reviewCount: newCount,
-          rating:      Math.round(newRating * 10) / 10, // 1 decimal place
+    // Create the review and recalculate aggregate rating in a transaction
+    const review = await prisma.$transaction(async (tx) => {
+      const created = await tx.review.create({
+        data: {
+          sessionId,
+          userId:  session.user.id,
+          rating:  Math.round(rating),
+          comment: comment?.trim() || null,
         },
       });
-    }
+
+      // Recalculate from all reviews (no drift risk)
+      const aggregate = await tx.review.aggregate({
+        where: {
+          session: { professionalId: dbSession.professionalId },
+        },
+        _avg:   { rating: true },
+        _count: { rating: true },
+      });
+
+      await tx.professionalProfile.update({
+        where: { id: dbSession.professionalId },
+        data:  {
+          rating:      Math.round((aggregate._avg.rating ?? 0) * 10) / 10,
+          reviewCount: aggregate._count.rating,
+        },
+      });
+
+      return created;
+    });
 
     return NextResponse.json(review, { status: 201 });
   } catch {
