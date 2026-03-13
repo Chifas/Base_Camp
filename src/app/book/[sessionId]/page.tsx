@@ -16,7 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { CATEGORY_LABELS, type Professional } from "@/types";
+import type { Professional } from "@/types";
 import { formatCurrency } from "@/lib/utils";
 
 function addHour(time: string): string {
@@ -201,7 +201,7 @@ export default function BookingPage() {
               <div>
                 <p className="font-semibold">{professional.name}</p>
                 <Badge variant="secondary" className="mt-0.5 text-xs">
-                  {CATEGORY_LABELS[professional.category]}
+                  {professional.categoryName}
                 </Badge>
               </div>
             </div>

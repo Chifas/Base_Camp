@@ -14,11 +14,15 @@ enum UserRole {
   ADMIN
 }
 
-enum ProfessionalCategory {
-  CAREER_MENTOR
-  EXECUTIVE_COACH
-  SECTOR_EXPERT
-  WORK_PSYCHOLOGIST
+model Category {
+  id          String  @id @default(cuid())
+  slug        String  @unique             // "CAREER_MENTOR"
+  name        String                      // "Mentor de Carrera"
+  description String?
+
+  professionals ProfessionalProfile[]
+
+  @@map("categories")
 }
 
 enum SessionStatus {
@@ -90,23 +94,24 @@ model VerificationToken {
 }
 
 model ProfessionalProfile {
-  id              String               @id @default(cuid())
-  userId          String               @unique
-  category        ProfessionalCategory
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  categoryId      String
   headline        String?
   hourlyRate      Float
   stripeAccountId String?
-  rating          Float                @default(0)
-  reviewCount     Int                  @default(0)
-  verified        Boolean              @default(false)
-  createdAt       DateTime             @default(now())
-  updatedAt       DateTime             @updatedAt
+  rating          Float    @default(0)
+  reviewCount     Int      @default(0)
+  verified        Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category      Category       @relation(fields: [categoryId], references: [id])
   availability  Availability[]
   sessions      Session[]      @relation("ProfessionalSessions")
 
-  @@index([category])
+  @@index([categoryId])
   @@map("professional_profiles")
 }
 

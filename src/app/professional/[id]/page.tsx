@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { FadeIn } from "@/components/shared/motion-wrapper";
-import { CATEGORY_LABELS, type Professional, type Review } from "@/types";
+import type { Professional, Review } from "@/types";
 
 const TIME_SLOTS = [
   "08:00","09:00","10:00","11:00","12:00","13:00",
@@ -158,7 +158,7 @@ export default function ProfessionalProfilePage() {
 
                 <div className="mt-3 flex flex-wrap items-center gap-3">
                   <Badge variant="secondary">
-                    {CATEGORY_LABELS[professional.category]}
+                    {professional.categoryName}
                   </Badge>
                   <div className="flex items-center gap-1">
                     <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />

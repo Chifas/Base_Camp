@@ -12,6 +12,7 @@ export async function GET(
         user: {
           select: { id: true, name: true, image: true, bio: true },
         },
+        category: true,
         availability: true,
         sessions: {
           where: { status: "COMPLETED" },
@@ -54,7 +55,8 @@ export async function GET(
       image: professional.user.image ?? "",
       bio: professional.user.bio ?? "",
       headline: professional.headline ?? "",
-      category: professional.category,
+      category: professional.category.slug,
+      categoryName: professional.category.name,
       hourlyRate: professional.hourlyRate,
       rating: professional.rating,
       reviewCount: professional.reviewCount,

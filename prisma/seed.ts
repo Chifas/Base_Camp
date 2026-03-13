@@ -14,6 +14,22 @@ async function main() {
   await prisma.account.deleteMany();
   await prisma.authSession.deleteMany();
   await prisma.user.deleteMany();
+  await prisma.category.deleteMany();
+
+  // ── Categories ─────────────────────────────────────────────────────────
+  const categoriesData = [
+    { slug: "CAREER_MENTOR",     name: "Mentor de Carrera",    description: "Orientación profesional, transiciones de carrera, marca personal y preparación de entrevistas." },
+    { slug: "EXECUTIVE_COACH",   name: "Coach Ejecutivo",      description: "Coaching de liderazgo, desarrollo directivo y gestión de equipos." },
+    { slug: "SECTOR_EXPERT",     name: "Experto Sectorial",    description: "Conocimiento especializado en sectores como fintech, salud, tech, consultoría, etc." },
+    { slug: "WORK_PSYCHOLOGIST", name: "Psicólogo/a Laboral",  description: "Burnout, estrés laboral, bienestar en el trabajo y dinámicas de equipo." },
+  ];
+
+  const categories: Record<string, string> = {};
+  for (const cat of categoriesData) {
+    const created = await prisma.category.create({ data: cat });
+    categories[cat.slug] = created.id;
+    console.log("✅ Category:", cat.name);
+  }
 
   const hashedPassword = await bcrypt.hash("guidepath123", 10);
 
@@ -39,11 +55,11 @@ async function main() {
         role: "PROFESSIONAL" as const,
         image:
           "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=400&h=400&fit=crop&crop=face",
-        bio: "Psicóloga clínica con más de 15 años de experiencia en terapia cognitivo-conductual.",
+        bio: "Psicóloga organizacional con más de 15 años acompañando a profesionales en entornos de alta exigencia. Especializada en burnout, estrés laboral y bienestar en el trabajo.",
       },
       profile: {
-        category: "PSYCHOLOGIST" as const,
-        headline: "Psicóloga Clínica · Terapia Cognitivo-Conductual",
+        categoryId: categories["WORK_PSYCHOLOGIST"],
+        headline: "Psicóloga Organizacional · Burnout y Bienestar Laboral",
         hourlyRate: 65,
         rating: 4.9,
         reviewCount: 127,
@@ -65,12 +81,12 @@ async function main() {
         role: "PROFESSIONAL" as const,
         image:
           "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face",
-        bio: "Coach de vida certificado por ICF. Ayudo a profesionales a encontrar su propósito y superar bloqueos.",
+        bio: "Coach ejecutivo certificado por ICF con más de 500 sesiones. Trabajo con profesionales que quieren acelerar su carrera y dar el salto a puestos de liderazgo.",
       },
       profile: {
-        category: "COACH" as const,
-        headline: "Coach de Vida Certificado ICF · Propósito y Bienestar",
-        hourlyRate: 55,
+        categoryId: categories["EXECUTIVE_COACH"],
+        headline: "Coach Ejecutivo Certificado ICF · Liderazgo y Potencial Directivo",
+        hourlyRate: 80,
         rating: 4.8,
         reviewCount: 89,
         verified: true,
@@ -89,10 +105,10 @@ async function main() {
         role: "PROFESSIONAL" as const,
         image:
           "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&h=400&fit=crop&crop=face",
-        bio: "Mentora de carrera con experiencia en RRHH en empresas del IBEX 35.",
+        bio: "Mentora de carrera con experiencia en RRHH en empresas del IBEX 35. Te ayudo a preparar entrevistas, negociar salarios y planificar tu transición profesional.",
       },
       profile: {
-        category: "CAREER_MENTOR" as const,
+        categoryId: categories["CAREER_MENTOR"],
         headline: "Mentora de Carrera · Ex-RRHH IBEX 35",
         hourlyRate: 70,
         rating: 4.7,
@@ -106,26 +122,26 @@ async function main() {
     },
     {
       user: {
-        name: "Dr. Miguel Fernández",
+        name: "Miguel Fernández Torres",
         email: "miguel@guidepath.com",
         password: hashedPassword,
         role: "PROFESSIONAL" as const,
         image:
           "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=400&h=400&fit=crop&crop=face",
-        bio: "Nutricionista clínico especializado en nutrición basada en evidencia científica.",
+        bio: "Ex-Head of Product en tres startups fintech. Experto en Product Management, estrategia de producto y metodologías ágiles.",
       },
       profile: {
-        category: "NUTRITIONIST" as const,
-        headline: "Nutricionista Clínico · Nutrición Basada en Evidencia",
-        hourlyRate: 50,
+        categoryId: categories["SECTOR_EXPERT"],
+        headline: "Experto en Product Management · Startups y Fintech",
+        hourlyRate: 95,
         rating: 4.9,
         reviewCount: 102,
         verified: true,
       },
       availability: [
-        { dayOfWeek: 1, startTime: "08:00", endTime: "14:00" },
-        { dayOfWeek: 2, startTime: "08:00", endTime: "14:00" },
-        { dayOfWeek: 4, startTime: "08:00", endTime: "14:00" },
+        { dayOfWeek: 1, startTime: "08:00", endTime: "13:00" },
+        { dayOfWeek: 2, startTime: "08:00", endTime: "13:00" },
+        { dayOfWeek: 4, startTime: "08:00", endTime: "13:00" },
         { dayOfWeek: 5, startTime: "08:00", endTime: "12:00" },
       ],
     },
@@ -137,46 +153,43 @@ async function main() {
         role: "PROFESSIONAL" as const,
         image:
           "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=400&fit=crop&crop=face",
-        bio: "Coach ejecutiva con MBA y 12 años en consultoría estratégica. Especializada en liderazgo y desarrollo directivo.",
+        bio: "Psicóloga laboral especializada en dinámicas de equipo, gestión de conflictos en el trabajo y acompañamiento en procesos de cambio organizacional.",
       },
       profile: {
-        category: "COACH" as const,
-        headline: "Coach Ejecutiva · Liderazgo y Desarrollo Directivo",
-        hourlyRate: 90,
+        categoryId: categories["WORK_PSYCHOLOGIST"],
+        headline: "Psicóloga Laboral · Equipos y Gestión del Cambio",
+        hourlyRate: 60,
         rating: 4.8,
-        reviewCount: 73,
+        reviewCount: 78,
         verified: true,
       },
       availability: [
-        { dayOfWeek: 1, startTime: "07:00", endTime: "09:00" },
-        { dayOfWeek: 2, startTime: "07:00", endTime: "09:00" },
-        { dayOfWeek: 3, startTime: "07:00", endTime: "09:00" },
-        { dayOfWeek: 4, startTime: "07:00", endTime: "09:00" },
-        { dayOfWeek: 5, startTime: "07:00", endTime: "09:00" },
+        { dayOfWeek: 1, startTime: "15:00", endTime: "20:00" },
+        { dayOfWeek: 3, startTime: "15:00", endTime: "20:00" },
+        { dayOfWeek: 5, startTime: "15:00", endTime: "20:00" },
       ],
     },
     {
       user: {
-        name: "Javier Moreno Torres",
-        email: "javier@guidepath.com",
+        name: "Pablo Moreno Díaz",
+        email: "pablo@guidepath.com",
         password: hashedPassword,
         role: "PROFESSIONAL" as const,
         image:
           "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face",
-        bio: "Psicólogo especializado en ansiedad, trauma y bienestar emocional. Enfoque integrativo.",
+        bio: "Coach ejecutivo y de liderazgo con más de 200 directivos acompañados. Trabajo con managers y C-level que quieren mejorar su estilo de liderazgo.",
       },
       profile: {
-        category: "PSYCHOLOGIST" as const,
-        headline: "Psicólogo · Ansiedad, Trauma y Bienestar Emocional",
-        hourlyRate: 60,
+        categoryId: categories["EXECUTIVE_COACH"],
+        headline: "Coach Ejecutivo · Directivos y Alta Dirección",
+        hourlyRate: 110,
         rating: 4.6,
-        reviewCount: 41,
-        verified: false,
+        reviewCount: 53,
+        verified: true,
       },
       availability: [
-        { dayOfWeek: 2, startTime: "17:00", endTime: "21:00" },
-        { dayOfWeek: 4, startTime: "17:00", endTime: "21:00" },
-        { dayOfWeek: 6, startTime: "10:00", endTime: "14:00" },
+        { dayOfWeek: 2, startTime: "09:00", endTime: "13:00" },
+        { dayOfWeek: 4, startTime: "09:00", endTime: "13:00" },
       ],
     },
   ];

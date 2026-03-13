@@ -4,7 +4,7 @@ import { Star, ArrowRight, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/shared/motion-wrapper";
-import { CATEGORY_LABELS, type Professional } from "@/types";
+import type { Professional } from "@/types";
 import { formatCurrency } from "@/lib/utils";
 
 interface FeaturedProfessionalsProps {
@@ -56,7 +56,7 @@ export function FeaturedProfessionals({ professionals }: FeaturedProfessionalsPr
                     {/* Badge overlay */}
                     <div className="absolute left-3 top-3">
                       <Badge variant="secondary" className="bg-background/80 backdrop-blur-sm text-xs">
-                        {CATEGORY_LABELS[pro.category]}
+                        {pro.categoryName}
                       </Badge>
                     </div>
 

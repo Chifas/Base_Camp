@@ -1,16 +1,17 @@
 export type UserRole = "CLIENT" | "PROFESSIONAL" | "ADMIN";
 
-export type ProfessionalCategory =
-  | "CAREER_MENTOR"
-  | "EXECUTIVE_COACH"
-  | "SECTOR_EXPERT"
-  | "WORK_PSYCHOLOGIST";
-
 export type SessionStatus =
   | "PENDING"
   | "CONFIRMED"
   | "COMPLETED"
   | "CANCELLED";
+
+export interface Category {
+  id: string;
+  slug: string;
+  name: string;
+  description?: string;
+}
 
 export interface User {
   id: string;
@@ -28,7 +29,8 @@ export interface Professional {
   image: string;
   bio: string;
   headline: string;
-  category: ProfessionalCategory;
+  category: string;
+  categoryName: string;
   hourlyRate: number;
   rating: number;
   reviewCount: number;
@@ -66,13 +68,6 @@ export interface Review {
   comment: string;
   createdAt: string;
 }
-
-export const CATEGORY_LABELS: Record<ProfessionalCategory, string> = {
-  CAREER_MENTOR: "Mentor de Carrera",
-  EXECUTIVE_COACH: "Coach Ejecutivo",
-  SECTOR_EXPERT: "Experto Sectorial",
-  WORK_PSYCHOLOGIST: "Psicólogo/a Laboral",
-};
 
 export const STATUS_LABELS: Record<SessionStatus, string> = {
   PENDING: "Pendiente",

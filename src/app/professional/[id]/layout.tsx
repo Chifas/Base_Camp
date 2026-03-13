@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
-import { CATEGORY_LABELS, type ProfessionalCategory } from "@/types";
 
 interface Props {
   params: { id: string };
@@ -11,6 +10,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     where: { id: params.id },
     include: {
       user: { select: { name: true, image: true, bio: true } },
+      category: true,
     },
   });
 
@@ -19,9 +19,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   const name = professional.user.name ?? "Profesional";
-  const category =
-    CATEGORY_LABELS[professional.category as ProfessionalCategory] ??
-    professional.category;
+  const category = professional.category.name;
   const description = professional.user.bio
     ? professional.user.bio.slice(0, 160)
     : `${name} — ${category} en GuidePath`;

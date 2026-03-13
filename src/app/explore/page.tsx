@@ -21,29 +21,30 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CATEGORY_LABELS, type ProfessionalCategory, type Professional } from "@/types";
+import type { Category, Professional } from "@/types";
 import { formatCurrency } from "@/lib/utils";
-
-const categories: { value: string; label: string }[] = [
-  { value: "ALL", label: "Todas las categorías" },
-  { value: "PSYCHOLOGIST", label: "Psicólogo/a" },
-  { value: "COACH", label: "Coach de Vida" },
-  { value: "CAREER_MENTOR", label: "Mentor de Carrera" },
-  { value: "NUTRITIONIST", label: "Nutricionista" },
-];
 
 export default function ExplorePage() {
   const [professionals, setProfessionals] = useState<Professional[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("ALL");
   const [sortBy, setSortBy] = useState("rating");
 
   useEffect(() => {
-    fetch("/api/professionals")
-      .then((r) => r.json())
-      .then((data) => setProfessionals(Array.isArray(data) ? data : []))
-      .catch(() => setProfessionals([]))
+    Promise.all([
+      fetch("/api/professionals").then((r) => r.json()),
+      fetch("/api/categories").then((r) => r.json()),
+    ])
+      .then(([profsData, catsData]) => {
+        setProfessionals(Array.isArray(profsData) ? profsData : []);
+        setCategories(Array.isArray(catsData) ? catsData : []);
+      })
+      .catch(() => {
+        setProfessionals([]);
+        setCategories([]);
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -122,9 +123,10 @@ export default function ExplorePage() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="ALL">Todas las categorías</SelectItem>
             {categories.map((cat) => (
-              <SelectItem key={cat.value} value={cat.value}>
-                {cat.label}
+              <SelectItem key={cat.slug} value={cat.slug}>
+                {cat.name}
               </SelectItem>
             ))}
           </SelectContent>
@@ -209,7 +211,7 @@ export default function ExplorePage() {
 
                     <div className="mt-2 flex items-center gap-3">
                       <Badge variant="secondary" className="text-xs">
-                        {CATEGORY_LABELS[pro.category]}
+                        {pro.categoryName}
                       </Badge>
                       <div className="flex items-center gap-1">
                         <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
