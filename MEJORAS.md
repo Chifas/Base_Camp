@@ -36,10 +36,10 @@ Este documento recoge las mejoras recomendadas para `GuidePath`, priorizadas par
 ## ⚠️ Prioridad Media
 
 ### 5. Modelo de dominio
-- [ ] Revisar si `rating` y `reviewCount` deben calcularse en consulta en lugar de persistirse manualmente
-- [ ] Valorar sustituir `ProfessionalCategory` como enum por una tabla de categorías independiente
-- [ ] Añadir soporte para bloqueos de agenda, vacaciones y excepciones en disponibilidad
-- [ ] Diseñar mejor el sistema de reservas para evitar solapes de horario
+- [x] Revisar si `rating` y `reviewCount` deben calcularse en consulta en lugar de persistirse manualmente (aggregate real en transacción)
+- [x] Valorar sustituir `ProfessionalCategory` como enum por una tabla de categorías independiente
+- [x] Añadir soporte para bloqueos de agenda, vacaciones y excepciones en disponibilidad
+- [x] Diseñar mejor el sistema de reservas para evitar solapes de horario
 
 ### 6. SEO y metadata
 - [x] Usar `generateMetadata()` en perfiles de profesionales (`/professional/[id]`)
@@ -54,7 +54,7 @@ Este documento recoge las mejoras recomendadas para `GuidePath`, priorizadas par
 - [ ] Optimizar carga inicial de landing y dashboards
 
 ### 8. Emails, pagos y eventos
-- [ ] Diseñar flujo real de Stripe Connect con comisión de plataforma
+- [x] Diseñar flujo real de Stripe Connect con comisión de plataforma (20%)
 - [x] Añadir webhooks de Stripe para confirmar pagos y cancelaciones
 - [x] Crear sistema de emails transaccionales con plantillas claras (Resend)
 - [ ] Añadir trazabilidad para reservas, pagos y cancelaciones
@@ -105,11 +105,11 @@ Este documento recoge las mejoras recomendadas para `GuidePath`, priorizadas par
 - [x] Testing básico
 - [x] CI/CD con GitHub Actions
 
-### Fase 3 — Modelo de negocio
-- [ ] Refactor del modelo de categorías
-- [ ] Revisión de ratings y reviews
-- [ ] Disponibilidad avanzada
-- [ ] Webhooks y pagos reales con Stripe
+### Fase 3 — Modelo de negocio ✅
+- [x] Refactor del modelo de categorías
+- [x] Revisión de ratings y reviews
+- [x] Disponibilidad avanzada
+- [x] Webhooks y pagos reales con Stripe
 
 ### Fase 4 — Producción
 - [ ] Hardening de seguridad
