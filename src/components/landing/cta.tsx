@@ -56,7 +56,7 @@ export function CTA() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="w-full border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/10 sm:w-auto"
+                  className="w-full sm:w-auto !border-white/30 !text-white !bg-white/10 hover:!bg-white/20"
                   asChild
                 >
                   <Link href="/explore">Explorar profesionales</Link>

@@ -158,6 +158,25 @@ export default function ProfessionalDashboard() {
       .finally(() => setLoadingAll(false));
   }, [router]);
 
+  // Accept / Reject session handler
+  const handleSessionAction = useCallback(async (sessionId: string, status: "CONFIRMED" | "CANCELLED") => {
+    try {
+      const res = await fetch(`/api/sessions/${sessionId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      if (res.ok) {
+        // Update local state
+        setSessions((prev) =>
+          prev.map((s) => (s.id === sessionId ? { ...s, status } : s))
+        );
+      }
+    } catch {
+      // silently fail
+    }
+  }, []);
+
   // Save availability handler
   const handleSaveAvailability = useCallback(async () => {
     setSavingAvailability(true);
@@ -297,11 +316,19 @@ export default function ProfessionalDashboard() {
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        <Button size="sm" variant="outline" className="text-red-600 hover:bg-red-50">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-red-600 hover:bg-red-50"
+                          onClick={() => handleSessionAction(session.id, "CANCELLED")}
+                        >
                           <X className="mr-1 h-4 w-4" />
                           Rechazar
                         </Button>
-                        <Button size="sm">
+                        <Button
+                          size="sm"
+                          onClick={() => handleSessionAction(session.id, "CONFIRMED")}
+                        >
                           <Check className="mr-1 h-4 w-4" />
                           Aceptar
                         </Button>
@@ -351,7 +378,10 @@ export default function ProfessionalDashboard() {
                         <span className="text-sm font-medium">
                           {formatCurrency(session.price)}
                         </span>
-                        <Button size="sm">
+                        <Button
+                          size="sm"
+                          onClick={() => router.push(`/session/${session.id}`)}
+                        >
                           <Video className="mr-2 h-4 w-4" />
                           Iniciar sesión
                         </Button>
