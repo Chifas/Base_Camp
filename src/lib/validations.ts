@@ -36,8 +36,8 @@ export const availabilitySchema = z.object({
   slots: z.array(
     z.object({
       dayOfWeek: z.number().int().min(0).max(6),
-      startTime: z.string().regex(/^\d{2}:\d{2}$/, "Formato HH:MM"),
-      endTime: z.string().regex(/^\d{2}:\d{2}$/, "Formato HH:MM"),
+      startTime: z.string().regex(/^(\d{2}:\d{2})?$/, "Formato HH:MM"),
+      endTime: z.string().regex(/^(\d{2}:\d{2})?$/, "Formato HH:MM"),
       enabled: z.boolean(),
     })
   ),
