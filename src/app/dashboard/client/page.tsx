@@ -17,6 +17,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { FadeIn } from "@/components/shared/motion-wrapper";
+import { DashboardSkeleton } from "@/components/shared/dashboard-skeleton";
+import { EmptyState } from "@/components/shared/empty-state";
 import { STATUS_LABELS, type Session } from "@/types";
 import { formatCurrency, formatDate, formatTime } from "@/lib/utils";
 
@@ -79,6 +81,8 @@ export default function ClientDashboard() {
       ),
     [sessions]
   );
+
+  if (loadingSessions) return <DashboardSkeleton />;
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
@@ -225,6 +229,13 @@ export default function ClientDashboard() {
           </TabsContent>
 
           <TabsContent value="past" className="mt-6">
+            {pastSessions.length === 0 ? (
+              <EmptyState
+                icon={Clock}
+                title="Sin historial todav\u00eda"
+                description="Aqu\u00ed ver\u00e1s las sesiones que ya hayas completado o cancelado."
+              />
+            ) : (
             <div className="space-y-4">
               {pastSessions.map((session, i) => (
                 <motion.div
@@ -273,6 +284,7 @@ export default function ClientDashboard() {
                 </motion.div>
               ))}
             </div>
+            )}
           </TabsContent>
         </Tabs>
       </FadeIn>

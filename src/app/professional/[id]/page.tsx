@@ -9,7 +9,6 @@ import {
   Star,
   CheckCircle2,
   Clock,
-  MapPin,
   Calendar,
   ChevronLeft,
   MessageSquare,

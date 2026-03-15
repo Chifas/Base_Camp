@@ -122,7 +122,7 @@ export async function POST(req: Request) {
             where: { stripeAccountId: account.id },
             data: { verified: true },
           });
-          console.log(`✅ Cuenta Connect ${account.id} verificada`);
+          log.info("stripe.connect_verified", { accountId: account.id });
         }
         break;
       }

@@ -1,25 +1,18 @@
-import type { Metadata } from "next";
+import dynamic from "next/dynamic";
 import { prisma } from "@/lib/prisma";
 import { Hero } from "@/components/landing/hero";
 import { HowItWorks } from "@/components/landing/how-it-works";
 import { FeaturedProfessionals } from "@/components/landing/featured-professionals";
-import { Testimonials } from "@/components/landing/testimonials";
-import { CTA } from "@/components/landing/cta";
 import type { Professional } from "@/types";
 
-export const metadata: Metadata = {
-  title: "GuidePath — Encuentra tu camino con profesionales que te guían",
-  description:
-    "Marketplace que conecta personas que buscan orientación con psicólogos, coaches, mentores de carrera y nutricionistas certificados. Sesiones por videollamada, fácil y seguro.",
-  openGraph: {
-    title: "GuidePath — Encuentra tu camino con profesionales que te guían",
-    description:
-      "Conectamos personas con psicólogos, coaches, mentores y nutricionistas certificados.",
-    siteName: "GuidePath",
-    type: "website",
-    locale: "es_ES",
-  },
-};
+const Testimonials = dynamic(() =>
+  import("@/components/landing/testimonials").then((m) => m.Testimonials)
+);
+const CTA = dynamic(() =>
+  import("@/components/landing/cta").then((m) => m.CTA)
+);
+
+// Metadata inherited from root layout (title.default + OG + Twitter Cards)
 
 async function getFeaturedProfessionals(): Promise<Professional[]> {
   try {

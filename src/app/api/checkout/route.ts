@@ -159,6 +159,15 @@ export async function POST(req: Request) {
 
     const checkoutSession = await stripe.checkout.sessions.create(checkoutOptions);
 
+    log.info("booking.created", {
+      sessionId: dbSession.id,
+      clientId: session.user.id,
+      professionalId: professional.id,
+      scheduledAt: scheduledAt.toISOString(),
+      price: professional.hourlyRate,
+      stripeCheckoutId: checkoutSession.id,
+    });
+
     return NextResponse.json({
       checkoutUrl: checkoutSession.url,
       sessionId: dbSession.id,

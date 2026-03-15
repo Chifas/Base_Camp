@@ -18,6 +18,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { FadeIn } from "@/components/shared/motion-wrapper";
+import { DashboardSkeleton } from "@/components/shared/dashboard-skeleton";
+import { EmptyState } from "@/components/shared/empty-state";
 import { STATUS_LABELS } from "@/types";
 import { formatCurrency, formatDate, formatTime } from "@/lib/utils";
 
@@ -77,6 +79,8 @@ export default function ProfessionalDashboard() {
     [sessions]
   );
   const totalSessions = sessions.filter((s) => s.status === "COMPLETED").length;
+
+  if (loadingSessions) return <DashboardSkeleton />;
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
@@ -191,6 +195,17 @@ export default function ProfessionalDashboard() {
               <h3 className="font-heading text-lg font-semibold">
                 Próximas sesiones confirmadas
               </h3>
+              {confirmedSessions.length === 0 && pendingSessions.length === 0 ? (
+                <div className="mt-3">
+                  <EmptyState
+                    icon={Calendar}
+                    title="No tienes sesiones programadas"
+                    description="Cuando un cliente reserve contigo, sus sesiones aparecer\u00e1n aqu\u00ed."
+                  />
+                </div>
+              ) : confirmedSessions.length === 0 ? (
+                <p className="mt-3 text-sm text-muted-foreground">No hay sesiones confirmadas por el momento.</p>
+              ) : (
               <div className="mt-3 space-y-3">
                 {confirmedSessions.map((session, i) => (
                   <motion.div
@@ -221,6 +236,7 @@ export default function ProfessionalDashboard() {
                   </motion.div>
                 ))}
               </div>
+              )}
             </div>
           </TabsContent>
 

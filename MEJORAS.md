@@ -16,8 +16,8 @@ Este documento recoge las mejoras recomendadas para `GuidePath`, priorizadas par
 ### 2. Manejo de errores
 - [x] Añadir `src/app/error.tsx`
 - [x] Añadir `src/app/not-found.tsx`
-- [ ] Crear estados vacíos y mensajes de error consistentes para páginas dinámicas
-- [ ] Definir una estrategia de errores de backend y frontend
+- [x] Crear estados vacíos y mensajes de error consistentes para páginas dinámicas
+- [x] Definir una estrategia de errores de backend y frontend
 
 ### 3. Base de datos — índices
 - [x] Añadir índices en Prisma para consultas frecuentes:
@@ -44,34 +44,34 @@ Este documento recoge las mejoras recomendadas para `GuidePath`, priorizadas par
 ### 6. SEO y metadata
 - [x] Usar `generateMetadata()` en perfiles de profesionales (`/professional/[id]`)
 - [x] Añadir títulos y descripciones dinámicas por página
-- [ ] Mejorar Open Graph y Twitter Cards (OG parcial, faltan Twitter Cards)
-- [ ] Revisar sitemap y robots cuando el proyecto esté más maduro
+- [x] Mejorar Open Graph y Twitter Cards
+- [x] Revisar sitemap y robots
 
 ### 7. Rendimiento
 - [x] Revisar qué componentes realmente necesitan `"use client"` (ej. `page.tsx` en landing no lo necesita)
 - [x] Mantener páginas simples como Server Components siempre que sea posible
-- [ ] Evaluar lazy loading en componentes pesados
-- [ ] Optimizar carga inicial de landing y dashboards
+- [x] Evaluar lazy loading en componentes pesados
+- [x] Optimizar carga inicial de landing y dashboards
 
 ### 8. Emails, pagos y eventos
 - [x] Diseñar flujo real de Stripe Connect con comisión de plataforma (20%)
 - [x] Añadir webhooks de Stripe para confirmar pagos y cancelaciones
 - [x] Crear sistema de emails transaccionales con plantillas claras (Resend)
-- [ ] Añadir trazabilidad para reservas, pagos y cancelaciones
+- [x] Añadir trazabilidad para reservas, pagos y cancelaciones
 
 ---
 
 ## 💡 Prioridad Baja
 
 ### 9. Calidad de código
-- [ ] Revisar y reforzar configuración de ESLint
-- [ ] Añadir convención de commits (Conventional Commits)
-- [ ] Crear `CONTRIBUTING.md`
-- [ ] Crear `CHANGELOG.md`
+- [x] Revisar y reforzar configuración de ESLint
+- [x] Añadir convención de commits (Conventional Commits)
+- [x] Crear `CONTRIBUTING.md`
+- [x] Crear `CHANGELOG.md`
 
 ### 10. Testing
 - [x] Añadir tests unitarios para utilidades y lógica de negocio (básicos: utils, env, professionals, sessions)
-- [ ] Añadir tests de integración para auth, reservas y pagos
+- [x] Añadir tests de integración para auth, reservas y pagos
 - [ ] Añadir tests E2E con Playwright para flujos principales
 - [x] Definir datos seed consistentes para testing
 
@@ -81,12 +81,12 @@ Este documento recoge las mejoras recomendadas para `GuidePath`, priorizadas par
   - [x] Lint
   - [x] Build
   - [x] Validación de tipos TypeScript
-- [ ] Añadir checks obligatorios antes de mergear a `Develop` o `main`
+- [x] Añadir checks obligatorios antes de mergear a `Develop` o `main` (documentado en docs/DEPLOY.md)
 
 ### 12. Documentación
 - [x] Mantener actualizado `README.md`
 - [x] Documentar arquitectura técnica
-- [ ] Añadir guía de despliegue
+- [x] Añadir guía de despliegue
 - [x] Añadir guía de configuración local
 
 ---
@@ -117,20 +117,47 @@ Este documento recoge las mejoras recomendadas para `GuidePath`, priorizadas par
 - [x] Analítica (Vercel Analytics + Speed Insights)
 - [x] Preparación final para despliegue
 
+### Fase 5 — Pulido final ✅
+- [x] Estados vacíos y skeletons de carga en dashboards
+- [x] Estrategia de errores unificada (api-error.ts + PageError component)
+- [x] Open Graph + Twitter Cards completas
+- [x] Sitemap dinámico + robots.txt
+- [x] Lazy loading en landing (Testimonials, CTA)
+- [x] Trazabilidad de reservas y pagos con logger estructurado
+- [x] ESLint reforzado + Conventional Commits (commitlint + husky)
+- [x] CONTRIBUTING.md + CHANGELOG.md
+- [x] Tests de integración (auth/register, reviews)
+- [x] Guía de despliegue (docs/DEPLOY.md)
+
+---
+
+## 📌 Pendiente para futuras iteraciones
+
+- [ ] Tests E2E con Playwright
+- [ ] Stripe Connect onboarding completo para profesionales
+- [ ] Rate limiting en API
+- [ ] Internacionalización (i18n)
+- [ ] Dashboard de admin
+- [ ] Sistema de notificaciones en tiempo real
+
 ---
 
 ## 📌 Notas del estado actual
 
 - Next.js 14 con App Router
 - Prisma con PostgreSQL (Supabase) con índices y cascadas configuradas
-- Autenticación con NextAuth v4 + middleware de protección de rutas
-- Stripe PaymentIntent + webhooks funcionales
+- Autenticación con NextAuth v4 + middleware RBAC
+- Stripe Checkout Sessions + webhooks funcionales
 - Daily.co integrado para videollamadas
 - Resend con plantillas de email transaccional
 - CI/CD con GitHub Actions (lint, build, types, tests)
-- Tests unitarios básicos con Vitest
-- SEO dinámico con `generateMetadata()` en perfiles
-- Validación de variables de entorno con Zod
+- Tests unitarios + integración con Vitest
+- SEO dinámico con OG + Twitter Cards
+- Sitemap dinámico + robots.txt
+- Validación de entorno y API con Zod
+- Logger estructurado JSON + health check
+- Vercel Analytics + Speed Insights
+- Conventional Commits + husky hooks
 
 ---
 

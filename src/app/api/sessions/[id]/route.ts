@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sendCancellationEmails } from "@/lib/emails";
 import { updateSessionSchema } from "@/lib/validations";
+import { logger } from "@/lib/logger";
 
 // GET /api/sessions/[id] — load a single session for participants only
 export async function GET(
@@ -109,6 +110,14 @@ export async function PATCH(
     const updated = await prisma.session.update({
       where: { id: params.id },
       data:  { status },
+    });
+
+    logger.info("session.status_changed", {
+      sessionId: params.id,
+      from: existing.status,
+      to: status,
+      changedBy: isClient ? "client" : "professional",
+      userId: session.user.id,
     });
 
     // Fire-and-forget email on cancellation

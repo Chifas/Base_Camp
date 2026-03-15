@@ -30,8 +30,14 @@ const geist = localFont({
   display: "swap",
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://guidepath.vercel.app";
+
 export const metadata: Metadata = {
-  title: "GuidePath — Encuentra tu camino con profesionales que te guían",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "GuidePath — Encuentra tu camino con profesionales que te guían",
+    template: "%s | GuidePath",
+  },
   description:
     "Marketplace que conecta personas que buscan orientación con psicólogos, coaches, mentores de carrera y nutricionistas certificados. Sesiones por videollamada, fácil y seguro.",
   keywords: [
@@ -43,6 +49,41 @@ export const metadata: Metadata = {
     "bienestar",
     "salud mental",
   ],
+  openGraph: {
+    type: "website",
+    locale: "es_ES",
+    url: siteUrl,
+    siteName: "GuidePath",
+    title: "GuidePath — Encuentra tu camino con profesionales que te guían",
+    description:
+      "Conecta con psicólogos, coaches, mentores y nutricionistas certificados. Sesiones por videollamada.",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "GuidePath — Orientación profesional online",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "GuidePath — Encuentra tu camino con profesionales que te guían",
+    description:
+      "Conecta con psicólogos, coaches, mentores y nutricionistas certificados. Sesiones por videollamada.",
+    images: ["/og-image.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
 };
 
 export default function RootLayout({

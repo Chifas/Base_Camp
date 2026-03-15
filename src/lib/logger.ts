@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 type LogLevel = "info" | "warn" | "error";
 
 interface LogEntry {
@@ -26,8 +27,11 @@ function emit(level: LogLevel, message: string, context?: Record<string, unknown
   }
 }
 
-export const log = {
+export const logger = {
   info: (message: string, context?: Record<string, unknown>) => emit("info", message, context),
   warn: (message: string, context?: Record<string, unknown>) => emit("warn", message, context),
   error: (message: string, context?: Record<string, unknown>) => emit("error", message, context),
 };
+
+/** @deprecated Use `logger` instead */
+export const log = logger;
