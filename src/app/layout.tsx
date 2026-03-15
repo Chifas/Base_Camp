@@ -9,25 +9,17 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 
 const inter = localFont({
-  src: [
-    {
-      path: "./fonts/InterVariable.woff2",
-      style: "normal",
-    },
-  ],
+  src: "./fonts/InterVariable.woff2",
   variable: "--font-sans",
   display: "swap",
+  weight: "100 900",
 });
 
 const geist = localFont({
-  src: [
-    {
-      path: "./fonts/GeistVF.woff2",
-      style: "normal",
-    },
-  ],
+  src: "./fonts/GeistVF.woff2",
   variable: "--font-heading",
   display: "swap",
+  weight: "100 900",
 });
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://guidepath.vercel.app";
