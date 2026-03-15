@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -19,6 +19,14 @@ interface SessionInfo {
 }
 
 export default function BookingConfirmedPage() {
+  return (
+    <Suspense fallback={<div className="mx-auto max-w-2xl px-4 py-20 text-center"><Loader2 className="mx-auto h-10 w-10 animate-spin text-primary" /></div>}>
+      <BookingConfirmedContent />
+    </Suspense>
+  );
+}
+
+function BookingConfirmedContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");
   const [sessionInfo, setSessionInfo] = useState<SessionInfo | null>(null);

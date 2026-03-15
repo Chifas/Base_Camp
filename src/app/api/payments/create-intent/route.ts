@@ -78,6 +78,9 @@ export async function POST(req: Request) {
     });
 
     // Create Stripe PaymentIntent
+    if (!stripe) {
+      return NextResponse.json({ error: "Stripe no configurado" }, { status: 503 });
+    }
     const paymentIntent = await stripe.paymentIntents.create({
       amount: amountCents,
       currency: "eur",

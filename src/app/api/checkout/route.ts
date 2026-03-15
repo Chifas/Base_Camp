@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import Stripe from "stripe";
 import { stripe } from "@/lib/stripe";
 import { env } from "@/lib/env";
 
@@ -114,8 +115,7 @@ export async function POST(req: Request) {
     const applicationFee = Math.round(unitAmount * (PLATFORM_FEE_PERCENT / 100));
 
     // Build checkout options
-    const checkoutOptions: Parameters<typeof stripe.checkout.sessions.create>[0] = {
-      payment_method_types: ["card"],
+    const checkoutOptions: Stripe.Checkout.SessionCreateParams = {
       line_items: [
         {
           price_data: {
