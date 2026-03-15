@@ -3,7 +3,11 @@
 ## Fase 1: Estabilidad y Calidad (Bugs + UX inmediata)
 
 ### 1.1 Correcciones pendientes
-- [ ] **Permisos de cámara en videollamada**: El iframe de Daily.co necesita atributos `allow="camera; microphone; autoplay"` y headers `Permissions-Policy` en `next.config.mjs`
+- [x] **Permisos de cámara en videollamada**: Headers `Permissions-Policy` añadidos en `next.config.mjs` para Daily.co iframe
+- [x] **Botones Aceptar/Rechazar sesiones**: Conectados al endpoint `PATCH /api/sessions/[id]`
+- [x] **Botón Iniciar sesión (videollamada)**: Conectado a la ruta `/session/[id]`
+- [x] **Botones CTA visibles en ambos modos**: Corregido contraste en hero y CTA para light/dark mode
+- [x] **Validación de disponibilidad**: Permitir strings vacíos en slots deshabilitados
 - [ ] **Protección de rutas completa**: El middleware actual protege rutas básicas pero falta proteger APIs sensibles (ej: solo el profesional puede marcar COMPLETED, solo el cliente puede cancelar)
 - [ ] **Manejo de errores global**: Añadir `error.tsx` específicos por sección (dashboard, booking, session) con mensajes descriptivos
 - [ ] **Loading states**: Añadir `loading.tsx` en cada ruta para mejor UX durante navegación
