@@ -15,7 +15,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
 import { FadeIn } from "@/components/shared/motion-wrapper";
 import { DashboardSkeleton } from "@/components/shared/dashboard-skeleton";
 import { EmptyState } from "@/components/shared/empty-state";

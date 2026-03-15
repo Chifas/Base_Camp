@@ -130,8 +130,8 @@ describe("POST /api/reviews", () => {
           update: vi.fn().mockResolvedValue({}),
         },
       };
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return (cb as (tx: any) => Promise<unknown>)(tx);
+      // eslint-disable-next-line no-unused-vars
+      return (cb as (_tx: Record<string, unknown>) => Promise<unknown>)(tx);
     });
 
     const res = await POST(makeRequest({ sessionId: "s1", rating: 5, comment: "Excellent!" }));
