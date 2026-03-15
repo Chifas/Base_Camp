@@ -1,7 +1,12 @@
 import { Resend } from "resend";
 
 // Server-side Resend client singleton
-export const resend = new Resend(process.env.RESEND_API_KEY);
+if (!process.env.RESEND_API_KEY) {
+  console.warn("⚠️ RESEND_API_KEY no configurada — emails deshabilitados");
+}
+export const resend = process.env.RESEND_API_KEY
+  ? new Resend(process.env.RESEND_API_KEY)
+  : null;
 
 /** Canonical "from" address. Override with RESEND_FROM_EMAIL in .env.
  *  During development with the free Resend tier you can use the sandbox

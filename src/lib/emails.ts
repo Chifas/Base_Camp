@@ -234,6 +234,11 @@ export async function sendBookingEmails(s: EmailSessionData) {
   const clientName       = s.client.name          ?? "Cliente";
   const professionalName = s.professional.user.name ?? "Profesional";
 
+  if (!resend) {
+    console.warn("⚠️ Resend no configurado — emails de reserva no enviados");
+    return;
+  }
+
   const results = await Promise.allSettled([
     // Client: booking confirmed
     resend.emails.send({
@@ -274,6 +279,11 @@ export async function sendBookingEmails(s: EmailSessionData) {
 export async function sendCancellationEmails(s: EmailSessionData) {
   const clientName       = s.client.name          ?? "Cliente";
   const professionalName = s.professional.user.name ?? "Profesional";
+
+  if (!resend) {
+    console.warn("⚠️ Resend no configurado — emails de cancelación no enviados");
+    return;
+  }
 
   const results = await Promise.allSettled([
     resend.emails.send({
