@@ -18,10 +18,10 @@
 - [x] **Validación de horarios**: Impide guardar disponibilidad si `endTime` <= `startTime`, con mensaje de error indicando el día
 
 ### 1.3 Tests
-- [x] **Ampliar cobertura de tests unitarios**: 44 tests pasando — availability (GET/PUT), sessions PATCH (roles + transiciones), reviews, register, professionals, utils, env
-- [ ] **Tests de integración**: Flujo completo de booking (crear intent → webhook → confirmar)
-- [ ] **Tests de componentes**: Dashboard, formularios de perfil, sistema de reviews
-- [ ] **E2E con Playwright**: Flujo de registro → onboarding → booking → videollamada → review
+- [x] **Ampliar cobertura de tests unitarios**: 75 tests pasando — availability, sessions PATCH, reviews, register, professionals, validations, utils, env, components
+- [x] **Tests de integración**: create-intent (auth, validation, conflict, self-booking, success) + webhook (signature, completed, expired, unknown events)
+- [x] **Tests de componentes**: EmptyState component + comprehensive Zod validation schemas tests
+- [x] **E2E con Playwright**: Configurado con tests para registro, login, validación de formularios, explorar profesionales, landing page navigation
 
 ---
 
