@@ -343,6 +343,7 @@ export function newReviewHtml(p: NewReviewProps): string {
 
 /** Send reminder emails to both parties before a session. */
 export async function sendSessionReminderEmails(s: EmailSessionData) {
+  if (!resend) return;
   const clientName       = s.client.name          ?? "Cliente";
   const professionalName = s.professional.user.name ?? "Profesional";
 
@@ -388,6 +389,7 @@ export async function sendNewReviewEmail(data: {
   rating:            number;
   comment?:          string | null;
 }) {
+  if (!resend) return;
   try {
     await resend.emails.send({
       from:    FROM_EMAIL,
