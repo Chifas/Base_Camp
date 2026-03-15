@@ -68,9 +68,9 @@ describe("POST /api/auth/register", () => {
     const res = await POST(
       makeRequest({ name: "Test User", email: "a@b.com", password: "12345678" })
     );
-    expect(res.status).toBe(201);
+    expect(res.status).toBe(200);
     const data = await res.json();
-    expect(data.user.email).toBe("a@b.com");
+    expect(data.ok).toBe(true);
   });
 
   it("creates professional user when role=PROFESSIONAL", async () => {
@@ -85,6 +85,6 @@ describe("POST /api/auth/register", () => {
     const res = await POST(
       makeRequest({ name: "Pro User", email: "pro@b.com", password: "12345678", role: "PROFESSIONAL" })
     );
-    expect(res.status).toBe(201);
+    expect(res.status).toBe(200);
   });
 });

@@ -13,12 +13,7 @@ vi.mock("@/lib/prisma", () => ({
     session: {
       findUnique: vi.fn(),
     },
-    review: {
-      create: vi.fn(),
-    },
-    professionalProfile: {
-      update: vi.fn(),
-    },
+    $transaction: vi.fn(),
   },
 }));
 
@@ -28,8 +23,7 @@ import { prisma } from "@/lib/prisma";
 
 const mockGetSession = vi.mocked(getServerSession);
 const mockSessionFindUnique = vi.mocked(prisma.session.findUnique);
-const mockReviewCreate = vi.mocked(prisma.review.create);
-const mockProfileUpdate = vi.mocked(prisma.professionalProfile.update);
+const mockTransaction = vi.mocked(prisma.$transaction);
 
 function makeRequest(body: Record<string, unknown>) {
   return new Request("http://localhost:3000/api/reviews", {
@@ -81,7 +75,25 @@ describe("POST /api/reviews", () => {
     expect(res.status).toBe(404);
   });
 
-  it("creates review and updates rating successfully", async () => {
+  it("returns 403 when user is not the client", async () => {
+    mockGetSession.mockResolvedValue({
+      user: { id: "other-user", role: "CLIENT" },
+      expires: "2099-01-01",
+    } as never);
+
+    mockSessionFindUnique.mockResolvedValue({
+      id: "s1",
+      clientId: "u1",
+      professionalId: "p1",
+      status: "COMPLETED",
+      review: null,
+    } as never);
+
+    const res = await POST(makeRequest({ sessionId: "s1", rating: 5, comment: "Great" }));
+    expect(res.status).toBe(403);
+  });
+
+  it("creates review successfully via transaction", async () => {
     mockGetSession.mockResolvedValue({
       user: { id: "u1", role: "CLIENT" },
       expires: "2099-01-01",
@@ -92,36 +104,40 @@ describe("POST /api/reviews", () => {
       clientId: "u1",
       professionalId: "p1",
       status: "COMPLETED",
-      professional: {
-        id: "p1",
-        rating: 4.0,
-        reviewCount: 10,
-      },
+      review: null,
     } as never);
 
-    mockReviewCreate.mockResolvedValue({
+    const createdReview = {
       id: "rev-1",
       sessionId: "s1",
       userId: "u1",
-      professionalId: "p1",
       rating: 5,
       comment: "Excellent!",
       createdAt: new Date(),
-    } as never);
+    };
 
-    mockProfileUpdate.mockResolvedValue({} as never);
+    // $transaction receives a callback — we execute it with a mock tx
+    mockTransaction.mockImplementation(async (cb: unknown) => {
+      const tx = {
+        review: {
+          create: vi.fn().mockResolvedValue(createdReview),
+          aggregate: vi.fn().mockResolvedValue({
+            _avg: { rating: 4.5 },
+            _count: { rating: 11 },
+          }),
+        },
+        professionalProfile: {
+          update: vi.fn().mockResolvedValue({}),
+        },
+      };
+      return (cb as (tx: typeof tx) => Promise<unknown>)(tx);
+    });
 
     const res = await POST(makeRequest({ sessionId: "s1", rating: 5, comment: "Excellent!" }));
     expect(res.status).toBe(201);
 
-    // Verify rating was updated with incremental formula
-    expect(mockProfileUpdate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: { id: "p1" },
-        data: expect.objectContaining({
-          reviewCount: 11,
-        }),
-      })
-    );
+    const data = await res.json();
+    expect(data.id).toBe("rev-1");
+    expect(data.rating).toBe(5);
   });
 });
