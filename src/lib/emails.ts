@@ -8,6 +8,7 @@
  */
 
 import { resend, FROM_EMAIL } from "@/lib/resend";
+import { log } from "@/lib/logger";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -265,7 +266,7 @@ export async function sendBookingEmails(s: EmailSessionData) {
 
   results.forEach((r, i) => {
     if (r.status === "rejected") {
-      console.error(`[emails] Failed to send booking email [${i}]:`, r.reason);
+      log.error(`Error enviando email de reserva [${i}]`, { reason: String(r.reason) });
     }
   });
 }
@@ -302,7 +303,7 @@ export async function sendCancellationEmails(s: EmailSessionData) {
 
   results.forEach((r, i) => {
     if (r.status === "rejected") {
-      console.error(`[emails] Failed to send cancellation email [${i}]:`, r.reason);
+      log.error(`Error enviando email de cancelación [${i}]`, { reason: String(r.reason) });
     }
   });
 }

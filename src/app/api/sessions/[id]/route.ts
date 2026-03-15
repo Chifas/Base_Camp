@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sendCancellationEmails } from "@/lib/emails";
+import { updateSessionSchema } from "@/lib/validations";
 
 // GET /api/sessions/[id] — load a single session for participants only
 export async function GET(
@@ -61,11 +62,16 @@ export async function PATCH(
       return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }
 
-    const { status } = await req.json();
-    const allowed = ["CONFIRMED", "CANCELLED", "COMPLETED"];
-    if (!allowed.includes(status)) {
-      return NextResponse.json({ error: "Estado no válido" }, { status: 400 });
+    const body = await req.json();
+    const parsed = updateSessionSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.errors[0].message },
+        { status: 400 }
+      );
     }
+
+    const { status } = parsed.data;
 
     // Verify the requesting user owns this session (as professional or client)
     // Include user emails so we can send notifications

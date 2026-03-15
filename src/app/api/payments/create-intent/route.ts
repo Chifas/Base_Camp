@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
+import { createIntentSchema } from "@/lib/validations";
+import { log } from "@/lib/logger";
 
 // POST /api/payments/create-intent
 // Creates a DB Session + Stripe PaymentIntent and returns the client secret
@@ -13,14 +15,23 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }
 
-    const { professionalId, scheduledAt, duration = 60, notes } = await req.json();
-
-    if (!professionalId || !scheduledAt) {
+    if (!stripe) {
       return NextResponse.json(
-        { error: "professionalId y scheduledAt son obligatorios" },
+        { error: "Stripe no está configurado" },
+        { status: 503 }
+      );
+    }
+
+    const body = await req.json();
+    const parsed = createIntentSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.errors[0].message },
         { status: 400 }
       );
     }
+
+    const { professionalId, scheduledAt, duration, notes } = parsed.data;
 
     // Fetch professional profile to get price and verify it exists
     const profile = await prisma.professionalProfile.findUnique({
@@ -102,7 +113,7 @@ export async function POST(req: Request) {
       amount: profile.hourlyRate,
     });
   } catch (err) {
-    console.error("[create-intent]", err);
+    log.error("Error al crear PaymentIntent", { error: String(err) });
     return NextResponse.json(
       { error: "Error al crear el pago" },
       { status: 500 }

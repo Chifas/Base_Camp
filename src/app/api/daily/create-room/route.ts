@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { log } from "@/lib/logger";
 
 const DAILY_API = "https://api.daily.co/v1";
 
@@ -109,7 +110,7 @@ export async function POST(req: Request) {
         const existing = await getRes.json();
         roomUrl = existing.url as string;
       } else {
-        console.error("[daily/create-room] Daily API error:", errBody);
+        log.error("Daily API error al crear sala", { error: errBody });
         return NextResponse.json(
           { error: "Error al crear la sala de videollamada" },
           { status: 502 }
@@ -125,7 +126,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ roomUrl });
   } catch (err) {
-    console.error("[daily/create-room]", err);
+    log.error("Error interno al preparar sala Daily", { error: String(err) });
     return NextResponse.json(
       { error: "Error interno al preparar la sala" },
       { status: 500 }

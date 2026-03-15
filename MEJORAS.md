@@ -99,23 +99,23 @@ Este documento recoge las mejoras recomendadas para `GuidePath`, priorizadas par
 - [x] Validación de variables de entorno
 - [x] Índices en Prisma
 
-### Fase 2 — Calidad y visibilidad
-- [ ] SEO dinámico
-- [ ] Revisión de `"use client"`
-- [ ] Testing básico
-- [ ] CI/CD con GitHub Actions
+### Fase 2 — Calidad y visibilidad ✅
+- [x] SEO dinámico
+- [x] Revisión de `"use client"`
+- [x] Testing básico
+- [x] CI/CD con GitHub Actions
 
-### Fase 3 — Modelo de negocio
-- [ ] Refactor del modelo de categorías
-- [ ] Revisión de ratings y reviews
-- [ ] Disponibilidad avanzada
-- [ ] Webhooks y pagos reales con Stripe
+### Fase 3 — Modelo de negocio ✅
+- [x] Refactor del modelo de categorías
+- [x] Revisión de ratings y reviews
+- [x] Disponibilidad avanzada
+- [x] Webhooks y pagos reales con Stripe
 
-### Fase 4 — Producción
-- [ ] Hardening de seguridad
-- [ ] Observabilidad y logs
-- [ ] Analítica
-- [ ] Preparación final para despliegue
+### Fase 4 — Producción ✅
+- [x] Hardening de seguridad (CSP, HSTS, RBAC middleware, Zod validation, auth fix)
+- [x] Observabilidad y logs (logger estructurado JSON, health check endpoint)
+- [x] Analítica (Vercel Analytics + Speed Insights)
+- [x] Preparación final para despliegue
 
 ---
 

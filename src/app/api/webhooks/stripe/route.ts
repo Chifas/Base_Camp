@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { env } from "@/lib/env";
 import { sendBookingConfirmation } from "@/lib/email";
 import type Stripe from "stripe";
+import { log } from "@/lib/logger";
 
 export async function POST(req: Request) {
   if (!stripe) {
@@ -34,7 +35,7 @@ export async function POST(req: Request) {
     );
   } catch (err) {
     const message = err instanceof Error ? err.message : "Error desconocido";
-    console.error("[Stripe Webhook] Firma inválida:", message);
+    log.error("Stripe webhook firma inválida", { message });
     return NextResponse.json(
       { error: `Firma inválida: ${message}` },
       { status: 400 }
@@ -49,7 +50,7 @@ export async function POST(req: Request) {
         const sessionId = checkoutSession.metadata?.sessionId;
 
         if (!sessionId) {
-          console.error("[Stripe Webhook] No sessionId in metadata");
+          log.error("Stripe webhook: no sessionId in metadata");
           break;
         }
 
@@ -73,9 +74,7 @@ export async function POST(req: Request) {
           },
         });
 
-        console.log(
-          `✅ Sesión ${sessionId} confirmada (payment: ${updatedSession.stripePaymentIntentId})`
-        );
+        log.info("Sesión confirmada", { sessionId, paymentIntentId: updatedSession.stripePaymentIntentId });
 
         // Send confirmation email
         if (updatedSession.client.email) {
@@ -111,18 +110,18 @@ export async function POST(req: Request) {
             where: { id: sessionId },
             data: { status: "CANCELLED" },
           });
-          console.log(`❌ Sesión ${sessionId} cancelada (checkout expirado)`);
+          log.info("Sesión cancelada por checkout expirado", { sessionId });
         }
         break;
       }
 
       default:
-        console.log(`[Stripe Webhook] Evento no manejado: ${event.type}`);
+        log.info("Stripe webhook evento no manejado", { type: event.type });
     }
 
     return NextResponse.json({ received: true });
   } catch (error) {
-    console.error("[Stripe Webhook] Error procesando evento:", error);
+    log.error("Stripe webhook error procesando evento", { error: String(error) });
     return NextResponse.json(
       { error: "Error procesando webhook" },
       { status: 500 }
