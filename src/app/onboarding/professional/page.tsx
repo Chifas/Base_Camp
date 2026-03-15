@@ -13,17 +13,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { Category } from "@/types";
+
+interface CategoryOption {
+  id: string;
+  name: string;
+}
 
 export default function ProfessionalOnboardingPage() {
   const router = useRouter();
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories, setCategories] = useState<CategoryOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
   // Form fields
-  const [categoryId, setCategoryId] = useState("");
+  const [category, setCategory] = useState("");
   const [headline, setHeadline] = useState("");
   const [hourlyRate, setHourlyRate] = useState("");
   const [bio, setBio] = useState("");
@@ -51,7 +55,7 @@ export default function ProfessionalOnboardingPage() {
     e.preventDefault();
     setError("");
 
-    if (!categoryId || !headline || !hourlyRate) {
+    if (!category || !headline || !hourlyRate) {
       setError("Por favor, completa todos los campos obligatorios.");
       return;
     }
@@ -74,7 +78,7 @@ export default function ProfessionalOnboardingPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          categoryId,
+          category,
           headline,
           hourlyRate: rate,
           bio: bio || undefined,
@@ -140,7 +144,7 @@ export default function ProfessionalOnboardingPage() {
               <Tag className="h-4 w-4 text-muted-foreground" />
               Categoría profesional *
             </label>
-            <Select value={categoryId} onValueChange={setCategoryId}>
+            <Select value={category} onValueChange={setCategory}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecciona tu especialidad" />
               </SelectTrigger>

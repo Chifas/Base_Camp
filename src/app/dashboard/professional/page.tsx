@@ -33,7 +33,10 @@ import { FadeIn } from "@/components/shared/motion-wrapper";
 import { DashboardSkeleton } from "@/components/shared/dashboard-skeleton";
 import { EmptyState } from "@/components/shared/empty-state";
 import { formatCurrency, formatDate, formatTime } from "@/lib/utils";
-import type { Category } from "@/types";
+interface CategoryOption {
+  id: string;
+  name: string;
+}
 
 const DAYS = [
   "Domingo",
@@ -72,7 +75,7 @@ interface ProfileData {
   id: string;
   headline: string | null;
   hourlyRate: number;
-  categoryId: string;
+  category: string;
   categoryName: string;
   name: string | null;
   bio: string | null;
@@ -91,7 +94,7 @@ export default function ProfessionalDashboard() {
   const [sessions, setSessions] = useState<SessionItem[]>([]);
   const [loadingAll, setLoadingAll] = useState(true);
   const [profile, setProfile] = useState<ProfileData | null>(null);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories, setCategories] = useState<CategoryOption[]>([]);
 
   // Availability state
   const [availability, setAvailability] = useState<AvailabilitySlot[]>(EMPTY_AVAILABILITY);
@@ -101,7 +104,7 @@ export default function ProfessionalDashboard() {
   // Profile edit state
   const [editHeadline, setEditHeadline] = useState("");
   const [editHourlyRate, setEditHourlyRate] = useState("");
-  const [editCategoryId, setEditCategoryId] = useState("");
+  const [editCategory, setEditCategory] = useState("");
   const [editBio, setEditBio] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
   const [profileMsg, setProfileMsg] = useState("");
@@ -127,7 +130,7 @@ export default function ProfessionalDashboard() {
         setProfile(profData);
         setEditHeadline(profData.headline ?? "");
         setEditHourlyRate(profData.hourlyRate?.toString() ?? "");
-        setEditCategoryId(profData.categoryId ?? "");
+        setEditCategory(profData.category ?? "");
         setEditBio(profData.bio ?? "");
 
         // Build availability from DB data
@@ -196,7 +199,7 @@ export default function ProfessionalDashboard() {
         body: JSON.stringify({
           headline: editHeadline || undefined,
           hourlyRate: rate,
-          categoryId: editCategoryId || undefined,
+          category: editCategory || undefined,
           bio: editBio || undefined,
         }),
       });
@@ -212,7 +215,7 @@ export default function ProfessionalDashboard() {
       setSavingProfile(false);
       setTimeout(() => setProfileMsg(""), 3000);
     }
-  }, [editHeadline, editHourlyRate, editCategoryId, editBio]);
+  }, [editHeadline, editHourlyRate, editCategory, editBio]);
 
   const confirmedSessions = useMemo(
     () => sessions.filter((s) => s.status === "CONFIRMED"),
@@ -461,7 +464,7 @@ export default function ProfessionalDashboard() {
                     <Tag className="h-4 w-4 text-muted-foreground" />
                     Categoría
                   </label>
-                  <Select value={editCategoryId} onValueChange={setEditCategoryId}>
+                  <Select value={editCategory} onValueChange={setEditCategory}>
                     <SelectTrigger>
                       <SelectValue placeholder="Selecciona categoría" />
                     </SelectTrigger>

@@ -3,7 +3,15 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { createProfessionalProfileSchema, updateProfessionalProfileSchema } from "@/lib/validations";
-import { logger } from "@/lib/logger";
+import { log as logger } from "@/lib/logger";
+
+/** Map enum values to human-readable names */
+const CATEGORY_LABELS: Record<string, { name: string; slug: string }> = {
+  CAREER_MENTOR: { name: "Mentor de Carrera", slug: "career-mentor" },
+  COACH: { name: "Coach Ejecutivo", slug: "coach" },
+  PSYCHOLOGIST: { name: "Psicólogo Laboral", slug: "psychologist" },
+  NUTRITIONIST: { name: "Nutricionista", slug: "nutritionist" },
+};
 
 // GET /api/professionals/me — get own professional profile
 export async function GET() {
@@ -16,7 +24,6 @@ export async function GET() {
     const profile = await prisma.professionalProfile.findUnique({
       where: { userId: session.user.id },
       include: {
-        category: true,
         user: { select: { name: true, email: true, image: true, bio: true } },
         availability: { orderBy: { dayOfWeek: "asc" } },
       },
@@ -26,6 +33,8 @@ export async function GET() {
       return NextResponse.json({ error: "Perfil no encontrado", hasProfile: false }, { status: 404 });
     }
 
+    const catInfo = CATEGORY_LABELS[profile.category] ?? { name: profile.category, slug: profile.category.toLowerCase() };
+
     return NextResponse.json({
       id: profile.id,
       headline: profile.headline,
@@ -33,9 +42,9 @@ export async function GET() {
       rating: profile.rating,
       reviewCount: profile.reviewCount,
       verified: profile.verified,
-      categoryId: profile.categoryId,
-      categoryName: profile.category.name,
-      categorySlug: profile.category.slug,
+      category: profile.category,
+      categoryName: catInfo.name,
+      categorySlug: catInfo.slug,
       name: profile.user.name,
       email: profile.user.email,
       image: profile.user.image,
@@ -74,13 +83,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const { categoryId, headline, hourlyRate, bio } = parsed.data;
-
-    // Verify category exists
-    const category = await prisma.category.findUnique({ where: { id: categoryId } });
-    if (!category) {
-      return NextResponse.json({ error: "Categoría no válida" }, { status: 400 });
-    }
+    const { category, headline, hourlyRate, bio } = parsed.data;
 
     // Create profile + update user bio in a transaction
     const profile = await prisma.$transaction(async (tx) => {
@@ -94,18 +97,17 @@ export async function POST(req: Request) {
       return tx.professionalProfile.create({
         data: {
           userId: session.user.id,
-          categoryId,
+          category,
           headline,
           hourlyRate,
         },
-        include: { category: true },
       });
     });
 
     logger.info("professional.profile_created", {
       profileId: profile.id,
       userId: session.user.id,
-      category: profile.category.slug,
+      category: profile.category,
     });
 
     return NextResponse.json(profile, { status: 201 });
@@ -139,15 +141,7 @@ export async function PUT(req: Request) {
       );
     }
 
-    const { categoryId, headline, hourlyRate, bio } = parsed.data;
-
-    // If categoryId provided, verify it exists
-    if (categoryId) {
-      const category = await prisma.category.findUnique({ where: { id: categoryId } });
-      if (!category) {
-        return NextResponse.json({ error: "Categoría no válida" }, { status: 400 });
-      }
-    }
+    const { category, headline, hourlyRate, bio } = parsed.data;
 
     const updated = await prisma.$transaction(async (tx) => {
       // Update user bio if provided
@@ -160,7 +154,7 @@ export async function PUT(req: Request) {
 
       // Build profile update data — only include fields that were sent
       const profileData: Record<string, unknown> = {};
-      if (categoryId !== undefined) profileData.categoryId = categoryId;
+      if (category !== undefined) profileData.category = category;
       if (headline !== undefined) profileData.headline = headline;
       if (hourlyRate !== undefined) profileData.hourlyRate = hourlyRate;
 
@@ -168,19 +162,11 @@ export async function PUT(req: Request) {
         return tx.professionalProfile.update({
           where: { id: existing.id },
           data: profileData,
-          include: {
-            category: true,
-            user: { select: { name: true, bio: true, image: true } },
-          },
         });
       }
 
       return tx.professionalProfile.findUnique({
         where: { id: existing.id },
-        include: {
-          category: true,
-          user: { select: { name: true, bio: true, image: true } },
-        },
       });
     });
 

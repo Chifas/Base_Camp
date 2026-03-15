@@ -3,6 +3,7 @@ import Image from "next/image";
 import { Star, ArrowRight, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { motion } from "framer-motion";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/shared/motion-wrapper";
 import type { Professional } from "@/types";
 import { formatCurrency } from "@/lib/utils";
@@ -41,17 +42,21 @@ export function FeaturedProfessionals({ professionals }: FeaturedProfessionalsPr
                 href={`/professional/${pro.id}`}
                 className="group block"
               >
-                <div className="glass relative overflow-hidden rounded-2xl transition-all hover:shadow-xl hover:-translate-y-1">
-                  {/* Image */}
-                  <div className="relative aspect-[4/5] overflow-hidden">
+                <div className="glass relative overflow-hidden rounded-2xl transition-all duration-300 hover:shadow-xl hover:-translate-y-2 card-glow">
+                  {/* Image with parallax hover */}
+                  <motion.div
+                    className="relative aspect-[4/5] overflow-hidden"
+                    whileHover={{ scale: 1.03 }}
+                    transition={{ duration: 0.6, ease: [0.33, 1, 0.68, 1] }}
+                  >
                     <Image
                       src={pro.image}
                       alt={pro.name}
                       fill
-                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                      className="object-cover transition-transform duration-700 group-hover:scale-110"
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/5 to-transparent transition-all duration-500 group-hover:from-black/80" />
 
                     {/* Badge overlay */}
                     <div className="absolute left-3 top-3">
@@ -78,18 +83,18 @@ export function FeaturedProfessionals({ professionals }: FeaturedProfessionalsPr
                         {pro.headline}
                       </p>
                     </div>
-                  </div>
+                  </motion.div>
 
                   {/* Card bottom */}
                   <div className="flex items-center justify-between p-4">
                     <div className="flex items-center gap-1">
-                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 drop-shadow-[0_0_3px_rgba(250,204,21,0.4)]" />
                       <span className="text-sm font-medium">{pro.rating}</span>
                       <span className="text-sm text-muted-foreground">
                         ({pro.reviewCount})
                       </span>
                     </div>
-                    <span className="font-heading text-lg font-bold text-primary">
+                    <span className="font-heading text-lg font-bold text-primary transition-transform duration-200 group-hover:scale-105 origin-right">
                       {formatCurrency(pro.hourlyRate)}
                       <span className="text-xs font-normal text-muted-foreground">
                         /h

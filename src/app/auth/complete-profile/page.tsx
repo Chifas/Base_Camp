@@ -31,9 +31,13 @@ export default function CompleteProfilePage() {
         });
       }
 
-      // Redirect to /dashboard — the router page will read fresh role from
-      // session (jwt callback always re-reads from DB) and redirect correctly
-      window.location.href = "/dashboard";
+      // Redirect based on role — professionals go to onboarding to complete
+      // their profile; clients go straight to dashboard
+      if (pendingRole === "PROFESSIONAL") {
+        window.location.href = "/onboarding/professional";
+      } else {
+        window.location.href = "/dashboard/client";
+      }
     }
 
     finalize();

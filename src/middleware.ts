@@ -14,6 +14,11 @@ export default withAuth(
       return NextResponse.redirect(new URL("/dashboard/professional", req.url));
     }
 
+    // Only professionals can access onboarding
+    if (path.startsWith("/onboarding/professional") && token?.role !== "PROFESSIONAL") {
+      return NextResponse.redirect(new URL("/dashboard/client", req.url));
+    }
+
     return NextResponse.next();
   },
   {
