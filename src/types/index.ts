@@ -29,6 +29,7 @@ export interface Professional {
   bio: string;
   headline: string;
   category: ProfessionalCategory;
+  categoryName?: string;
   hourlyRate: number;
   rating: number;
   reviewCount: number;

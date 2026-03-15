@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { CATEGORY_LABELS } from "@/types";
 
 export async function GET() {
   try {
@@ -21,6 +22,7 @@ export async function GET() {
       bio: p.user.bio ?? "",
       headline: p.headline ?? "",
       category: p.category,
+      categoryName: CATEGORY_LABELS[p.category] ?? p.category,
       hourlyRate: p.hourlyRate,
       rating: p.rating,
       reviewCount: p.reviewCount,

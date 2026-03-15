@@ -6,6 +6,7 @@ import { FeaturedProfessionals } from "@/components/landing/featured-professiona
 import { Testimonials } from "@/components/landing/testimonials";
 import { CTA } from "@/components/landing/cta";
 import type { Professional } from "@/types";
+import { CATEGORY_LABELS } from "@/types";
 
 export const metadata: Metadata = {
   title: "GuidePath — Encuentra tu camino con profesionales que te guían",
@@ -40,6 +41,7 @@ async function getFeaturedProfessionals(): Promise<Professional[]> {
       bio: p.user.bio ?? "",
       headline: p.headline ?? "",
       category: p.category as Professional["category"],
+      categoryName: CATEGORY_LABELS[p.category as Professional["category"]] ?? p.category,
       hourlyRate: p.hourlyRate,
       rating: p.rating,
       reviewCount: p.reviewCount,
