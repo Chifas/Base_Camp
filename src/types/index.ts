@@ -1,10 +1,10 @@
 export type UserRole = "CLIENT" | "PROFESSIONAL" | "ADMIN";
 
 export type ProfessionalCategory =
+  | "PSYCHOLOGIST"
+  | "COACH"
   | "CAREER_MENTOR"
-  | "EXECUTIVE_COACH"
-  | "SECTOR_EXPERT"
-  | "WORK_PSYCHOLOGIST";
+  | "NUTRITIONIST";
 
 export type SessionStatus =
   | "PENDING"
@@ -69,9 +69,9 @@ export interface Review {
 
 export const CATEGORY_LABELS: Record<ProfessionalCategory, string> = {
   CAREER_MENTOR: "Mentor de Carrera",
-  EXECUTIVE_COACH: "Coach Ejecutivo",
-  SECTOR_EXPERT: "Experto Sectorial",
-  WORK_PSYCHOLOGIST: "Psicólogo/a Laboral",
+  COACH: "Coach Ejecutivo",
+  PSYCHOLOGIST: "Psicólogo/a Laboral",
+  NUTRITIONIST: "Nutricionista",
 };
 
 export const STATUS_LABELS: Record<SessionStatus, string> = {

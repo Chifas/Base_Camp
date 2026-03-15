@@ -43,6 +43,30 @@ export const availabilitySchema = z.object({
   ),
 });
 
+// Valid ProfessionalCategory enum values (must match prisma schema)
+const professionalCategoryEnum = z.enum([
+  "PSYCHOLOGIST",
+  "COACH",
+  "CAREER_MENTOR",
+  "NUTRITIONIST",
+]);
+
+// POST /api/professionals/me (onboarding — create profile)
+export const createProfessionalProfileSchema = z.object({
+  category: professionalCategoryEnum,
+  headline: z.string().min(5, "El titular debe tener al menos 5 caracteres").max(120),
+  hourlyRate: z.number().min(1, "La tarifa debe ser al menos 1€"),
+  bio: z.string().max(1000).optional(),
+});
+
+// PUT /api/professionals/me (edit profile)
+export const updateProfessionalProfileSchema = z.object({
+  category: professionalCategoryEnum.optional(),
+  headline: z.string().min(5).max(120).optional(),
+  hourlyRate: z.number().min(1).optional(),
+  bio: z.string().max(1000).optional(),
+});
+
 // PATCH /api/sessions/[id]
 export const updateSessionSchema = z.object({
   status: z.enum(["CONFIRMED", "CANCELLED", "COMPLETED"]),
