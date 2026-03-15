@@ -28,22 +28,22 @@
 ## Fase 2: Funcionalidades Core Pendientes
 
 ### 2.1 Stripe Connect (pagos a profesionales)
-- [ ] **Flujo completo de onboarding Stripe Connect**: El endpoint existe pero no está integrado en el dashboard
-- [ ] **Transferencias automáticas**: Al completar sesión, transferir al profesional su parte
-- [ ] **Comisión de plataforma**: Definir % de comisión y aplicarlo en cada pago
-- [ ] **Panel de pagos**: Historial de transferencias, estado de cuenta, próximos pagos
+- [x] **Flujo completo de onboarding Stripe Connect**: Botón en dashboard profesional, `POST /api/stripe/connect` → redirect a Stripe, webhook `account.updated` marca `stripeConnected`
+- [x] **Transferencias automáticas**: Al completar sesión, `stripe.transfers.create()` transfiere 85% al profesional, guarda `stripeTransferId`
+- [x] **Comisión de plataforma**: 15% de comisión aplicada en cada transferencia
+- [x] **Panel de pagos**: `GET /api/stripe/transfers` con historial, ingresos brutos/comisión/neto en tab de earnings del dashboard
 
 ### 2.2 Sistema de notificaciones
-- [ ] **Emails transaccionales mejorados**: Templates HTML profesionales con branding GuidePath
-- [ ] **Recordatorio pre-sesión**: Email/notificación 24h y 1h antes de la sesión
-- [ ] **Notificación de nueva review**: Email al profesional cuando recibe una valoración
-- [ ] **Notificaciones in-app**: Centro de notificaciones en el navbar con badge de no leídas
+- [x] **Emails transaccionales mejorados**: Templates HTML con branding GuidePath para confirmación, recordatorio y nueva review
+- [x] **Recordatorio pre-sesión**: Cron cada 15min (`/api/cron/session-reminders`) envía email + notificación in-app 1h antes
+- [x] **Notificación de nueva review**: Email + notificación in-app al profesional al recibir valoración
+- [x] **Notificaciones in-app**: `NotificationBell` en navbar con badge, dropdown últimas 5, polling 30s, marcar leídas (`/api/notifications`)
 
 ### 2.3 Gestión de sesiones avanzada
-- [ ] **Reprogramar sesión**: Permitir cambiar fecha/hora de una sesión confirmada
-- [ ] **Política de cancelación**: Cancelación gratuita hasta 24h antes, cargo parcial después
-- [ ] **Notas de sesión**: El profesional puede añadir notas privadas post-sesión
-- [ ] **Historial de sesiones completo**: Filtros por fecha, estado, profesional/cliente
+- [x] **Reprogramar sesión**: `POST/PATCH /api/sessions/[id]/reschedule` con propuestas, aceptar/rechazar por la otra parte
+- [x] **Política de cancelación**: Gratis >24h, 50% cargo <24h (cliente), refund completo si profesional cancela. `src/lib/cancellation.ts`
+- [x] **Notas de sesión**: Profesional puede guardar notas post-sesión en sesiones COMPLETED via `PATCH /api/sessions/[id]`
+- [x] **Historial de sesiones completo**: Filtros `?status=X&from=Y&to=Z&page=N&limit=M` en `GET /api/sessions`
 
 ---
 
