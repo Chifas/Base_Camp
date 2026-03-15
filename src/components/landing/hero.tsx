@@ -66,7 +66,7 @@ export function Hero() {
             transition={{ duration: 0.6, delay: 0.45 }}
             className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row"
           >
-            <Button size="lg" className="w-full sm:w-auto group btn-glow" asChild>
+            <Button size="lg" className="w-full sm:w-auto group btn-glow bg-indigo-600 text-white hover:bg-indigo-700" asChild>
               <Link href="/explore">
                 Explorar profesionales
                 <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -75,7 +75,7 @@ export function Hero() {
             <Button
               variant="outline"
               size="lg"
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto border-white/30 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20 hover:text-white"
               asChild
             >
               <Link href="#como-funciona">
