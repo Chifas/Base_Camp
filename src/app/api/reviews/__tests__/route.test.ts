@@ -38,7 +38,8 @@ vi.mock("@/lib/prisma", () => {
         findUnique: vi.fn(),
         update: vi.fn(),
       },
-      $transaction: vi.fn(async (cb: (tx: typeof mockTx) => Promise<unknown>) => cb(mockTx)),
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      $transaction: vi.fn(async (cb: (_tx: typeof mockTx) => Promise<unknown>) => cb(mockTx)),
       __mockTx: mockTx,
     },
   };
@@ -50,8 +51,8 @@ import { prisma } from "@/lib/prisma";
 
 const mockGetSession = vi.mocked(getServerSession);
 const mockSessionFindUnique = vi.mocked(prisma.session.findUnique);
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mockTx = (prisma as any).__mockTx;
+// @ts-expect-error — test-only hidden property for tx mock
+const mockTx = prisma.__mockTx;
 
 function makeRequest(body: Record<string, unknown>) {
   return new Request("http://localhost:3000/api/reviews", {
