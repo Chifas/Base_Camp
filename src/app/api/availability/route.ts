@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { availabilitySchema } from "@/lib/validations";
 
 // GET /api/availability — return the authenticated professional's availability
 export async function GET() {
@@ -35,13 +36,16 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }
 
-    const { slots } = await req.json() as {
-      slots: { dayOfWeek: number; startTime: string; endTime: string; enabled: boolean }[];
-    };
-
-    if (!Array.isArray(slots)) {
-      return NextResponse.json({ error: "slots debe ser un array" }, { status: 400 });
+    const body = await req.json();
+    const parsed = availabilitySchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.errors[0].message },
+        { status: 400 }
+      );
     }
+
+    const { slots } = parsed.data;
 
     const profile = await prisma.professionalProfile.findUnique({
       where: { userId: session.user.id },

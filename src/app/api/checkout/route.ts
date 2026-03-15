@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import Stripe from "stripe";
 import { stripe } from "@/lib/stripe";
 import { env } from "@/lib/env";
+import { checkoutSchema } from "@/lib/validations";
+import { log } from "@/lib/logger";
 
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
@@ -22,14 +24,15 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
-    const { professionalId, date, time, notes } = body;
-
-    if (!professionalId || !date || !time) {
+    const parsed = checkoutSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: "Faltan datos requeridos" },
+        { error: parsed.error.errors[0].message },
         { status: 400 }
       );
     }
+
+    const { professionalId, date, time, notes } = parsed.data;
 
     // Find professional
     const professional = await prisma.professionalProfile.findUnique({
@@ -161,7 +164,7 @@ export async function POST(req: Request) {
       sessionId: dbSession.id,
     });
   } catch (error) {
-    console.error("[/api/checkout]", error);
+    log.error("Error en checkout", { error: String(error) });
     return NextResponse.json(
       { error: "Error al crear la sesión de pago" },
       { status: 500 }

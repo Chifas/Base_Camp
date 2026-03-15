@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { reviewSchema } from "@/lib/validations";
 
 // POST /api/reviews — create a review for a completed session
 export async function POST(req: Request) {
@@ -11,14 +12,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }
 
-    const { sessionId, rating, comment } = await req.json();
-
-    if (!sessionId || typeof rating !== "number" || rating < 1 || rating > 5) {
+    const body = await req.json();
+    const parsed = reviewSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: "sessionId y rating (1-5) son obligatorios" },
+        { error: parsed.error.errors[0].message },
         { status: 400 }
       );
     }
+
+    const { sessionId, rating, comment } = parsed.data;
 
     // Verify the session exists and is COMPLETED
     const dbSession = await prisma.session.findUnique({
