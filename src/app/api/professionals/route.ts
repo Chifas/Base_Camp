@@ -8,7 +8,6 @@ export async function GET() {
         user: {
           select: { id: true, name: true, image: true, bio: true },
         },
-        category: true,
         availability: true,
       },
       orderBy: { rating: "desc" },
@@ -21,8 +20,7 @@ export async function GET() {
       image: p.user.image ?? "",
       bio: p.user.bio ?? "",
       headline: p.headline ?? "",
-      category: p.category.slug,
-      categoryName: p.category.name,
+      category: p.category,
       hourlyRate: p.hourlyRate,
       rating: p.rating,
       reviewCount: p.reviewCount,

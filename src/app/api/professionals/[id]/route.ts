@@ -12,12 +12,7 @@ export async function GET(
         user: {
           select: { id: true, name: true, image: true, bio: true },
         },
-        category: true,
         availability: true,
-        blockedDates: {
-          where: { date: { gte: new Date() } },
-          orderBy: { date: "asc" },
-        },
         sessions: {
           where: { status: "COMPLETED" },
           include: {
@@ -59,8 +54,7 @@ export async function GET(
       image: professional.user.image ?? "",
       bio: professional.user.bio ?? "",
       headline: professional.headline ?? "",
-      category: professional.category.slug,
-      categoryName: professional.category.name,
+      category: professional.category,
       hourlyRate: professional.hourlyRate,
       rating: professional.rating,
       reviewCount: professional.reviewCount,
@@ -70,11 +64,6 @@ export async function GET(
         dayOfWeek: a.dayOfWeek,
         startTime: a.startTime,
         endTime: a.endTime,
-      })),
-      blockedDates: professional.blockedDates.map((b) => ({
-        id: b.id,
-        date: b.date.toISOString(),
-        reason: b.reason,
       })),
       reviews,
     });

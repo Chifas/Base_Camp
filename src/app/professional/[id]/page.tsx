@@ -9,6 +9,7 @@ import {
   Star,
   CheckCircle2,
   Clock,
+  MapPin,
   Calendar,
   ChevronLeft,
   MessageSquare,
@@ -18,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { FadeIn } from "@/components/shared/motion-wrapper";
-import type { Professional, Review } from "@/types";
+import { CATEGORY_LABELS, type Professional, type Review } from "@/types";
 
 const TIME_SLOTS = [
   "08:00","09:00","10:00","11:00","12:00","13:00",
@@ -49,7 +50,7 @@ function getNextDays(count: number) {
 
 export default function ProfessionalProfilePage() {
   const params = useParams();
-  const [professional, setProfessional] = useState<(Professional & { reviews: Review[]; blockedDates?: { id: string; date: string; reason: string | null }[] }) | null>(null);
+  const [professional, setProfessional] = useState<(Professional & { reviews: Review[] }) | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
@@ -65,22 +66,13 @@ export default function ProfessionalProfilePage() {
 
   const nextDays = useMemo(() => getNextDays(14), []);
 
-  // Filter available days based on professional availability and blocked dates
+  // Filter available days based on professional availability
   const availableDays = useMemo(() => {
     if (!professional) return [];
     const availableDayOfWeek = professional.availability.map(
       (a) => a.dayOfWeek
     );
-    const blockedDateStrings = new Set(
-      (professional.blockedDates ?? []).map((b) =>
-        new Date(b.date).toDateString()
-      )
-    );
-    return nextDays.filter(
-      (d) =>
-        availableDayOfWeek.includes(d.getDay()) &&
-        !blockedDateStrings.has(d.toDateString())
-    );
+    return nextDays.filter((d) => availableDayOfWeek.includes(d.getDay()));
   }, [professional, nextDays]);
 
   // Filter available time slots for selected date
@@ -166,7 +158,7 @@ export default function ProfessionalProfilePage() {
 
                 <div className="mt-3 flex flex-wrap items-center gap-3">
                   <Badge variant="secondary">
-                    {professional.categoryName}
+                    {CATEGORY_LABELS[professional.category]}
                   </Badge>
                   <div className="flex items-center gap-1">
                     <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
