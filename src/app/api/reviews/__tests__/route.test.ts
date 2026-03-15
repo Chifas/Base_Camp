@@ -38,7 +38,6 @@ vi.mock("@/lib/prisma", () => {
         findUnique: vi.fn(),
         update: vi.fn(),
       },
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       $transaction: vi.fn(async (cb: (_tx: typeof mockTx) => Promise<unknown>) => cb(mockTx)),
       __mockTx: mockTx,
     },
