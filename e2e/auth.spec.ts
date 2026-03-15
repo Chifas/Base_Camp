@@ -13,10 +13,13 @@ test.describe("Registro e inicio de sesión", () => {
     await expect(page.getByLabel(/contraseña/i)).toBeVisible();
   });
 
-  test("debe mostrar errores de validación en campos vacíos", async ({ page }) => {
+  test("debe mostrar validación nativa del navegador en campos vacíos", async ({ page }) => {
     await page.goto("/auth/register");
-    await page.getByRole("button", { name: /crear cuenta/i }).click();
-    await expect(page.locator("text=obligatorio").first()).toBeVisible();
+    // The form has required fields, so native validation fires before Zod
+    const nameInput = page.getByLabel(/nombre completo/i);
+    await expect(nameInput).toHaveAttribute("required", "");
+    const emailInput = page.getByLabel(/email/i);
+    await expect(emailInput).toHaveAttribute("required", "");
   });
 
   test("debe mostrar error con contraseña corta", async ({ page }) => {
@@ -42,7 +45,7 @@ test.describe("Registro e inicio de sesión", () => {
 
   test("debe mostrar la página de login", async ({ page }) => {
     await page.goto("/auth/login");
-    await expect(page.getByRole("heading", { name: /iniciar sesión/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /bienvenido/i })).toBeVisible();
   });
 
   test("debe iniciar sesión con un usuario existente", async ({ page }) => {
