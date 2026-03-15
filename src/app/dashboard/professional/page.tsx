@@ -378,7 +378,10 @@ export default function ProfessionalDashboard() {
                         <span className="text-sm font-medium">
                           {formatCurrency(session.price)}
                         </span>
-                        <Button size="sm">
+                        <Button
+                          size="sm"
+                          onClick={() => router.push(`/session/${session.id}`)}
+                        >
                           <Video className="mr-2 h-4 w-4" />
                           Iniciar sesión
                         </Button>
