@@ -75,6 +75,12 @@ export const CATEGORY_LABELS: Record<ProfessionalCategory, string> = {
   NUTRITIONIST: "Nutricionista",
 };
 
+export interface Category {
+  id: string;
+  name: string;
+  slug: string;
+}
+
 export const STATUS_LABELS: Record<SessionStatus, string> = {
   PENDING: "Pendiente",
   CONFIRMED: "Confirmada",
