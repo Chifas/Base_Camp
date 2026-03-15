@@ -1,0 +1,223 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { Compass, Loader2, Briefcase, DollarSign, FileText, Tag } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import type { Category } from "@/types";
+
+export default function ProfessionalOnboardingPage() {
+  const router = useRouter();
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  // Form fields
+  const [categoryId, setCategoryId] = useState("");
+  const [headline, setHeadline] = useState("");
+  const [hourlyRate, setHourlyRate] = useState("");
+  const [bio, setBio] = useState("");
+
+  // Check if already has profile + load categories
+  useEffect(() => {
+    Promise.all([
+      fetch("/api/professionals/me").then((r) => r.json()),
+      fetch("/api/categories").then((r) => r.json()),
+    ])
+      .then(([profileData, catsData]) => {
+        if (profileData.hasProfile) {
+          router.replace("/dashboard/professional");
+          return;
+        }
+        setCategories(Array.isArray(catsData) ? catsData : []);
+      })
+      .catch(() => {
+        setCategories([]);
+      })
+      .finally(() => setLoading(false));
+  }, [router]);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+
+    if (!categoryId || !headline || !hourlyRate) {
+      setError("Por favor, completa todos los campos obligatorios.");
+      return;
+    }
+
+    const rate = parseFloat(hourlyRate);
+    if (isNaN(rate) || rate < 1) {
+      setError("La tarifa debe ser al menos 1€.");
+      return;
+    }
+
+    if (headline.length < 5) {
+      setError("El titular debe tener al menos 5 caracteres.");
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      const res = await fetch("/api/professionals/me", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          categoryId,
+          headline,
+          hourlyRate: rate,
+          bio: bio || undefined,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error ?? "Error al crear el perfil.");
+        setSubmitting(false);
+        return;
+      }
+
+      router.push("/dashboard/professional");
+      router.refresh();
+    } catch {
+      setError("Error de conexión. Inténtalo de nuevo.");
+      setSubmitting(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-12">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-lg"
+      >
+        {/* Header */}
+        <div className="text-center">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+            <Compass className="h-7 w-7" />
+          </div>
+          <h1 className="mt-4 font-heading text-2xl font-bold">
+            Configura tu perfil profesional
+          </h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Completa tu perfil para que los clientes puedan encontrarte y reservar sesiones contigo.
+          </p>
+        </div>
+
+        {/* Form */}
+        <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
+          {error && (
+            <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              {error}
+            </p>
+          )}
+
+          {/* Category */}
+          <div className="space-y-2">
+            <label className="flex items-center gap-2 text-sm font-medium">
+              <Tag className="h-4 w-4 text-muted-foreground" />
+              Categoría profesional *
+            </label>
+            <Select value={categoryId} onValueChange={setCategoryId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecciona tu especialidad" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((cat) => (
+                  <SelectItem key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Headline */}
+          <div className="space-y-2">
+            <label htmlFor="headline" className="flex items-center gap-2 text-sm font-medium">
+              <Briefcase className="h-4 w-4 text-muted-foreground" />
+              Titular profesional *
+            </label>
+            <Input
+              id="headline"
+              placeholder="Ej: Coach ejecutivo con 10 años de experiencia"
+              value={headline}
+              onChange={(e) => setHeadline(e.target.value)}
+              maxLength={120}
+            />
+            <p className="text-xs text-muted-foreground">
+              Una frase corta que describa tu perfil ({headline.length}/120)
+            </p>
+          </div>
+
+          {/* Hourly rate */}
+          <div className="space-y-2">
+            <label htmlFor="rate" className="flex items-center gap-2 text-sm font-medium">
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+              Tarifa por sesión (€) *
+            </label>
+            <Input
+              id="rate"
+              type="number"
+              min="1"
+              step="0.01"
+              placeholder="65"
+              value={hourlyRate}
+              onChange={(e) => setHourlyRate(e.target.value)}
+            />
+          </div>
+
+          {/* Bio */}
+          <div className="space-y-2">
+            <label htmlFor="bio" className="flex items-center gap-2 text-sm font-medium">
+              <FileText className="h-4 w-4 text-muted-foreground" />
+              Sobre ti (opcional)
+            </label>
+            <textarea
+              id="bio"
+              className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              placeholder="Cuéntale a tus clientes potenciales sobre tu experiencia, formación y enfoque..."
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              maxLength={1000}
+            />
+            <p className="text-xs text-muted-foreground">{bio.length}/1000</p>
+          </div>
+
+          <Button type="submit" className="w-full" size="lg" disabled={submitting}>
+            {submitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Creando perfil...
+              </>
+            ) : (
+              "Crear perfil profesional"
+            )}
+          </Button>
+        </form>
+      </motion.div>
+    </div>
+  );
+}

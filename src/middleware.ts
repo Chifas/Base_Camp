@@ -30,5 +30,6 @@ export const config = {
     "/dashboard/:path*",
     "/session/:path*",
     "/book/:path*",
+    "/onboarding/:path*",
   ],
 };

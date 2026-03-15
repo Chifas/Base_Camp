@@ -63,7 +63,7 @@ export default function RegisterPage() {
     }
 
     router.push(
-      role === "PROFESSIONAL" ? "/dashboard/professional" : "/dashboard/client"
+      role === "PROFESSIONAL" ? "/onboarding/professional" : "/dashboard/client"
     );
     router.refresh();
   }
