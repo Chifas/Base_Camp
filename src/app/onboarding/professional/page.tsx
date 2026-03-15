@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { Compass, Loader2, Briefcase, DollarSign, FileText, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { createProfessionalProfileSchema } from "@/lib/validations";
 import {
   Select,
   SelectContent,
@@ -31,6 +32,7 @@ export default function ProfessionalOnboardingPage() {
   const [headline, setHeadline] = useState("");
   const [hourlyRate, setHourlyRate] = useState("");
   const [bio, setBio] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   // Check if already has profile + load categories
   useEffect(() => {
@@ -54,20 +56,23 @@ export default function ProfessionalOnboardingPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-
-    if (!category || !headline || !hourlyRate) {
-      setError("Por favor, completa todos los campos obligatorios.");
-      return;
-    }
+    setFieldErrors({});
 
     const rate = parseFloat(hourlyRate);
-    if (isNaN(rate) || rate < 1) {
-      setError("La tarifa debe ser al menos 1€.");
-      return;
-    }
+    const parsed = createProfessionalProfileSchema.safeParse({
+      category: category || undefined,
+      headline,
+      hourlyRate: isNaN(rate) ? 0 : rate,
+      bio: bio || undefined,
+    });
 
-    if (headline.length < 5) {
-      setError("El titular debe tener al menos 5 caracteres.");
+    if (!parsed.success) {
+      const errors: Record<string, string> = {};
+      parsed.error.errors.forEach((err) => {
+        const field = err.path[0]?.toString();
+        if (field && !errors[field]) errors[field] = err.message;
+      });
+      setFieldErrors(errors);
       return;
     }
 
@@ -144,8 +149,8 @@ export default function ProfessionalOnboardingPage() {
               <Tag className="h-4 w-4 text-muted-foreground" />
               Categoría profesional *
             </label>
-            <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger>
+            <Select value={category} onValueChange={(v) => { setCategory(v); setFieldErrors((prev) => ({ ...prev, category: "" })); }}>
+              <SelectTrigger className={fieldErrors.category ? "border-destructive" : ""}>
                 <SelectValue placeholder="Selecciona tu especialidad" />
               </SelectTrigger>
               <SelectContent>
@@ -156,6 +161,7 @@ export default function ProfessionalOnboardingPage() {
                 ))}
               </SelectContent>
             </Select>
+            {fieldErrors.category && <p className="text-xs text-destructive">{fieldErrors.category}</p>}
           </div>
 
           {/* Headline */}
@@ -167,13 +173,15 @@ export default function ProfessionalOnboardingPage() {
             <Input
               id="headline"
               placeholder="Ej: Coach ejecutivo con 10 años de experiencia"
+              className={fieldErrors.headline ? "border-destructive" : ""}
               value={headline}
-              onChange={(e) => setHeadline(e.target.value)}
+              onChange={(e) => { setHeadline(e.target.value); setFieldErrors((prev) => ({ ...prev, headline: "" })); }}
               maxLength={120}
             />
             <p className="text-xs text-muted-foreground">
               Una frase corta que describa tu perfil ({headline.length}/120)
             </p>
+            {fieldErrors.headline && <p className="text-xs text-destructive">{fieldErrors.headline}</p>}
           </div>
 
           {/* Hourly rate */}
@@ -188,9 +196,11 @@ export default function ProfessionalOnboardingPage() {
               min="1"
               step="0.01"
               placeholder="65"
+              className={fieldErrors.hourlyRate ? "border-destructive" : ""}
               value={hourlyRate}
-              onChange={(e) => setHourlyRate(e.target.value)}
+              onChange={(e) => { setHourlyRate(e.target.value); setFieldErrors((prev) => ({ ...prev, hourlyRate: "" })); }}
             />
+            {fieldErrors.hourlyRate && <p className="text-xs text-destructive">{fieldErrors.hourlyRate}</p>}
           </div>
 
           {/* Bio */}
@@ -201,13 +211,14 @@ export default function ProfessionalOnboardingPage() {
             </label>
             <textarea
               id="bio"
-              className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className={`flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${fieldErrors.bio ? "border-destructive" : ""}`}
               placeholder="Cuéntale a tus clientes potenciales sobre tu experiencia, formación y enfoque..."
               value={bio}
-              onChange={(e) => setBio(e.target.value)}
+              onChange={(e) => { setBio(e.target.value); setFieldErrors((prev) => ({ ...prev, bio: "" })); }}
               maxLength={1000}
             />
             <p className="text-xs text-muted-foreground">{bio.length}/1000</p>
+            {fieldErrors.bio && <p className="text-xs text-destructive">{fieldErrors.bio}</p>}
           </div>
 
           <Button type="submit" className="w-full" size="lg" disabled={submitting}>

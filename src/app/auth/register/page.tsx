@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import { Compass, Mail, Lock, Eye, EyeOff, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { registerSchema } from "@/lib/validations";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -18,17 +19,21 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    setFieldErrors({});
 
-    if (!name || !email || !password) {
-      setError("Por favor, completa todos los campos.");
-      return;
-    }
-    if (password.length < 8) {
-      setError("La contraseña debe tener al menos 8 caracteres.");
+    const parsed = registerSchema.safeParse({ name, email, password, role });
+    if (!parsed.success) {
+      const errors: Record<string, string> = {};
+      parsed.error.errors.forEach((err) => {
+        const field = err.path[0]?.toString();
+        if (field && !errors[field]) errors[field] = err.message;
+      });
+      setFieldErrors(errors);
       return;
     }
 
@@ -181,12 +186,13 @@ export default function RegisterPage() {
                   id="name"
                   type="text"
                   placeholder="Tu nombre"
-                  className="pl-10"
+                  className={`pl-10 ${fieldErrors.name ? "border-destructive" : ""}`}
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(e) => { setName(e.target.value); setFieldErrors((prev) => ({ ...prev, name: "" })); }}
                   required
                 />
               </div>
+              {fieldErrors.name && <p className="text-xs text-destructive">{fieldErrors.name}</p>}
             </div>
 
             <div className="space-y-2">
@@ -202,12 +208,13 @@ export default function RegisterPage() {
                   id="email"
                   type="email"
                   placeholder="tu@email.com"
-                  className="pl-10"
+                  className={`pl-10 ${fieldErrors.email ? "border-destructive" : ""}`}
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => { setEmail(e.target.value); setFieldErrors((prev) => ({ ...prev, email: "" })); }}
                   required
                 />
               </div>
+              {fieldErrors.email && <p className="text-xs text-destructive">{fieldErrors.email}</p>}
             </div>
 
             <div className="space-y-2">
@@ -223,9 +230,9 @@ export default function RegisterPage() {
                   id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="Mínimo 8 caracteres"
-                  className="pl-10 pr-10"
+                  className={`pl-10 pr-10 ${fieldErrors.password ? "border-destructive" : ""}`}
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => { setPassword(e.target.value); setFieldErrors((prev) => ({ ...prev, password: "" })); }}
                   required
                 />
                 <button
@@ -240,6 +247,7 @@ export default function RegisterPage() {
                   )}
                 </button>
               </div>
+              {fieldErrors.password && <p className="text-xs text-destructive">{fieldErrors.password}</p>}
             </div>
 
             <Button type="submit" className="w-full" size="lg" disabled={loading}>

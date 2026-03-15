@@ -8,17 +8,17 @@
 - [x] **Botón Iniciar sesión (videollamada)**: Conectado a la ruta `/session/[id]`
 - [x] **Botones CTA visibles en ambos modos**: Corregido contraste en hero y CTA para light/dark mode
 - [x] **Validación de disponibilidad**: Permitir strings vacíos en slots deshabilitados
-- [ ] **Protección de rutas completa**: El middleware actual protege rutas básicas pero falta proteger APIs sensibles (ej: solo el profesional puede marcar COMPLETED, solo el cliente puede cancelar)
-- [ ] **Manejo de errores global**: Añadir `error.tsx` específicos por sección (dashboard, booking, session) con mensajes descriptivos
-- [ ] **Loading states**: Añadir `loading.tsx` en cada ruta para mejor UX durante navegación
+- [x] **Protección de rutas completa**: Validación de roles en PATCH sessions (solo profesional confirma/completa) + transiciones de estado válidas (PENDING→CONFIRMED→COMPLETED, no reversibles)
+- [x] **Manejo de errores global**: `error.tsx` específicos para dashboard, booking, session y explore con mensajes descriptivos
+- [x] **Loading states**: `loading.tsx` con skeletons en dashboard, explore, booking, session, perfil profesional, login y registro
 
 ### 1.2 Validaciones de formulario
-- [ ] **Zod en todos los formularios cliente**: Validación en tiempo real en registro, onboarding, booking y perfil profesional
-- [ ] **Feedback de errores inline**: Mostrar errores debajo de cada campo, no solo alertas genéricas
-- [ ] **Validación de horarios**: Impedir que `endTime` sea menor que `startTime` en disponibilidad
+- [x] **Zod en formularios cliente**: Validación con schemas Zod en registro y onboarding profesional
+- [x] **Feedback de errores inline**: Errores por campo con borde rojo y mensaje debajo, se limpian al editar
+- [x] **Validación de horarios**: Impide guardar disponibilidad si `endTime` <= `startTime`, con mensaje de error indicando el día
 
 ### 1.3 Tests
-- [ ] **Ampliar cobertura de tests unitarios**: Cubrir todos los API routes (actualmente solo 4 de 15+ tienen tests)
+- [x] **Ampliar cobertura de tests unitarios**: 44 tests pasando — availability (GET/PUT), sessions PATCH (roles + transiciones), reviews, register, professionals, utils, env
 - [ ] **Tests de integración**: Flujo completo de booking (crear intent → webhook → confirmar)
 - [ ] **Tests de componentes**: Dashboard, formularios de perfil, sistema de reviews
 - [ ] **E2E con Playwright**: Flujo de registro → onboarding → booking → videollamada → review

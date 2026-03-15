@@ -99,11 +99,31 @@ export async function PATCH(
       return NextResponse.json({ error: "Sin permisos" }, { status: 403 });
     }
 
-    // Only the professional can confirm; either party can cancel
+    // Only the professional can confirm or complete
     if (status === "CONFIRMED" && !isProfessional) {
       return NextResponse.json(
         { error: "Solo el profesional puede confirmar sesiones" },
         { status: 403 }
+      );
+    }
+    if (status === "COMPLETED" && !isProfessional) {
+      return NextResponse.json(
+        { error: "Solo el profesional puede completar sesiones" },
+        { status: 403 }
+      );
+    }
+
+    // Validate status transitions
+    const validTransitions: Record<string, string[]> = {
+      PENDING:   ["CONFIRMED", "CANCELLED"],
+      CONFIRMED: ["COMPLETED", "CANCELLED"],
+      COMPLETED: [],
+      CANCELLED: [],
+    };
+    if (!validTransitions[existing.status]?.includes(status)) {
+      return NextResponse.json(
+        { error: `No se puede cambiar de ${existing.status} a ${status}` },
+        { status: 400 }
       );
     }
 

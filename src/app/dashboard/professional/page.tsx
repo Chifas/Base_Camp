@@ -179,6 +179,15 @@ export default function ProfessionalDashboard() {
 
   // Save availability handler
   const handleSaveAvailability = useCallback(async () => {
+    // Validate time ranges before saving
+    const invalidSlot = availability.find(
+      (s) => s.enabled && s.startTime && s.endTime && s.startTime >= s.endTime
+    );
+    if (invalidSlot) {
+      setAvailabilityMsg(`Error: La hora de fin debe ser posterior a la de inicio (${DAYS[invalidSlot.dayOfWeek]}).`);
+      return;
+    }
+
     setSavingAvailability(true);
     setAvailabilityMsg("");
     try {
@@ -471,7 +480,7 @@ export default function ProfessionalDashboard() {
                   Guardar disponibilidad
                 </Button>
                 {availabilityMsg && (
-                  <span className="text-sm text-muted-foreground">{availabilityMsg}</span>
+                  <span className={`text-sm ${availabilityMsg.startsWith("Error") ? "text-destructive" : "text-muted-foreground"}`}>{availabilityMsg}</span>
                 )}
               </div>
             </div>
