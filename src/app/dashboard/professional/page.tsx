@@ -109,6 +109,33 @@ export default function ProfessionalDashboard() {
   const [savingProfile, setSavingProfile] = useState(false);
   const [profileMsg, setProfileMsg] = useState("");
 
+  // Stripe Connect state
+  const [stripeStatus, setStripeStatus] = useState<{
+    connected: boolean;
+    onboarded: boolean;
+  } | null>(null);
+  const [connectingStripe, setConnectingStripe] = useState(false);
+
+  // Earnings state
+  interface Transfer {
+    sessionId: string;
+    clientName: string;
+    scheduledAt: string;
+    grossAmount: number;
+    commission: number;
+    netAmount: number;
+    transferred: boolean;
+  }
+  interface EarningsSummary {
+    totalGross: number;
+    totalNet: number;
+    totalCommission: number;
+    totalSessions: number;
+    transferredCount: number;
+  }
+  const [transfers, setTransfers] = useState<Transfer[]>([]);
+  const [earningsSummary, setEarningsSummary] = useState<EarningsSummary | null>(null);
+
   // Load all data on mount
   useEffect(() => {
     Promise.all([
@@ -156,38 +183,87 @@ export default function ProfessionalDashboard() {
         setSessions([]);
       })
       .finally(() => setLoadingAll(false));
+
+    // Load Stripe Connect status
+    fetch("/api/stripe/connect")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (data) setStripeStatus(data);
+      })
+      .catch(() => {});
+
+    // Load earnings data
+    fetch("/api/stripe/transfers")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (data) {
+          setTransfers(data.transfers ?? []);
+          setEarningsSummary(data.summary ?? null);
+        }
+      })
+      .catch(() => {});
+
+    // Handle Stripe redirect params
+    const url = new URL(window.location.href);
+    const stripeParam = url.searchParams.get("stripe");
+    if (stripeParam === "success") {
+      // Re-fetch status after successful onboarding
+      fetch("/api/stripe/connect")
+        .then((r) => r.ok ? r.json() : null)
+        .then((data) => { if (data) setStripeStatus(data); })
+        .catch(() => {});
+      // Clean up URL
+      url.searchParams.delete("stripe");
+      window.history.replaceState({}, "", url.pathname);
+    } else if (stripeParam === "refresh") {
+      // Onboarding link expired, auto-trigger new one
+      fetch("/api/stripe/connect", { method: "POST" })
+        .then((r) => r.ok ? r.json() : null)
+        .then((data) => { if (data?.url) window.location.href = data.url; })
+        .catch(() => {});
+      url.searchParams.delete("stripe");
+      window.history.replaceState({}, "", url.pathname);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
-  // Accept / Reject session handler
-  const handleSessionAction = useCallback(async (sessionId: string, status: "CONFIRMED" | "CANCELLED") => {
+  // Stripe Connect handler
+  const handleConnectStripe = useCallback(async () => {
+    setConnectingStripe(true);
     try {
-      const res = await fetch(`/api/sessions/${sessionId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
-      });
+      const res = await fetch("/api/stripe/connect", { method: "POST" });
       if (res.ok) {
-        // Update local state
-        setSessions((prev) =>
-          prev.map((s) => (s.id === sessionId ? { ...s, status } : s))
-        );
+        const data = await res.json();
+        if (data.url) {
+          window.location.href = data.url;
+          return;
+        }
       }
-    } catch {
-      // silently fail
-    }
+    } catch {}
+    setConnectingStripe(false);
   }, []);
+
+  // Session action handler (accept / reject)
+  const handleSessionAction = useCallback(
+    async (sessionId: string, newStatus: "CONFIRMED" | "CANCELLED") => {
+      try {
+        const res = await fetch(`/api/sessions/${sessionId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: newStatus }),
+        });
+        if (res.ok) {
+          setSessions((prev) =>
+            prev.map((s) => (s.id === sessionId ? { ...s, status: newStatus } : s))
+          );
+        }
+      } catch {}
+    },
+    []
+  );
 
   // Save availability handler
   const handleSaveAvailability = useCallback(async () => {
-    // Validate time ranges before saving
-    const invalidSlot = availability.find(
-      (s) => s.enabled && s.startTime && s.endTime && s.startTime >= s.endTime
-    );
-    if (invalidSlot) {
-      setAvailabilityMsg(`Error: La hora de fin debe ser posterior a la de inicio (${DAYS[invalidSlot.dayOfWeek]}).`);
-      return;
-    }
-
     setSavingAvailability(true);
     setAvailabilityMsg("");
     try {
@@ -387,10 +463,7 @@ export default function ProfessionalDashboard() {
                         <span className="text-sm font-medium">
                           {formatCurrency(session.price)}
                         </span>
-                        <Button
-                          size="sm"
-                          onClick={() => router.push(`/session/${session.id}`)}
-                        >
+                        <Button size="sm" onClick={() => router.push(`/session/${session.id}`)}>
                           <Video className="mr-2 h-4 w-4" />
                           Iniciar sesión
                         </Button>
@@ -480,7 +553,7 @@ export default function ProfessionalDashboard() {
                   Guardar disponibilidad
                 </Button>
                 {availabilityMsg && (
-                  <span className={`text-sm ${availabilityMsg.startsWith("Error") ? "text-destructive" : "text-muted-foreground"}`}>{availabilityMsg}</span>
+                  <span className="text-sm text-muted-foreground">{availabilityMsg}</span>
                 )}
               </div>
             </div>
@@ -587,47 +660,111 @@ export default function ProfessionalDashboard() {
           </TabsContent>
 
           {/* ===== Earnings ===== */}
-          <TabsContent value="earnings" className="mt-6">
+          <TabsContent value="earnings" className="mt-6 space-y-6">
+            {/* Stripe Connect status */}
+            <div className="rounded-xl border bg-card p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-heading text-lg font-semibold">Stripe Connect</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {stripeStatus?.onboarded
+                      ? "Tu cuenta está conectada. Los pagos se transfieren automáticamente."
+                      : stripeStatus?.connected
+                        ? "Tu cuenta está creada pero necesita completar la configuración."
+                        : "Conecta tu cuenta de Stripe para recibir pagos por tus sesiones."}
+                  </p>
+                </div>
+                {stripeStatus?.onboarded ? (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                    <Check className="h-3.5 w-3.5" />
+                    Conectado
+                  </span>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleConnectStripe}
+                    disabled={connectingStripe}
+                  >
+                    {connectingStripe ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <DollarSign className="mr-2 h-4 w-4" />
+                    )}
+                    {stripeStatus?.connected ? "Completar configuración" : "Configurar Stripe"}
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* Earnings summary */}
             <div className="rounded-xl border bg-card p-6">
               <h3 className="font-heading text-lg font-semibold">
                 Resumen de ingresos
               </h3>
 
-              <div className="mt-6 space-y-4">
-                {totalEarnings === 0 ? (
+              {earningsSummary && earningsSummary.totalSessions > 0 ? (
+                <>
+                  <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    <div className="rounded-lg border p-4">
+                      <p className="text-sm text-muted-foreground">Ingresos brutos</p>
+                      <p className="mt-1 font-heading text-xl font-bold">
+                        {formatCurrency(earningsSummary.totalGross)}
+                      </p>
+                    </div>
+                    <div className="rounded-lg border p-4">
+                      <p className="text-sm text-muted-foreground">Comisión (15%)</p>
+                      <p className="mt-1 font-heading text-xl font-bold text-muted-foreground">
+                        -{formatCurrency(earningsSummary.totalCommission)}
+                      </p>
+                    </div>
+                    <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
+                      <p className="text-sm text-primary">Neto recibido</p>
+                      <p className="mt-1 font-heading text-xl font-bold text-primary">
+                        {formatCurrency(earningsSummary.totalNet)}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Transfers list */}
+                  <div className="mt-6">
+                    <h4 className="text-sm font-medium text-muted-foreground">
+                      Historial ({earningsSummary.totalSessions} sesiones)
+                    </h4>
+                    <div className="mt-3 space-y-2">
+                      {transfers.slice(0, 10).map((t) => (
+                        <div
+                          key={t.sessionId}
+                          className="flex items-center justify-between rounded-lg border px-4 py-3 text-sm"
+                        >
+                          <div>
+                            <p className="font-medium">{t.clientName}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {formatDate(t.scheduledAt)}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className="font-medium">{formatCurrency(t.netAmount)}</span>
+                            {t.transferred ? (
+                              <span className="text-xs text-green-600">✓ Transferido</span>
+                            ) : (
+                              <span className="text-xs text-yellow-600">Pendiente</span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="mt-4">
                   <EmptyState
                     icon={DollarSign}
                     title="Sin ingresos todavía"
                     description="Cuando completes sesiones, verás aquí tu resumen de ingresos."
                   />
-                ) : (
-                  <div className="flex items-center justify-between rounded-lg border p-4">
-                    <div>
-                      <p className="font-medium">Total acumulado</p>
-                      <p className="text-sm text-muted-foreground">
-                        {totalSessions} sesiones completadas
-                      </p>
-                    </div>
-                    <span className="font-heading text-lg font-bold text-primary">
-                      {formatCurrency(totalEarnings)}
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              <Separator className="my-6" />
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Stripe Connect</p>
-                  <p className="text-xs text-muted-foreground">
-                    Los pagos se transfieren automáticamente a tu cuenta
-                  </p>
                 </div>
-                <Button variant="outline" size="sm">
-                  Configurar Stripe
-                </Button>
-              </div>
+              )}
             </div>
           </TabsContent>
         </Tabs>

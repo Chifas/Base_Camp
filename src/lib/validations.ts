@@ -69,5 +69,27 @@ export const updateProfessionalProfileSchema = z.object({
 
 // PATCH /api/sessions/[id]
 export const updateSessionSchema = z.object({
-  status: z.enum(["CONFIRMED", "CANCELLED", "COMPLETED"]),
+  status: z.enum(["CONFIRMED", "CANCELLED", "COMPLETED"]).optional(),
+  notes: z.string().max(5000, "Las notas no pueden superar los 5000 caracteres").optional(),
+}).refine((data) => data.status || data.notes, {
+  message: "Debes proporcionar status o notes",
+});
+
+// PATCH /api/notifications
+export const markNotificationsSchema = z.union([
+  z.object({ ids: z.array(z.string().min(1)).min(1) }),
+  z.object({ all: z.literal(true) }),
+]);
+
+// POST /api/sessions/[id]/reschedule
+export const rescheduleRequestSchema = z.object({
+  proposedAt: z.string().min(1, "proposedAt es obligatorio").refine(
+    (val) => !isNaN(new Date(val).getTime()),
+    "proposedAt debe ser una fecha válida"
+  ),
+});
+
+// PATCH /api/sessions/[id]/reschedule
+export const rescheduleResponseSchema = z.object({
+  status: z.enum(["ACCEPTED", "REJECTED"]),
 });

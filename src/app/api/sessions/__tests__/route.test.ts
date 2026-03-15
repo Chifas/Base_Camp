@@ -17,6 +17,7 @@ vi.mock("@/lib/prisma", () => ({
     },
     session: {
       findMany: vi.fn(),
+      count: vi.fn().mockResolvedValue(0),
     },
   },
 }));
@@ -29,6 +30,10 @@ const mockGetSession = vi.mocked(getServerSession);
 const mockProfileFindUnique = vi.mocked(prisma.professionalProfile.findUnique);
 const mockSessionFindMany = vi.mocked(prisma.session.findMany);
 
+function makeRequest(url = "http://localhost:3000/api/sessions") {
+  return new Request(url);
+}
+
 describe("GET /api/sessions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -37,7 +42,7 @@ describe("GET /api/sessions", () => {
   it("returns 401 when not authenticated", async () => {
     mockGetSession.mockResolvedValue(null);
 
-    const response = await GET();
+    const response = await GET(makeRequest());
     const data = await response.json();
 
     expect(response.status).toBe(401);
@@ -60,13 +65,15 @@ describe("GET /api/sessions", () => {
         status: "CONFIRMED",
         price: 65,
         dailyRoomUrl: null,
+        notes: null,
+        cancellationFee: null,
         professional: {
           user: { id: "user-1", name: "Dra. Elena", image: "https://img.test/1.jpg" },
         },
       },
     ] as never);
 
-    const response = await GET();
+    const response = await GET(makeRequest());
     const data = await response.json();
 
     expect(response.status).toBe(200);
@@ -96,11 +103,13 @@ describe("GET /api/sessions", () => {
         status: "PENDING",
         price: 65,
         dailyRoomUrl: null,
+        notes: null,
+        cancellationFee: null,
         client: { id: "client-1", name: "Juan García", image: "" },
       },
     ] as never);
 
-    const response = await GET();
+    const response = await GET(makeRequest());
     const data = await response.json();
 
     expect(response.status).toBe(200);
@@ -117,7 +126,7 @@ describe("GET /api/sessions", () => {
 
     mockSessionFindMany.mockRejectedValue(new Error("DB error"));
 
-    const response = await GET();
+    const response = await GET(makeRequest());
     const data = await response.json();
 
     expect(response.status).toBe(500);

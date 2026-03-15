@@ -28,6 +28,20 @@ enum SessionStatus {
   CANCELLED
 }
 
+enum NotificationType {
+  SESSION_CONFIRMED
+  SESSION_CANCELLED
+  SESSION_REMINDER
+  NEW_REVIEW
+  PAYMENT_RECEIVED
+}
+
+enum RescheduleStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String?
@@ -40,11 +54,13 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  accounts           Account[]
-  sessions           AuthSession[]
-  professionalProfile ProfessionalProfile?
-  clientSessions     Session[]  @relation("ClientSessions")
-  reviews            Review[]
+  accounts             Account[]
+  sessions             AuthSession[]
+  professionalProfile  ProfessionalProfile?
+  clientSessions       Session[]            @relation("ClientSessions")
+  reviews              Review[]
+  notifications        Notification[]
+  rescheduleRequests   RescheduleRequest[]
 
   @@map("users")
 }
@@ -96,6 +112,7 @@ model ProfessionalProfile {
   headline        String?
   hourlyRate      Float
   stripeAccountId String?
+  stripeConnected Boolean              @default(false)
   rating          Float                @default(0)
   reviewCount     Int                  @default(0)
   verified        Boolean              @default(false)
@@ -119,13 +136,20 @@ model Session {
   status                SessionStatus @default(PENDING)
   dailyRoomUrl          String?
   stripePaymentIntentId String?
+  stripeTransferId      String?
   price                 Float
+  notes                 String?
+  cancellationFee       Float?
+  cancelledAt           DateTime?
+  cancelledBy           String?
+  reminderSent          Boolean       @default(false)
   createdAt             DateTime      @default(now())
   updatedAt             DateTime      @updatedAt
 
-  client       User                @relation("ClientSessions", fields: [clientId], references: [id])
-  professional ProfessionalProfile @relation("ProfessionalSessions", fields: [professionalId], references: [id])
-  review       Review?
+  client              User                @relation("ClientSessions", fields: [clientId], references: [id])
+  professional        ProfessionalProfile @relation("ProfessionalSessions", fields: [professionalId], references: [id])
+  review              Review?
+  rescheduleRequests  RescheduleRequest[]
 
   @@index([clientId])
   @@index([professionalId])
@@ -157,4 +181,37 @@ model Availability {
   professional ProfessionalProfile @relation(fields: [professionalId], references: [id], onDelete: Cascade)
 
   @@map("availability")
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  message   String
+  link      String?
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+model RescheduleRequest {
+  id          String           @id @default(cuid())
+  sessionId   String
+  proposedBy  String
+  proposedAt  DateTime
+  status      RescheduleStatus @default(PENDING)
+  createdAt   DateTime         @default(now())
+  respondedAt DateTime?
+
+  session  Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  proposer User    @relation(fields: [proposedBy], references: [id])
+
+  @@index([sessionId])
+  @@map("reschedule_requests")
 }

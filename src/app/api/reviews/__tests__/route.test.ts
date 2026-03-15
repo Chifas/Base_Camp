@@ -8,12 +8,26 @@ vi.mock("@/lib/auth", () => ({
   authOptions: {},
 }));
 
+vi.mock("@/lib/emails", () => ({
+  sendNewReviewEmail: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock("@/lib/notifications", () => ({
+  createNotification: vi.fn().mockResolvedValue(undefined),
+}));
+
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     session: {
       findUnique: vi.fn(),
     },
-    $transaction: vi.fn(),
+    review: {
+      create: vi.fn(),
+    },
+    professionalProfile: {
+      findUnique: vi.fn(),
+      update: vi.fn(),
+    },
   },
 }));
 
@@ -23,7 +37,8 @@ import { prisma } from "@/lib/prisma";
 
 const mockGetSession = vi.mocked(getServerSession);
 const mockSessionFindUnique = vi.mocked(prisma.session.findUnique);
-const mockTransaction = vi.mocked(prisma.$transaction);
+const mockReviewCreate = vi.mocked(prisma.review.create);
+const mockProfileFindUnique = vi.mocked(prisma.professionalProfile.findUnique);
 
 function makeRequest(body: Record<string, unknown>) {
   return new Request("http://localhost:3000/api/reviews", {
@@ -87,13 +102,15 @@ describe("POST /api/reviews", () => {
       professionalId: "p1",
       status: "COMPLETED",
       review: null,
+      professional: { user: { id: "pro-user", name: "Pro", email: "pro@test.com" } },
+      client: { name: "Client" },
     } as never);
 
     const res = await POST(makeRequest({ sessionId: "s1", rating: 5, comment: "Great" }));
     expect(res.status).toBe(403);
   });
 
-  it("creates review successfully via transaction", async () => {
+  it("creates review successfully", async () => {
     mockGetSession.mockResolvedValue({
       user: { id: "u1", role: "CLIENT" },
       expires: "2099-01-01",
@@ -105,6 +122,8 @@ describe("POST /api/reviews", () => {
       professionalId: "p1",
       status: "COMPLETED",
       review: null,
+      professional: { user: { id: "pro-user", name: "Pro", email: "pro@test.com" } },
+      client: { name: "Test Client" },
     } as never);
 
     const createdReview = {
@@ -116,23 +135,12 @@ describe("POST /api/reviews", () => {
       createdAt: new Date(),
     };
 
-    // $transaction receives a callback — we execute it with a mock tx
-    mockTransaction.mockImplementation(async (cb: unknown) => {
-      const tx = {
-        review: {
-          create: vi.fn().mockResolvedValue(createdReview),
-          aggregate: vi.fn().mockResolvedValue({
-            _avg: { rating: 4.5 },
-            _count: { rating: 11 },
-          }),
-        },
-        professionalProfile: {
-          update: vi.fn().mockResolvedValue({}),
-        },
-      };
-      // eslint-disable-next-line no-unused-vars
-      return (cb as (_tx: Record<string, unknown>) => Promise<unknown>)(tx);
-    });
+    mockReviewCreate.mockResolvedValue(createdReview as never);
+    mockProfileFindUnique.mockResolvedValue({
+      id: "p1",
+      rating: 4.0,
+      reviewCount: 10,
+    } as never);
 
     const res = await POST(makeRequest({ sessionId: "s1", rating: 5, comment: "Excellent!" }));
     expect(res.status).toBe(201);

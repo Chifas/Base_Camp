@@ -167,7 +167,7 @@ interface NewSessionProps {
 }
 
 export function newSessionHtml(p: NewSessionProps): string {
-  const net = p.price * 0.8;
+  const net = p.price * 0.85;
   return layout(`
     <h2 style="margin:0 0 8px;font-size:22px;font-weight:700;">Nueva sesión programada 📅</h2>
     <p style="margin:0 0 4px;color:#475569;font-size:15px;">
@@ -182,7 +182,7 @@ export function newSessionHtml(p: NewSessionProps): string {
       ["Fecha",        fmtDate(p.scheduledAt)],
       ["Hora",         fmtTime(p.scheduledAt)],
       ["Duración",     "60 minutos"],
-      ["Tus ingresos", fmtCurrency(net) + " (neto, 20 % comisión)"],
+      ["Tus ingresos", fmtCurrency(net) + " (neto, 15 % comisión)"],
     ])}
 
     ${ctaButton("Ir a mi panel", `${APP_URL}/dashboard/professional`)}
@@ -274,6 +274,135 @@ export async function sendBookingEmails(s: EmailSessionData) {
       log.error(`Error enviando email de reserva [${i}]`, { reason: String(r.reason) });
     }
   });
+}
+
+// ── Template 4 — Session reminder (both parties) ─────────────────────────────
+
+interface SessionReminderProps {
+  recipientName:  string;
+  otherPartyName: string;
+  role:           "client" | "professional";
+  scheduledAt:    Date | string;
+  sessionId:      string;
+}
+
+export function sessionReminderHtml(p: SessionReminderProps): string {
+  const dashUrl = `${APP_URL}/dashboard/${p.role}`;
+  return layout(`
+    <h2 style="margin:0 0 8px;font-size:22px;font-weight:700;">Tu sesión es en 1 hora ⏰</h2>
+    <p style="margin:0 0 4px;color:#475569;font-size:15px;">
+      Hola ${p.recipientName ?? ""},
+    </p>
+    <p style="margin:0;color:#475569;font-size:15px;line-height:1.6;">
+      Tu sesión con <strong>${p.otherPartyName ?? "—"}</strong> comienza pronto.
+      Asegúrate de estar preparado/a.
+    </p>
+
+    ${sessionCard([
+      [p.role === "client" ? "Profesional" : "Cliente", p.otherPartyName ?? "—"],
+      ["Fecha", fmtDate(p.scheduledAt)],
+      ["Hora",  fmtTime(p.scheduledAt)],
+    ])}
+
+    ${ctaButton("Ir a mi panel", dashUrl)}
+
+    <p style="margin:24px 0 0;font-size:13px;color:#94a3b8;text-align:center;">
+      Comprueba que tu cámara y micrófono funcionan correctamente antes de la sesión.
+    </p>
+  `);
+}
+
+// ── Template 5 — New review notification (professional) ──────────────────────
+
+interface NewReviewProps {
+  professionalName: string;
+  clientName:       string;
+  rating:           number;
+  comment?:         string | null;
+}
+
+export function newReviewHtml(p: NewReviewProps): string {
+  const stars = "★".repeat(p.rating) + "☆".repeat(5 - p.rating);
+  return layout(`
+    <h2 style="margin:0 0 8px;font-size:22px;font-weight:700;">Nueva reseña recibida ⭐</h2>
+    <p style="margin:0 0 4px;color:#475569;font-size:15px;">
+      Hola ${p.professionalName ?? ""},
+    </p>
+    <p style="margin:0;color:#475569;font-size:15px;line-height:1.6;">
+      <strong>${p.clientName ?? "Un cliente"}</strong> ha dejado una valoración sobre tu sesión.
+    </p>
+
+    <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:20px;margin:24px 0;text-align:center;">
+      <p style="margin:0 0 8px;font-size:28px;letter-spacing:2px;color:#f59e0b;">${stars}</p>
+      ${p.comment ? `<p style="margin:0;color:#475569;font-size:14px;font-style:italic;">"${p.comment}"</p>` : ""}
+    </div>
+
+    ${ctaButton("Ver mis reseñas", `${APP_URL}/dashboard/professional`)}
+  `);
+}
+
+/** Send reminder emails to both parties before a session. */
+export async function sendSessionReminderEmails(s: EmailSessionData) {
+  const clientName       = s.client.name          ?? "Cliente";
+  const professionalName = s.professional.user.name ?? "Profesional";
+
+  const results = await Promise.allSettled([
+    resend.emails.send({
+      from:    FROM_EMAIL,
+      to:      s.client.email,
+      subject: "Tu sesión es en 1 hora — GuidePath",
+      html:    sessionReminderHtml({
+        recipientName:  clientName,
+        otherPartyName: professionalName,
+        role:           "client",
+        scheduledAt:    s.scheduledAt,
+        sessionId:      s.id,
+      }),
+    }),
+    resend.emails.send({
+      from:    FROM_EMAIL,
+      to:      s.professional.user.email,
+      subject: "Tu sesión es en 1 hora — GuidePath",
+      html:    sessionReminderHtml({
+        recipientName:  professionalName,
+        otherPartyName: clientName,
+        role:           "professional",
+        scheduledAt:    s.scheduledAt,
+        sessionId:      s.id,
+      }),
+    }),
+  ]);
+
+  results.forEach((r, i) => {
+    if (r.status === "rejected") {
+      log.error(`Error enviando email de recordatorio [${i}]`, { reason: String(r.reason) });
+    }
+  });
+}
+
+/** Send review notification to the professional. */
+export async function sendNewReviewEmail(data: {
+  professionalEmail: string;
+  professionalName:  string;
+  clientName:        string;
+  rating:            number;
+  comment?:          string | null;
+}) {
+  try {
+    await resend.emails.send({
+      from:    FROM_EMAIL,
+      to:      data.professionalEmail,
+      subject: "Has recibido una nueva reseña — GuidePath",
+      html:    newReviewHtml({
+        professionalName: data.professionalName,
+        clientName:       data.clientName,
+        rating:           data.rating,
+        comment:          data.comment,
+      }),
+    });
+  } catch (error) {
+    log.error("Error enviando email de nueva reseña", { error: String(error) });
+  }
 }
 
 /** Send cancellation notice to both parties. */

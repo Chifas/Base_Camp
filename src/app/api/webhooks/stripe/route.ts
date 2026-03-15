@@ -3,7 +3,8 @@ import { headers } from "next/headers";
 import { stripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import { env } from "@/lib/env";
-import { sendBookingConfirmation } from "@/lib/email";
+import { sendBookingEmails, type EmailSessionData } from "@/lib/emails";
+import { createNotifications } from "@/lib/notifications";
 import type Stripe from "stripe";
 import { log } from "@/lib/logger";
 
@@ -65,10 +66,10 @@ export async function POST(req: Request) {
                 : checkoutSession.payment_intent?.id ?? null,
           },
           include: {
-            client: { select: { name: true, email: true } },
+            client: { select: { id: true, name: true, email: true } },
             professional: {
               include: {
-                user: { select: { name: true } },
+                user: { select: { id: true, name: true, email: true } },
               },
             },
           },
@@ -76,27 +77,39 @@ export async function POST(req: Request) {
 
         log.info("Sesión confirmada", { sessionId, paymentIntentId: updatedSession.stripePaymentIntentId });
 
-        // Send confirmation email
-        if (updatedSession.client.email) {
-          await sendBookingConfirmation({
-            to: updatedSession.client.email,
-            clientName: updatedSession.client.name ?? "Cliente",
-            professionalName:
-              updatedSession.professional.user.name ?? "Profesional",
-            date: updatedSession.scheduledAt.toLocaleDateString("es-ES", {
-              weekday: "long",
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-            }),
-            time: updatedSession.scheduledAt.toLocaleTimeString("es-ES", {
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
-            price: updatedSession.price,
-          });
-        }
+        // Send confirmation emails to both parties (fire-and-forget)
+        sendBookingEmails(updatedSession as unknown as EmailSessionData).catch(() => {});
 
+        // In-app notifications for both parties
+        void createNotifications([
+          {
+            userId: updatedSession.clientId,
+            type: "SESSION_CONFIRMED",
+            title: "Sesión confirmada",
+            message: `Tu sesión con ${updatedSession.professional.user.name ?? "tu profesional"} ha sido confirmada.`,
+            link: "/dashboard/client",
+          },
+          {
+            userId: updatedSession.professional.userId,
+            type: "SESSION_CONFIRMED",
+            title: "Nueva sesión confirmada",
+            message: `Tienes una nueva sesión con ${updatedSession.client.name ?? "un cliente"}.`,
+            link: "/dashboard/professional",
+          },
+        ]);
+
+        break;
+      }
+
+      case "account.updated": {
+        const account = event.data.object as Stripe.Account;
+        if (account.charges_enabled && account.payouts_enabled) {
+          await prisma.professionalProfile.updateMany({
+            where: { stripeAccountId: account.id },
+            data: { stripeConnected: true },
+          });
+          log.info("Stripe Connect account fully onboarded", { accountId: account.id });
+        }
         break;
       }
 

@@ -7,6 +7,7 @@ import { Menu, X, Compass, LayoutDashboard, LogOut } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./theme-toggle";
+import { NotificationBell } from "./notification-bell";
 
 const navLinks = [
   { href: "/explore", label: "Explorar" },
@@ -62,6 +63,7 @@ export function Navbar() {
             </Link>
           ))}
           <ThemeToggle />
+          {user && <NotificationBell />}
 
           {/* Auth / Profile */}
           {!user ? (

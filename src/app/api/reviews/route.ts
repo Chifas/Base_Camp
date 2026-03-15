@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { reviewSchema } from "@/lib/validations";
+import { sendNewReviewEmail } from "@/lib/emails";
+import { createNotification } from "@/lib/notifications";
 
 // POST /api/reviews — create a review for a completed session
 export async function POST(req: Request) {
@@ -26,7 +28,13 @@ export async function POST(req: Request) {
     // Verify the session exists and is COMPLETED
     const dbSession = await prisma.session.findUnique({
       where:   { id: sessionId },
-      include: { review: true },
+      include: {
+        review: true,
+        professional: {
+          include: { user: { select: { id: true, name: true, email: true } } },
+        },
+        client: { select: { name: true } },
+      },
     });
 
     if (!dbSession) {
@@ -82,6 +90,23 @@ export async function POST(req: Request) {
       });
 
       return created;
+    });
+
+    // Fire-and-forget: email + in-app notification to professional
+    const professionalUser = dbSession.professional.user;
+    void sendNewReviewEmail({
+      professionalEmail: professionalUser.email,
+      professionalName: professionalUser.name ?? "Profesional",
+      clientName: dbSession.client.name ?? "Un cliente",
+      rating,
+      comment: comment?.trim() || null,
+    });
+    void createNotification({
+      userId: professionalUser.id,
+      type: "NEW_REVIEW",
+      title: "Nueva reseña recibida",
+      message: `${dbSession.client.name ?? "Un cliente"} te ha dejado una valoración de ${rating} estrellas.`,
+      link: "/dashboard/professional",
     });
 
     return NextResponse.json(review, { status: 201 });
