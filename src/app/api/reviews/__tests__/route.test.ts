@@ -16,20 +16,33 @@ vi.mock("@/lib/notifications", () => ({
   createNotification: vi.fn().mockResolvedValue(undefined),
 }));
 
-vi.mock("@/lib/prisma", () => ({
-  prisma: {
-    session: {
-      findUnique: vi.fn(),
-    },
+vi.mock("@/lib/prisma", () => {
+  const mockTx = {
     review: {
       create: vi.fn(),
+      aggregate: vi.fn(),
     },
     professionalProfile: {
-      findUnique: vi.fn(),
       update: vi.fn(),
     },
-  },
-}));
+  };
+  return {
+    prisma: {
+      session: {
+        findUnique: vi.fn(),
+      },
+      review: {
+        create: vi.fn(),
+      },
+      professionalProfile: {
+        findUnique: vi.fn(),
+        update: vi.fn(),
+      },
+      $transaction: vi.fn(async (cb: (tx: typeof mockTx) => Promise<unknown>) => cb(mockTx)),
+      __mockTx: mockTx,
+    },
+  };
+});
 
 import { POST } from "../route";
 import { getServerSession } from "next-auth";
@@ -37,8 +50,8 @@ import { prisma } from "@/lib/prisma";
 
 const mockGetSession = vi.mocked(getServerSession);
 const mockSessionFindUnique = vi.mocked(prisma.session.findUnique);
-const mockReviewCreate = vi.mocked(prisma.review.create);
-const mockProfileFindUnique = vi.mocked(prisma.professionalProfile.findUnique);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockTx = (prisma as any).__mockTx;
 
 function makeRequest(body: Record<string, unknown>) {
   return new Request("http://localhost:3000/api/reviews", {
@@ -135,12 +148,12 @@ describe("POST /api/reviews", () => {
       createdAt: new Date(),
     };
 
-    mockReviewCreate.mockResolvedValue(createdReview as never);
-    mockProfileFindUnique.mockResolvedValue({
-      id: "p1",
-      rating: 4.0,
-      reviewCount: 10,
+    mockTx.review.create.mockResolvedValue(createdReview as never);
+    mockTx.review.aggregate.mockResolvedValue({
+      _avg: { rating: 4.5 },
+      _count: { rating: 11 },
     } as never);
+    mockTx.professionalProfile.update.mockResolvedValue({} as never);
 
     const res = await POST(makeRequest({ sessionId: "s1", rating: 5, comment: "Excellent!" }));
     expect(res.status).toBe(201);

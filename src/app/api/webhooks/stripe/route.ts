@@ -106,7 +106,7 @@ export async function POST(req: Request) {
         if (account.charges_enabled && account.payouts_enabled) {
           await prisma.professionalProfile.updateMany({
             where: { stripeAccountId: account.id },
-            data: { stripeConnected: true },
+            data: { stripeConnected: true, verified: true },
           });
           log.info("Stripe Connect account fully onboarded", { accountId: account.id });
         }
@@ -124,18 +124,6 @@ export async function POST(req: Request) {
             data: { status: "CANCELLED" },
           });
           log.info("Sesión cancelada por checkout expirado", { sessionId });
-        }
-        break;
-      }
-
-      case "account.updated": {
-        const account = event.data.object as Stripe.Account;
-        if (account.charges_enabled && account.payouts_enabled) {
-          await prisma.professionalProfile.updateMany({
-            where: { stripeAccountId: account.id },
-            data: { verified: true },
-          });
-          log.info("stripe.connect_verified", { accountId: account.id });
         }
         break;
       }
