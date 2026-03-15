@@ -19,13 +19,12 @@ const MOCK_PROFESSIONALS = [
     id: "prof-1",
     userId: "user-1",
     headline: "Psicóloga Clínica",
-    categoryId: "cat-1",
+    category: "PSYCHOLOGIST",
     hourlyRate: 65,
     rating: 4.9,
     reviewCount: 127,
     verified: true,
     user: { id: "user-1", name: "Dra. Elena Martínez", image: "https://img.test/1.jpg", bio: "Psicóloga clínica" },
-    category: { id: "cat-1", slug: "WORK_PSYCHOLOGIST", name: "Psicólogo/a Laboral", description: null },
     availability: [
       { id: "av-1", dayOfWeek: 1, startTime: "09:00", endTime: "14:00" },
     ],
@@ -49,7 +48,7 @@ describe("GET /api/professionals", () => {
     expect(data[0]).toMatchObject({
       id: "prof-1",
       name: "Dra. Elena Martínez",
-      category: "WORK_PSYCHOLOGIST",
+      category: "PSYCHOLOGIST",
       categoryName: "Psicólogo/a Laboral",
       hourlyRate: 65,
       rating: 4.9,
