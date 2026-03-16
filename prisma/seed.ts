@@ -1,4 +1,5 @@
-import { PrismaClient } from "@prisma/client";
+/// <reference types="node" />
+import { PrismaClient, ProfessionalCategory } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
@@ -10,26 +11,12 @@ async function main() {
   await prisma.review.deleteMany();
   await prisma.session.deleteMany();
   await prisma.availability.deleteMany();
+  await prisma.certification.deleteMany();
   await prisma.professionalProfile.deleteMany();
   await prisma.account.deleteMany();
   await prisma.authSession.deleteMany();
+  await prisma.notification.deleteMany();
   await prisma.user.deleteMany();
-  await prisma.category.deleteMany();
-
-  // ── Categories ─────────────────────────────────────────────────────────
-  const categoriesData = [
-    { slug: "CAREER_MENTOR",     name: "Mentor de Carrera",    description: "Orientación profesional, transiciones de carrera, marca personal y preparación de entrevistas." },
-    { slug: "EXECUTIVE_COACH",   name: "Coach Ejecutivo",      description: "Coaching de liderazgo, desarrollo directivo y gestión de equipos." },
-    { slug: "SECTOR_EXPERT",     name: "Experto Sectorial",    description: "Conocimiento especializado en sectores como fintech, salud, tech, consultoría, etc." },
-    { slug: "WORK_PSYCHOLOGIST", name: "Psicólogo/a Laboral",  description: "Burnout, estrés laboral, bienestar en el trabajo y dinámicas de equipo." },
-  ];
-
-  const categories: Record<string, string> = {};
-  for (const cat of categoriesData) {
-    const created = await prisma.category.create({ data: cat });
-    categories[cat.slug] = created.id;
-    console.log("✅ Category:", cat.name);
-  }
 
   const hashedPassword = await bcrypt.hash("guidepath123", 10);
 
@@ -58,12 +45,14 @@ async function main() {
         bio: "Psicóloga organizacional con más de 15 años acompañando a profesionales en entornos de alta exigencia. Especializada en burnout, estrés laboral y bienestar en el trabajo.",
       },
       profile: {
-        categoryId: categories["WORK_PSYCHOLOGIST"],
+        category: ProfessionalCategory.PSYCHOLOGIST,
         headline: "Psicóloga Organizacional · Burnout y Bienestar Laboral",
         hourlyRate: 65,
         rating: 4.9,
         reviewCount: 127,
         verified: true,
+        languages: ["Español", "Inglés"],
+        yearsExperience: 15,
       },
       availability: [
         { dayOfWeek: 1, startTime: "09:00", endTime: "14:00" },
@@ -84,12 +73,14 @@ async function main() {
         bio: "Coach ejecutivo certificado por ICF con más de 500 sesiones. Trabajo con profesionales que quieren acelerar su carrera y dar el salto a puestos de liderazgo.",
       },
       profile: {
-        categoryId: categories["EXECUTIVE_COACH"],
+        category: ProfessionalCategory.COACH,
         headline: "Coach Ejecutivo Certificado ICF · Liderazgo y Potencial Directivo",
         hourlyRate: 80,
         rating: 4.8,
         reviewCount: 89,
         verified: true,
+        languages: ["Español", "Inglés", "Francés"],
+        yearsExperience: 12,
       },
       availability: [
         { dayOfWeek: 1, startTime: "10:00", endTime: "18:00" },
@@ -108,12 +99,14 @@ async function main() {
         bio: "Mentora de carrera con experiencia en RRHH en empresas del IBEX 35. Te ayudo a preparar entrevistas, negociar salarios y planificar tu transición profesional.",
       },
       profile: {
-        categoryId: categories["CAREER_MENTOR"],
+        category: ProfessionalCategory.CAREER_MENTOR,
         headline: "Mentora de Carrera · Ex-RRHH IBEX 35",
         hourlyRate: 70,
         rating: 4.7,
         reviewCount: 64,
         verified: true,
+        languages: ["Español"],
+        yearsExperience: 10,
       },
       availability: [
         { dayOfWeek: 2, startTime: "16:00", endTime: "20:00" },
@@ -131,12 +124,14 @@ async function main() {
         bio: "Ex-Head of Product en tres startups fintech. Experto en Product Management, estrategia de producto y metodologías ágiles.",
       },
       profile: {
-        categoryId: categories["SECTOR_EXPERT"],
+        category: ProfessionalCategory.CAREER_MENTOR,
         headline: "Experto en Product Management · Startups y Fintech",
         hourlyRate: 95,
         rating: 4.9,
         reviewCount: 102,
         verified: true,
+        languages: ["Español", "Inglés"],
+        yearsExperience: 8,
       },
       availability: [
         { dayOfWeek: 1, startTime: "08:00", endTime: "13:00" },
@@ -156,12 +151,14 @@ async function main() {
         bio: "Psicóloga laboral especializada en dinámicas de equipo, gestión de conflictos en el trabajo y acompañamiento en procesos de cambio organizacional.",
       },
       profile: {
-        categoryId: categories["WORK_PSYCHOLOGIST"],
+        category: ProfessionalCategory.PSYCHOLOGIST,
         headline: "Psicóloga Laboral · Equipos y Gestión del Cambio",
         hourlyRate: 60,
         rating: 4.8,
         reviewCount: 78,
         verified: true,
+        languages: ["Español", "Portugués"],
+        yearsExperience: 9,
       },
       availability: [
         { dayOfWeek: 1, startTime: "15:00", endTime: "20:00" },
@@ -180,12 +177,14 @@ async function main() {
         bio: "Coach ejecutivo y de liderazgo con más de 200 directivos acompañados. Trabajo con managers y C-level que quieren mejorar su estilo de liderazgo.",
       },
       profile: {
-        categoryId: categories["EXECUTIVE_COACH"],
+        category: ProfessionalCategory.COACH,
         headline: "Coach Ejecutivo · Directivos y Alta Dirección",
         hourlyRate: 110,
         rating: 4.6,
         reviewCount: 53,
         verified: true,
+        languages: ["Español", "Inglés"],
+        yearsExperience: 20,
       },
       availability: [
         { dayOfWeek: 2, startTime: "09:00", endTime: "13:00" },
