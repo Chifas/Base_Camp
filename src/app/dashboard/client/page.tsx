@@ -1,9 +1,11 @@
 "use client";
 
-import { useMemo, useEffect, useState } from "react";
+import { useMemo, useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 import {
   Calendar,
   Clock,
@@ -11,6 +13,8 @@ import {
   Video,
   MessageSquare,
   ArrowRight,
+  X,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +22,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FadeIn } from "@/components/shared/motion-wrapper";
 import { DashboardSkeleton } from "@/components/shared/dashboard-skeleton";
 import { EmptyState } from "@/components/shared/empty-state";
+import { PhotoUpload } from "@/components/shared/photo-upload";
 import { STATUS_LABELS, type Session } from "@/types";
 import { formatCurrency, formatDate, formatTime } from "@/lib/utils";
 
@@ -47,10 +52,71 @@ function timeUntilEnabled(scheduledAt: string): string {
   return `Disponible en ${m}m`;
 }
 
+const CATEGORY_LABELS_REVIEW = {
+  ratingPunctuality: "Puntualidad",
+  ratingKnowledge: "Conocimiento",
+  ratingCommunication: "Comunicación",
+  ratingValue: "Relación calidad-precio",
+} as const;
+
 export default function ClientDashboard() {
+  const { data: authSession } = useSession();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loadingSessions, setLoadingSessions] = useState(true);
   const [now, setNow] = useState(() => Date.now());
+
+  // Review modal state
+  const [reviewSessionId, setReviewSessionId] = useState<string | null>(null);
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewComment, setReviewComment] = useState("");
+  const [reviewPunctuality, setReviewPunctuality] = useState(0);
+  const [reviewKnowledge, setReviewKnowledge] = useState(0);
+  const [reviewCommunication, setReviewCommunication] = useState(0);
+  const [reviewValue, setReviewValue] = useState(0);
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [reviewedSessionIds, setReviewedSessionIds] = useState<Set<string>>(new Set());
+
+  const handleSubmitReview = useCallback(async () => {
+    if (!reviewSessionId || reviewRating === 0) return;
+    setSubmittingReview(true);
+    try {
+      const res = await fetch("/api/reviews", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sessionId: reviewSessionId,
+          rating: reviewRating,
+          comment: reviewComment || undefined,
+          ratingPunctuality: reviewPunctuality || undefined,
+          ratingKnowledge: reviewKnowledge || undefined,
+          ratingCommunication: reviewCommunication || undefined,
+          ratingValue: reviewValue || undefined,
+        }),
+      });
+      if (res.ok) {
+        toast.success("Reseña enviada correctamente");
+        setReviewedSessionIds((prev) => new Set([...prev, reviewSessionId]));
+        setReviewSessionId(null);
+        resetReviewForm();
+      } else {
+        const data = await res.json();
+        toast.error(data.error ?? "Error al enviar reseña");
+      }
+    } catch {
+      toast.error("Error de conexión");
+    } finally {
+      setSubmittingReview(false);
+    }
+  }, [reviewSessionId, reviewRating, reviewComment, reviewPunctuality, reviewKnowledge, reviewCommunication, reviewValue]);
+
+  function resetReviewForm() {
+    setReviewRating(0);
+    setReviewComment("");
+    setReviewPunctuality(0);
+    setReviewKnowledge(0);
+    setReviewCommunication(0);
+    setReviewValue(0);
+  }
 
   useEffect(() => {
     fetch("/api/sessions")
@@ -130,13 +196,14 @@ export default function ClientDashboard() {
       {/* Sessions tabs */}
       <FadeIn delay={0.2}>
         <Tabs defaultValue="upcoming" className="mt-8">
-          <TabsList>
+          <TabsList className="overflow-x-auto">
             <TabsTrigger value="upcoming">
               Próximas ({upcomingSessions.length})
             </TabsTrigger>
             <TabsTrigger value="past">
               Historial ({pastSessions.length})
             </TabsTrigger>
+            <TabsTrigger value="profile">Mi perfil</TabsTrigger>
           </TabsList>
 
           <TabsContent value="upcoming" className="mt-6">
@@ -273,8 +340,12 @@ export default function ClientDashboard() {
                     >
                       {STATUS_LABELS[session.status]}
                     </Badge>
-                    {session.status === "COMPLETED" && (
-                      <Button size="sm" variant="outline">
+                    {session.status === "COMPLETED" && !reviewedSessionIds.has(session.id) && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setReviewSessionId(session.id)}
+                      >
                         <Star className="mr-2 h-4 w-4" />
                         Dejar reseña
                       </Button>
@@ -285,8 +356,118 @@ export default function ClientDashboard() {
             </div>
             )}
           </TabsContent>
+          {/* ===== Profile ===== */}
+          <TabsContent value="profile" className="mt-6">
+            <div className="rounded-xl border bg-card p-6">
+              <h3 className="font-heading text-lg font-semibold">Mi perfil</h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Actualiza tu foto de perfil.
+              </p>
+              <div className="mt-6">
+                <PhotoUpload
+                  currentImage={authSession?.user?.image || ""}
+                />
+              </div>
+            </div>
+          </TabsContent>
         </Tabs>
       </FadeIn>
+
+      {/* Review modal */}
+      {reviewSessionId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="mx-4 w-full max-w-md rounded-xl border bg-card p-6 shadow-xl">
+            <div className="flex items-center justify-between">
+              <h3 className="font-heading text-lg font-semibold">Dejar reseña</h3>
+              <button
+                onClick={() => { setReviewSessionId(null); resetReviewForm(); }}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Overall rating */}
+            <div className="mt-4">
+              <p className="text-sm font-medium">Valoración general</p>
+              <div className="mt-2 flex gap-1">
+                {Array.from({ length: 5 }, (_, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setReviewRating(i + 1)}
+                    className="transition-transform hover:scale-110"
+                  >
+                    <Star
+                      className={`h-7 w-7 ${
+                        i < reviewRating ? "fill-yellow-400 text-yellow-400" : "text-zinc-300"
+                      }`}
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Category ratings */}
+            <div className="mt-4 space-y-3">
+              <p className="text-sm font-medium text-muted-foreground">Valoraciones detalladas (opcional)</p>
+              {([
+                ["ratingPunctuality", reviewPunctuality, setReviewPunctuality],
+                ["ratingKnowledge", reviewKnowledge, setReviewKnowledge],
+                ["ratingCommunication", reviewCommunication, setReviewCommunication],
+                ["ratingValue", reviewValue, setReviewValue],
+              ] as const).map(([key, value, setter]) => (
+                <div key={key} className="flex items-center justify-between">
+                  <span className="text-sm">{CATEGORY_LABELS_REVIEW[key]}</span>
+                  <div className="flex gap-0.5">
+                    {Array.from({ length: 5 }, (_, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => (setter as (_v: number) => void)(i + 1)}
+                      >
+                        <Star
+                          className={`h-4 w-4 ${
+                            i < value ? "fill-yellow-400 text-yellow-400" : "text-zinc-300"
+                          }`}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Comment */}
+            <div className="mt-4">
+              <textarea
+                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                placeholder="Comenta tu experiencia (opcional)..."
+                value={reviewComment}
+                onChange={(e) => setReviewComment(e.target.value)}
+                maxLength={500}
+              />
+            </div>
+
+            {/* Submit */}
+            <div className="mt-4 flex justify-end gap-2">
+              <Button
+                variant="ghost"
+                onClick={() => { setReviewSessionId(null); resetReviewForm(); }}
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleSubmitReview}
+                disabled={submittingReview || reviewRating === 0}
+              >
+                {submittingReview && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Enviar reseña
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -23,7 +23,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const { sessionId, rating, comment } = parsed.data;
+    const { sessionId, rating, comment, ratingPunctuality, ratingKnowledge, ratingCommunication, ratingValue } = parsed.data;
 
     // Verify the session exists and is COMPLETED
     const dbSession = await prisma.session.findUnique({
@@ -68,6 +68,10 @@ export async function POST(req: Request) {
           sessionId,
           userId:  session.user.id,
           rating:  Math.round(rating),
+          ratingPunctuality: ratingPunctuality ? Math.round(ratingPunctuality) : null,
+          ratingKnowledge: ratingKnowledge ? Math.round(ratingKnowledge) : null,
+          ratingCommunication: ratingCommunication ? Math.round(ratingCommunication) : null,
+          ratingValue: ratingValue ? Math.round(ratingValue) : null,
           comment: comment?.trim() || null,
         },
       });

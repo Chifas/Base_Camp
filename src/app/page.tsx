@@ -25,15 +25,31 @@ export const metadata: Metadata = {
 async function getFeaturedProfessionals(): Promise<Professional[]> {
   try {
     const professionals = await prisma.professionalProfile.findMany({
+      where: {
+        reviewCount: { gte: 1 },
+      },
       include: {
         user: { select: { id: true, name: true, image: true, bio: true } },
         availability: true,
       },
-      orderBy: { rating: "desc" },
-      take: 4,
+      orderBy: [{ rating: "desc" }, { reviewCount: "desc" }],
+      take: 8,
     });
 
-    return professionals.map((p) => ({
+    // Score-based sort with daily rotation
+    const dayOfYear = Math.floor(Date.now() / 86400000);
+    const scored = professionals.map((p, idx) => ({
+      p,
+      score:
+        p.rating * 0.4 +
+        Math.log(p.reviewCount + 1) * 0.3 +
+        (p.availability.length > 0 ? 0.2 : 0) +
+        ((idx + dayOfYear) % professionals.length) * 0.05,
+    }));
+    scored.sort((a, b) => b.score - a.score);
+    const top = scored.slice(0, 4);
+
+    return top.map(({ p }) => ({
       id: p.id,
       userId: p.userId,
       name: p.user.name ?? "",

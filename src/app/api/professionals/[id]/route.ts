@@ -14,6 +14,9 @@ export async function GET(
           select: { id: true, name: true, image: true, bio: true },
         },
         availability: true,
+        certifications: {
+          orderBy: { createdAt: "desc" },
+        },
         sessions: {
           where: { status: "COMPLETED" },
           include: {
@@ -44,7 +47,13 @@ export async function GET(
         userName: s.review!.user.name ?? "Usuario",
         userImage: s.review!.user.image ?? "",
         rating: s.review!.rating,
+        ratingPunctuality: s.review!.ratingPunctuality,
+        ratingKnowledge: s.review!.ratingKnowledge,
+        ratingCommunication: s.review!.ratingCommunication,
+        ratingValue: s.review!.ratingValue,
         comment: s.review!.comment ?? "",
+        professionalResponse: s.review!.professionalResponse,
+        respondedAt: s.review!.respondedAt?.toISOString() ?? null,
         createdAt: s.review!.createdAt.toISOString(),
       }));
 
@@ -61,6 +70,15 @@ export async function GET(
       rating: professional.rating,
       reviewCount: professional.reviewCount,
       verified: professional.verified,
+      verifiedAt: professional.verifiedAt?.toISOString() ?? null,
+      languages: professional.languages,
+      yearsExperience: professional.yearsExperience,
+      certifications: professional.certifications.map((c) => ({
+        id: c.id,
+        title: c.title,
+        institution: c.institution,
+        year: c.year,
+      })),
       availability: professional.availability.map((a) => ({
         id: a.id,
         dayOfWeek: a.dayOfWeek,

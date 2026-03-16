@@ -21,6 +21,14 @@ export interface User {
   bio?: string;
 }
 
+export interface Certification {
+  id: string;
+  title: string;
+  institution: string;
+  year?: number;
+  documentUrl?: string;
+}
+
 export interface Professional {
   id: string;
   userId: string;
@@ -34,6 +42,10 @@ export interface Professional {
   rating: number;
   reviewCount: number;
   verified: boolean;
+  verifiedAt?: string;
+  languages?: string[];
+  yearsExperience?: number;
+  certifications?: Certification[];
   availability: AvailabilitySlot[];
 }
 
@@ -64,7 +76,14 @@ export interface Review {
   userName: string;
   userImage: string;
   rating: number;
+  ratingPunctuality?: number;
+  ratingKnowledge?: number;
+  ratingCommunication?: number;
+  ratingValue?: number;
   comment: string;
+  professionalResponse?: string;
+  respondedAt?: string;
+  reported?: boolean;
   createdAt: string;
 }
 

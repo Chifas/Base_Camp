@@ -50,29 +50,29 @@
 ## Fase 3: Experiencia de Usuario
 
 ### 3.1 Perfil de usuario
-- [ ] **Foto de perfil**: Upload de imagen con crop y preview (usar Supabase Storage o Cloudinary)
-- [ ] **Perfil público del profesional**: Página SEO-friendly con schema.org markup
-- [ ] **Verificación de profesionales**: Badge de verificado, proceso de validación de credenciales
-- [ ] **Certificaciones y experiencia**: Sección para añadir títulos, años de experiencia, especialidades
+- [x] **Foto de perfil**: Upload de imagen con Cloudinary (crop face 400×400, validación tipo/tamaño 5MB), preview local, componente `PhotoUpload` reutilizable
+- [x] **Perfil público del profesional**: Página server component con `generateMetadata()` dinámico + JSON-LD schema.org (Person, Service, AggregateRating)
+- [x] **Verificación de profesionales**: Badge de verificado con tooltip en perfil y listados, campo `verifiedAt` en schema
+- [x] **Certificaciones y experiencia**: CRUD de certificaciones, idiomas (tag input), años de experiencia en dashboard profesional + API endpoints
 
 ### 3.2 Búsqueda y descubrimiento
-- [ ] **Filtros avanzados en Explorar**: Rango de precio, idioma, disponibilidad inmediata, rating mínimo
-- [ ] **Ordenación por relevancia**: Algoritmo que combine rating, reviews, disponibilidad y precio
-- [ ] **Profesionales destacados**: Sección rotativa en landing basada en métricas reales
-- [ ] **Búsqueda por texto**: Full-text search en nombre, headline y bio del profesional
-- [ ] **Paginación o scroll infinito**: Actualmente carga todos los profesionales de golpe
+- [x] **Filtros avanzados en Explorar**: Rango de precio, idioma, disponibilidad inmediata, rating mínimo — panel colapsable con badge de filtros activos
+- [x] **Ordenación por relevancia**: Algoritmo scoring `rating*0.4 + log(reviewCount+1)*0.3 + hasAvailability*0.2 + normalized_price*0.1`
+- [x] **Profesionales destacados**: Sección rotativa en landing con seed diario (day-of-year modulo), top 4 de 8 candidatos con ≥1 review
+- [x] **Búsqueda por texto**: Server-side search en nombre, headline y bio con `contains` + `mode: insensitive`
+- [x] **Paginación**: Server-side con `?page=&limit=`, componente `Pagination` reutilizable con ellipsis, URL-based state con `useSearchParams`
 
 ### 3.3 Sistema de reviews mejorado
-- [ ] **Respuesta del profesional**: El profesional puede responder a una review
-- [ ] **Reviews con categorías**: Puntualidad, conocimiento, comunicación, valor por dinero
-- [ ] **Reportar review**: Sistema de moderación para reviews inapropiadas
+- [x] **Respuesta del profesional**: `POST /api/reviews/[id]/respond` — una respuesta por review, visible en perfil y dashboard
+- [x] **Reviews con categorías**: Puntualidad, conocimiento, comunicación, valor por dinero — modal con 5 star pickers en dashboard cliente
+- [x] **Reportar review**: `POST /api/reviews/[id]/report` — formulario inline con motivo, validación Zod
 
 ### 3.4 UI/UX
-- [ ] **Animaciones de transición entre páginas**: Page transitions con Framer Motion
-- [ ] **Skeleton loaders personalizados**: Skeletons que reflejen el layout real de cada página
-- [ ] **Toast notifications**: Reemplazar mensajes de estado por toasts (sonner o react-hot-toast)
-- [ ] **Modo offline**: Service worker para PWA básica con cache de recursos estáticos
-- [ ] **Responsive refinado**: Revisar y pulir todos los breakpoints en mobile
+- [x] **Animaciones de transición entre páginas**: `template.tsx` con Framer Motion fade + y-translate (200ms, easeOut)
+- [x] **Skeleton loaders personalizados**: Skeletons actualizados para nuevo layout 3-columnas del perfil profesional
+- [x] **Toast notifications**: Sonner `<Toaster>` global — reemplazados todos los mensajes inline en dashboards
+- [x] **Modo offline**: PWA con `manifest.json` + service worker `sw.js` (network-first, cache estáticos, skip API routes)
+- [x] **Responsive refinado**: Filtros colapsables mobile, TabsList overflow-x-auto, booking card no-sticky mobile, category ratings stack vertical mobile
 
 ---
 
@@ -110,7 +110,7 @@
 ### 5.1 SEO y Marketing
 - [ ] **Blog integrado**: CMS simple para artículos sobre desarrollo profesional
 - [ ] **Landing pages por categoría**: `/coach`, `/psicologo`, `/mentor` con SEO específico
-- [ ] **Schema.org markup**: Structured data para profesionales (Person, Service, Review)
+- [x] **Schema.org markup**: Structured data para profesionales (Person, Service, AggregateRating) — implementado en Fase 3.1
 - [ ] **Sitemap dinámico**: Incluir perfiles de profesionales verificados
 - [ ] **Open Graph mejorado**: Imágenes dinámicas para compartir en redes sociales
 

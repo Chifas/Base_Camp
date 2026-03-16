@@ -16,6 +16,18 @@ vi.mock("@/lib/emails", () => ({
   sendCancellationEmails: vi.fn(),
 }));
 
+vi.mock("@/lib/stripe", () => ({
+  stripe: { refunds: { create: vi.fn() } },
+}));
+
+vi.mock("@/lib/cancellation", () => ({
+  calculateCancellation: vi.fn().mockReturnValue({ refundPercent: 100, fee: 0 }),
+}));
+
+vi.mock("@/lib/notifications", () => ({
+  createNotifications: vi.fn(),
+}));
+
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     session: {

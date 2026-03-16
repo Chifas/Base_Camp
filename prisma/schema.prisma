@@ -116,12 +116,16 @@ model ProfessionalProfile {
   rating          Float                @default(0)
   reviewCount     Int                  @default(0)
   verified        Boolean              @default(false)
+  verifiedAt      DateTime?
+  languages       String[]             @default(["es"])
+  yearsExperience Int?
   createdAt       DateTime             @default(now())
   updatedAt       DateTime             @updatedAt
 
-  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  availability  Availability[]
-  sessions      Session[]      @relation("ProfessionalSessions")
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  availability    Availability[]
+  sessions        Session[]         @relation("ProfessionalSessions")
+  certifications  Certification[]
 
   @@index([category])
   @@map("professional_profiles")
@@ -158,17 +162,41 @@ model Session {
 }
 
 model Review {
-  id        String   @id @default(cuid())
-  sessionId String   @unique
-  userId    String
-  rating    Int      // 1-5
-  comment   String?
-  createdAt DateTime @default(now())
+  id                    String    @id @default(cuid())
+  sessionId             String    @unique
+  userId                String
+  rating                Int       // 1-5 overall
+  ratingPunctuality     Int?      // 1-5
+  ratingKnowledge       Int?      // 1-5
+  ratingCommunication   Int?      // 1-5
+  ratingValue           Int?      // 1-5
+  comment               String?
+  professionalResponse  String?
+  respondedAt           DateTime?
+  reported              Boolean   @default(false)
+  reportReason          String?
+  reportedAt            DateTime?
+  createdAt             DateTime  @default(now())
 
   session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   user    User    @relation(fields: [userId], references: [id])
 
   @@map("reviews")
+}
+
+model Certification {
+  id              String              @id @default(cuid())
+  professionalId  String
+  title           String
+  institution     String
+  year            Int?
+  documentUrl     String?
+  createdAt       DateTime            @default(now())
+
+  professional ProfessionalProfile @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+
+  @@index([professionalId])
+  @@map("certifications")
 }
 
 model Availability {

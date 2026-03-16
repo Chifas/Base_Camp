@@ -28,6 +28,10 @@ export const checkoutSchema = z.object({
 export const reviewSchema = z.object({
   sessionId: z.string().min(1, "sessionId es obligatorio"),
   rating: z.number().int().min(1).max(5),
+  ratingPunctuality: z.number().int().min(1).max(5).optional(),
+  ratingKnowledge: z.number().int().min(1).max(5).optional(),
+  ratingCommunication: z.number().int().min(1).max(5).optional(),
+  ratingValue: z.number().int().min(1).max(5).optional(),
   comment: z.string().optional(),
 });
 
@@ -65,6 +69,8 @@ export const updateProfessionalProfileSchema = z.object({
   headline: z.string().min(5).max(120).optional(),
   hourlyRate: z.number().min(1).optional(),
   bio: z.string().max(1000).optional(),
+  languages: z.array(z.string().min(1)).optional(),
+  yearsExperience: z.number().int().min(0).optional(),
 });
 
 // PATCH /api/sessions/[id]
@@ -92,4 +98,21 @@ export const rescheduleRequestSchema = z.object({
 // PATCH /api/sessions/[id]/reschedule
 export const rescheduleResponseSchema = z.object({
   status: z.enum(["ACCEPTED", "REJECTED"]),
+});
+
+// POST /api/reviews/[id]/respond
+export const professionalResponseSchema = z.object({
+  response: z.string().min(1, "La respuesta es obligatoria").max(500, "Máximo 500 caracteres"),
+});
+
+// POST /api/reviews/[id]/report
+export const reportReviewSchema = z.object({
+  reason: z.string().min(1, "El motivo es obligatorio").max(500, "Máximo 500 caracteres"),
+});
+
+// POST /api/certifications
+export const certificationSchema = z.object({
+  title: z.string().min(1, "El título es obligatorio").max(200),
+  institution: z.string().min(1, "La institución es obligatoria").max(200),
+  year: z.number().int().min(1950).max(2030).optional(),
 });

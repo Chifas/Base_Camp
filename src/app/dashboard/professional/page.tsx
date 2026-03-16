@@ -3,6 +3,7 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 import {
   Calendar,
   Clock,
@@ -17,6 +18,12 @@ import {
   Briefcase,
   Tag,
   FileText,
+  Star,
+  Plus,
+  Trash2,
+  Globe,
+  Award,
+  MessageSquare,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,6 +39,7 @@ import {
 import { FadeIn } from "@/components/shared/motion-wrapper";
 import { DashboardSkeleton } from "@/components/shared/dashboard-skeleton";
 import { EmptyState } from "@/components/shared/empty-state";
+import { PhotoUpload } from "@/components/shared/photo-upload";
 import { formatCurrency, formatDate, formatTime } from "@/lib/utils";
 interface CategoryOption {
   id: string;
@@ -78,8 +86,31 @@ interface ProfileData {
   category: string;
   categoryName: string;
   name: string | null;
+  image: string | null;
   bio: string | null;
+  languages: string[];
+  yearsExperience: number | null;
   hasProfile: boolean;
+}
+
+interface CertificationItem {
+  id: string;
+  title: string;
+  institution: string;
+  year?: number;
+}
+
+interface ReviewItem {
+  id: string;
+  userName: string;
+  rating: number;
+  ratingPunctuality?: number;
+  ratingKnowledge?: number;
+  ratingCommunication?: number;
+  ratingValue?: number;
+  comment: string | null;
+  professionalResponse: string | null;
+  createdAt: string;
 }
 
 type AvailabilitySlot = {
@@ -99,15 +130,30 @@ export default function ProfessionalDashboard() {
   // Availability state
   const [availability, setAvailability] = useState<AvailabilitySlot[]>(EMPTY_AVAILABILITY);
   const [savingAvailability, setSavingAvailability] = useState(false);
-  const [availabilityMsg, setAvailabilityMsg] = useState("");
 
   // Profile edit state
   const [editHeadline, setEditHeadline] = useState("");
   const [editHourlyRate, setEditHourlyRate] = useState("");
   const [editCategory, setEditCategory] = useState("");
   const [editBio, setEditBio] = useState("");
+  const [editLanguages, setEditLanguages] = useState<string[]>(["es"]);
+  const [editYearsExperience, setEditYearsExperience] = useState("");
+  const [newLanguage, setNewLanguage] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
-  const [profileMsg, setProfileMsg] = useState("");
+
+  // Certifications state
+  const [certifications, setCertifications] = useState<CertificationItem[]>([]);
+  const [showCertForm, setShowCertForm] = useState(false);
+  const [certTitle, setCertTitle] = useState("");
+  const [certInstitution, setCertInstitution] = useState("");
+  const [certYear, setCertYear] = useState("");
+  const [savingCert, setSavingCert] = useState(false);
+
+  // Reviews state
+  const [reviews, setReviews] = useState<ReviewItem[]>([]);
+  const [respondingTo, setRespondingTo] = useState<string | null>(null);
+  const [responseText, setResponseText] = useState("");
+  const [savingResponse, setSavingResponse] = useState(false);
 
   // Stripe Connect state
   const [stripeStatus, setStripeStatus] = useState<{
@@ -143,10 +189,14 @@ export default function ProfessionalDashboard() {
       fetch("/api/professionals/me").then((r) => r.json()),
       fetch("/api/categories").then((r) => r.json()),
       fetch("/api/availability").then((r) => r.ok ? r.json() : []),
+      fetch("/api/certifications").then((r) => r.ok ? r.json() : []),
+      fetch("/api/reviews/received").then((r) => r.ok ? r.json() : []),
     ])
-      .then(([sessData, profData, catsData, availData]) => {
+      .then(([sessData, profData, catsData, availData, certsData, reviewsData]) => {
         setSessions(Array.isArray(sessData) ? sessData : []);
         setCategories(Array.isArray(catsData) ? catsData : []);
+        setCertifications(Array.isArray(certsData) ? certsData : []);
+        setReviews(Array.isArray(reviewsData) ? reviewsData : []);
 
         // If no profile → redirect to onboarding
         if (!profData.hasProfile) {
@@ -159,6 +209,8 @@ export default function ProfessionalDashboard() {
         setEditHourlyRate(profData.hourlyRate?.toString() ?? "");
         setEditCategory(profData.category ?? "");
         setEditBio(profData.bio ?? "");
+        setEditLanguages(profData.languages ?? ["es"]);
+        setEditYearsExperience(profData.yearsExperience?.toString() ?? "");
 
         // Build availability from DB data
         if (Array.isArray(availData) && availData.length > 0) {
@@ -265,7 +317,6 @@ export default function ProfessionalDashboard() {
   // Save availability handler
   const handleSaveAvailability = useCallback(async () => {
     setSavingAvailability(true);
-    setAvailabilityMsg("");
     try {
       const res = await fetch("/api/availability", {
         method: "PUT",
@@ -273,26 +324,24 @@ export default function ProfessionalDashboard() {
         body: JSON.stringify({ slots: availability }),
       });
       if (res.ok) {
-        setAvailabilityMsg("Disponibilidad guardada correctamente.");
+        toast.success("Disponibilidad guardada correctamente");
       } else {
         const data = await res.json();
-        setAvailabilityMsg(data.error ?? "Error al guardar.");
+        toast.error(data.error ?? "Error al guardar");
       }
     } catch {
-      setAvailabilityMsg("Error de conexión.");
+      toast.error("Error de conexión");
     } finally {
       setSavingAvailability(false);
-      setTimeout(() => setAvailabilityMsg(""), 3000);
     }
   }, [availability]);
 
   // Save profile handler
   const handleSaveProfile = useCallback(async () => {
     setSavingProfile(true);
-    setProfileMsg("");
     const rate = parseFloat(editHourlyRate);
     if (isNaN(rate) || rate < 1) {
-      setProfileMsg("La tarifa debe ser al menos 1€.");
+      toast.error("La tarifa debe ser al menos 1€");
       setSavingProfile(false);
       return;
     }
@@ -305,21 +354,96 @@ export default function ProfessionalDashboard() {
           hourlyRate: rate,
           category: editCategory || undefined,
           bio: editBio || undefined,
+          languages: editLanguages,
+          yearsExperience: editYearsExperience ? parseInt(editYearsExperience) : undefined,
         }),
       });
       if (res.ok) {
-        setProfileMsg("Perfil actualizado correctamente.");
+        toast.success("Perfil actualizado correctamente");
       } else {
         const data = await res.json();
-        setProfileMsg(data.error ?? "Error al guardar.");
+        toast.error(data.error ?? "Error al guardar");
       }
     } catch {
-      setProfileMsg("Error de conexión.");
+      toast.error("Error de conexión");
     } finally {
       setSavingProfile(false);
-      setTimeout(() => setProfileMsg(""), 3000);
     }
-  }, [editHeadline, editHourlyRate, editCategory, editBio]);
+  }, [editHeadline, editHourlyRate, editCategory, editBio, editLanguages, editYearsExperience]);
+
+  // Add certification handler
+  const handleAddCertification = useCallback(async () => {
+    setSavingCert(true);
+    try {
+      const res = await fetch("/api/certifications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: certTitle,
+          institution: certInstitution,
+          year: certYear ? parseInt(certYear) : undefined,
+        }),
+      });
+      if (res.ok) {
+        const cert = await res.json();
+        setCertifications((prev) => [...prev, cert]);
+        setCertTitle("");
+        setCertInstitution("");
+        setCertYear("");
+        setShowCertForm(false);
+        toast.success("Certificación añadida");
+      } else {
+        const data = await res.json();
+        toast.error(data.error ?? "Error al guardar");
+      }
+    } catch {
+      toast.error("Error de conexión");
+    } finally {
+      setSavingCert(false);
+    }
+  }, [certTitle, certInstitution, certYear]);
+
+  // Delete certification handler
+  const handleDeleteCertification = useCallback(async (id: string) => {
+    try {
+      const res = await fetch(`/api/certifications/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        setCertifications((prev) => prev.filter((c) => c.id !== id));
+        toast.success("Certificación eliminada");
+      }
+    } catch {
+      toast.error("Error al eliminar");
+    }
+  }, []);
+
+  // Respond to review handler
+  const handleRespondReview = useCallback(async (reviewId: string) => {
+    setSavingResponse(true);
+    try {
+      const res = await fetch(`/api/reviews/${reviewId}/respond`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ response: responseText }),
+      });
+      if (res.ok) {
+        setReviews((prev) =>
+          prev.map((r) =>
+            r.id === reviewId ? { ...r, professionalResponse: responseText } : r
+          )
+        );
+        setRespondingTo(null);
+        setResponseText("");
+        toast.success("Respuesta publicada");
+      } else {
+        const data = await res.json();
+        toast.error(data.error ?? "Error al responder");
+      }
+    } catch {
+      toast.error("Error de conexión");
+    } finally {
+      setSavingResponse(false);
+    }
+  }, [responseText]);
 
   const confirmedSessions = useMemo(
     () => sessions.filter((s) => s.status === "CONFIRMED"),
@@ -369,12 +493,13 @@ export default function ProfessionalDashboard() {
       {/* Tabs */}
       <FadeIn delay={0.2}>
         <Tabs defaultValue="sessions" className="mt-8">
-          <TabsList>
+          <TabsList className="overflow-x-auto">
             <TabsTrigger value="sessions">
               Sesiones ({confirmedSessions.length + pendingSessions.length})
             </TabsTrigger>
             <TabsTrigger value="availability">Disponibilidad</TabsTrigger>
             <TabsTrigger value="profile">Perfil</TabsTrigger>
+            <TabsTrigger value="reviews">Reseñas ({reviews.length})</TabsTrigger>
             <TabsTrigger value="earnings">Ingresos</TabsTrigger>
           </TabsList>
 
@@ -543,24 +668,19 @@ export default function ProfessionalDashboard() {
 
               <Separator className="my-6" />
 
-              <div className="flex items-center gap-3">
-                <Button onClick={handleSaveAvailability} disabled={savingAvailability}>
-                  {savingAvailability ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <Save className="mr-2 h-4 w-4" />
-                  )}
-                  Guardar disponibilidad
-                </Button>
-                {availabilityMsg && (
-                  <span className="text-sm text-muted-foreground">{availabilityMsg}</span>
+              <Button onClick={handleSaveAvailability} disabled={savingAvailability}>
+                {savingAvailability ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="mr-2 h-4 w-4" />
                 )}
-              </div>
+                Guardar disponibilidad
+              </Button>
             </div>
           </TabsContent>
 
           {/* ===== Profile ===== */}
-          <TabsContent value="profile" className="mt-6">
+          <TabsContent value="profile" className="mt-6 space-y-6">
             <div className="rounded-xl border bg-card p-6">
               <h3 className="font-heading text-lg font-semibold">
                 Tu perfil profesional
@@ -568,6 +688,14 @@ export default function ProfessionalDashboard() {
               <p className="mt-1 text-sm text-muted-foreground">
                 Esta información es visible para los clientes en tu perfil público.
               </p>
+
+              {/* Photo upload */}
+              <div className="mt-6">
+                <PhotoUpload
+                  currentImage={profile?.image || ""}
+                  onUpload={(url) => setProfile((p) => p ? { ...p, image: url } : p)}
+                />
+              </div>
 
               <div className="mt-6 space-y-5">
                 {/* Category */}
@@ -637,25 +765,272 @@ export default function ProfessionalDashboard() {
                   />
                   <p className="text-xs text-muted-foreground">{editBio.length}/1000</p>
                 </div>
+
+                {/* Years of experience */}
+                <div className="space-y-2">
+                  <label htmlFor="edit-years" className="flex items-center gap-2 text-sm font-medium">
+                    <Award className="h-4 w-4 text-muted-foreground" />
+                    Años de experiencia
+                  </label>
+                  <Input
+                    id="edit-years"
+                    type="number"
+                    min="0"
+                    max="50"
+                    placeholder="Ej: 5"
+                    value={editYearsExperience}
+                    onChange={(e) => setEditYearsExperience(e.target.value)}
+                  />
+                </div>
+
+                {/* Languages */}
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 text-sm font-medium">
+                    <Globe className="h-4 w-4 text-muted-foreground" />
+                    Idiomas
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {editLanguages.map((lang) => (
+                      <span
+                        key={lang}
+                        className="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-3 py-1 text-sm dark:bg-zinc-800"
+                      >
+                        {lang}
+                        <button
+                          type="button"
+                          onClick={() => setEditLanguages((prev) => prev.filter((l) => l !== lang))}
+                          className="ml-1 text-zinc-400 hover:text-zinc-600"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Añadir idioma"
+                      value={newLanguage}
+                      onChange={(e) => setNewLanguage(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && newLanguage.trim()) {
+                          e.preventDefault();
+                          if (!editLanguages.includes(newLanguage.trim())) {
+                            setEditLanguages((prev) => [...prev, newLanguage.trim()]);
+                          }
+                          setNewLanguage("");
+                        }
+                      }}
+                      className="max-w-[200px]"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (newLanguage.trim() && !editLanguages.includes(newLanguage.trim())) {
+                          setEditLanguages((prev) => [...prev, newLanguage.trim()]);
+                          setNewLanguage("");
+                        }
+                      }}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
               </div>
 
               <Separator className="my-6" />
 
-              <div className="flex items-center gap-3">
-                <Button onClick={handleSaveProfile} disabled={savingProfile}>
-                  {savingProfile ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <Save className="mr-2 h-4 w-4" />
-                  )}
-                  Guardar cambios
-                </Button>
-                {profileMsg && (
-                  <span className={`text-sm ${profileMsg.includes("Error") ? "text-destructive" : "text-muted-foreground"}`}>
-                    {profileMsg}
-                  </span>
+              <Button onClick={handleSaveProfile} disabled={savingProfile}>
+                {savingProfile ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="mr-2 h-4 w-4" />
                 )}
+                Guardar cambios
+              </Button>
+            </div>
+
+            {/* Certifications section */}
+            <div className="rounded-xl border bg-card p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-heading text-lg font-semibold">Certificaciones</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Títulos y credenciales que avalan tu experiencia.
+                  </p>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => setShowCertForm(!showCertForm)}>
+                  <Plus className="mr-1 h-4 w-4" />
+                  Añadir
+                </Button>
               </div>
+
+              {showCertForm && (
+                <div className="mt-4 space-y-3 rounded-lg border p-4">
+                  <Input
+                    placeholder="Título (ej: Máster en Psicología Clínica)"
+                    value={certTitle}
+                    onChange={(e) => setCertTitle(e.target.value)}
+                  />
+                  <Input
+                    placeholder="Institución (ej: Universidad de Barcelona)"
+                    value={certInstitution}
+                    onChange={(e) => setCertInstitution(e.target.value)}
+                  />
+                  <Input
+                    type="number"
+                    placeholder="Año (opcional)"
+                    value={certYear}
+                    onChange={(e) => setCertYear(e.target.value)}
+                    min="1950"
+                    max="2030"
+                  />
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      onClick={handleAddCertification}
+                      disabled={savingCert || !certTitle || !certInstitution}
+                    >
+                      {savingCert ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Save className="mr-1 h-4 w-4" />}
+                      Guardar
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => setShowCertForm(false)}>
+                      Cancelar
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {certifications.length === 0 && !showCertForm ? (
+                <p className="mt-4 text-sm text-muted-foreground">
+                  No has añadido certificaciones todavía.
+                </p>
+              ) : (
+                <div className="mt-4 space-y-2">
+                  {certifications.map((cert) => (
+                    <div
+                      key={cert.id}
+                      className="flex items-center justify-between rounded-lg border px-4 py-3"
+                    >
+                      <div>
+                        <p className="text-sm font-medium">{cert.title}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {cert.institution}{cert.year ? ` · ${cert.year}` : ""}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteCertification(cert.id)}
+                        className="text-zinc-400 hover:text-red-500 transition-colors"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
+          {/* ===== Reviews ===== */}
+          <TabsContent value="reviews" className="mt-6">
+            <div className="rounded-xl border bg-card p-6">
+              <h3 className="font-heading text-lg font-semibold">
+                Reseñas de clientes
+              </h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Valoraciones recibidas de tus sesiones completadas.
+              </p>
+
+              {reviews.length === 0 ? (
+                <div className="mt-4">
+                  <EmptyState
+                    icon={MessageSquare}
+                    title="Sin reseñas todavía"
+                    description="Cuando los clientes valoren tus sesiones, aparecerán aquí."
+                  />
+                </div>
+              ) : (
+                <div className="mt-4 space-y-4">
+                  {reviews.map((review) => (
+                    <div key={review.id} className="rounded-lg border p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium">{review.userName}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {formatDate(review.createdAt)}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          {Array.from({ length: 5 }, (_, i) => (
+                            <Star
+                              key={i}
+                              className={`h-4 w-4 ${
+                                i < review.rating ? "fill-yellow-400 text-yellow-400" : "text-zinc-300"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Category ratings */}
+                      {(review.ratingPunctuality || review.ratingKnowledge || review.ratingCommunication || review.ratingValue) && (
+                        <div className="mt-2 flex flex-wrap gap-3 text-xs text-muted-foreground">
+                          {review.ratingPunctuality && <span>Puntualidad: {review.ratingPunctuality}/5</span>}
+                          {review.ratingKnowledge && <span>Conocimiento: {review.ratingKnowledge}/5</span>}
+                          {review.ratingCommunication && <span>Comunicación: {review.ratingCommunication}/5</span>}
+                          {review.ratingValue && <span>Valor: {review.ratingValue}/5</span>}
+                        </div>
+                      )}
+
+                      {review.comment && (
+                        <p className="mt-2 text-sm">{review.comment}</p>
+                      )}
+
+                      {/* Professional response */}
+                      {review.professionalResponse ? (
+                        <div className="mt-3 ml-4 rounded-lg border-l-2 border-indigo-500 bg-indigo-50/50 p-3 dark:bg-indigo-950/20">
+                          <p className="text-xs font-medium text-indigo-600 dark:text-indigo-400">Tu respuesta</p>
+                          <p className="mt-1 text-sm">{review.professionalResponse}</p>
+                        </div>
+                      ) : respondingTo === review.id ? (
+                        <div className="mt-3 space-y-2">
+                          <textarea
+                            className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            placeholder="Escribe tu respuesta..."
+                            value={responseText}
+                            onChange={(e) => setResponseText(e.target.value)}
+                            maxLength={500}
+                          />
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              onClick={() => handleRespondReview(review.id)}
+                              disabled={savingResponse || !responseText.trim()}
+                            >
+                              {savingResponse ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : null}
+                              Publicar respuesta
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={() => { setRespondingTo(null); setResponseText(""); }}>
+                              Cancelar
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="mt-2"
+                          onClick={() => setRespondingTo(review.id)}
+                        >
+                          <MessageSquare className="mr-1 h-3.5 w-3.5" />
+                          Responder
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </TabsContent>
 

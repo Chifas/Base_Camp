@@ -6,6 +6,7 @@ import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 const inter = localFont({
@@ -26,6 +27,8 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://guidepath.vercel.ap
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
+  manifest: "/manifest.json",
+  themeColor: "#4f46e5",
   title: {
     default: "GuidePath — Encuentra tu camino con profesionales que te guían",
     template: "%s | GuidePath",
@@ -85,6 +88,19 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                  navigator.serviceWorker.register('/sw.js').catch(() => {});
+                });
+              }
+            `,
+          }}
+        />
+      </head>
       <body className={`${inter.variable} ${geist.variable} font-sans antialiased`}>
         <ThemeProvider
           attribute="class"
@@ -99,6 +115,7 @@ export default function RootLayout({
               <Footer />
             </div>
           </AuthSessionProvider>
+          <Toaster richColors position="top-right" />
         </ThemeProvider>
         <Analytics />
         <SpeedInsights />

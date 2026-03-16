@@ -10,6 +10,10 @@ const nextConfig = {
         protocol: "https",
         hostname: "lh3.googleusercontent.com",
       },
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+      },
     ],
   },
   async headers() {
@@ -34,7 +38,7 @@ const nextConfig = {
               "default-src 'self'",
               "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com https://cdn.vercel-insights.com",
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: blob: https://images.unsplash.com https://lh3.googleusercontent.com",
+              "img-src 'self' data: blob: https://images.unsplash.com https://lh3.googleusercontent.com https://res.cloudinary.com",
               "font-src 'self'",
               "connect-src 'self' https://api.stripe.com https://*.daily.co wss://*.daily.co https://vitals.vercel-insights.com",
               "frame-src 'self' https://js.stripe.com https://*.daily.co",
