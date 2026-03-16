@@ -60,16 +60,25 @@ export default function RegisterPage() {
       redirect: false,
     });
 
-    setLoading(false);
-
     if (result?.error) {
+      setLoading(false);
       setError("Cuenta creada, pero error al iniciar sesión. Inténtalo manualmente.");
       return;
     }
 
-    router.push(
-      role === "PROFESSIONAL" ? "/onboarding/professional" : "/dashboard/client"
-    );
+    // Wait for session to be fully populated with role before redirecting
+    const sessionRes = await fetch("/api/auth/session");
+    const sessionData = await sessionRes.json();
+    const userRole = sessionData?.user?.role ?? role;
+
+    setLoading(false);
+
+    const destination =
+      userRole === "PROFESSIONAL"
+        ? "/onboarding/professional"
+        : "/dashboard/client";
+
+    router.push(destination);
     router.refresh();
   }
 
