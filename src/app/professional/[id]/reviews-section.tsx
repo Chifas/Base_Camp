@@ -29,7 +29,7 @@ export function ReviewsSection({ reviews, rating, reviewCount }: ReviewsSectionP
       });
       if (res.ok) {
         toast.success("Reseña reportada. Revisaremos el contenido.");
-        setReportedIds((prev) => new Set([...prev, reviewId]));
+        setReportedIds((prev) => { const next = new Set(Array.from(prev)); next.add(reviewId); return next; });
         setReportingId(null);
         setReportReason("");
       } else {

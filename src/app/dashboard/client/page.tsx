@@ -95,7 +95,7 @@ export default function ClientDashboard() {
       });
       if (res.ok) {
         toast.success("Reseña enviada correctamente");
-        setReviewedSessionIds((prev) => new Set([...prev, reviewSessionId]));
+        setReviewedSessionIds((prev) => { const next = new Set(Array.from(prev)); next.add(reviewSessionId); return next; });
         setReviewSessionId(null);
         resetReviewForm();
       } else {
