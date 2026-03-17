@@ -8,6 +8,10 @@ vi.mock("@/lib/auth", () => ({
   authOptions: {},
 }));
 
+vi.mock("next/cache", () => ({
+  revalidatePath: vi.fn(),
+}));
+
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     professionalProfile: {

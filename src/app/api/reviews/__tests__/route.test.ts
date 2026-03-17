@@ -8,6 +8,15 @@ vi.mock("@/lib/auth", () => ({
   authOptions: {},
 }));
 
+vi.mock("next/cache", () => ({
+  revalidatePath: vi.fn(),
+}));
+
+vi.mock("@/lib/rate-limit", () => ({
+  reviewLimiter: vi.fn(() => null),
+  checkRateLimit: vi.fn().mockResolvedValue({ success: true }),
+}));
+
 vi.mock("@/lib/emails", () => ({
   sendNewReviewEmail: vi.fn().mockResolvedValue(undefined),
 }));
