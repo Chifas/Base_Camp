@@ -1,5 +1,25 @@
 # GuidePath — Roadmap de Mejoras
 
+## Fase 0: Lanzamiento y Adquisición Inicial
+
+### 0.1 Validación y Beta
+- [ ] **Lista de espera / waitlist**: Captura de emails de profesionales interesados antes del lanzamiento oficial
+- [ ] **Programa beta cerrado**: Invitar 10-20 profesionales reales para validar el flujo completo end-to-end
+- [ ] **Métricas de validación**: Definir KPIs de product-market fit (ej: X sesiones completadas, Y% retención mensual, Z NPS)
+- [ ] **Formulario de feedback estructurado**: Encuesta post-sesión para clientes y profesionales en beta
+
+### 0.2 Onboarding guiado para profesionales
+- [ ] **Wizard de setup paso a paso**: Flujo guiado (perfil → disponibilidad → precio → primera sesión) para reducir abandono en activación
+- [ ] **Barra de completitud de perfil**: Indicador % con sugerencias accionables (tipo LinkedIn) para maximizar visibilidad
+- [ ] **Email de activación progresiva**: Secuencia de emails Day 1/3/7 para que el profesional complete su perfil
+
+### 0.3 Sistema de referidos
+- [ ] **Referidos profesional → profesional**: Código de invitación con beneficio (ej: reducción de comisión primer mes)
+- [ ] **Referidos cliente → cliente**: Crédito en próxima sesión por cada amigo registrado que complete una sesión
+- [ ] **Dashboard de referidos**: Panel donde cada usuario ve sus referidos y beneficios acumulados
+
+---
+
 ## Fase 1: Estabilidad y Calidad (Bugs + UX inmediata)
 
 ### 1.1 Correcciones pendientes
@@ -109,9 +129,9 @@
 
 ### 5.1 SEO y Marketing
 - [ ] **Blog integrado**: CMS simple para artículos sobre desarrollo profesional
-- [ ] **Landing pages por categoría**: `/coach`, `/psicologo`, `/mentor` con SEO específico
+- [ ] **Landing pages por categoría**: `/coach`, `/psicologo`, `/mentor` con SEO específico — *alta prioridad para tráfico orgánico*
 - [x] **Schema.org markup**: Structured data para profesionales (Person, Service, AggregateRating) — implementado en Fase 3.1
-- [ ] **Sitemap dinámico**: Incluir perfiles de profesionales verificados
+- [ ] **Sitemap dinámico**: Incluir perfiles de profesionales verificados — *alta prioridad para indexación Google*
 - [ ] **Open Graph mejorado**: Imágenes dinámicas para compartir en redes sociales
 
 ### 5.2 Panel de administración
@@ -138,18 +158,27 @@
 - [ ] **CI/CD mejorado**: Tests obligatorios en PR, deploy preview por branch
 - [ ] **Base de datos**: Índices optimizados, queries N+1 audit, connection pooling
 
+### 5.6 Confianza y Seguridad (Trust & Safety)
+- [ ] **Verificación de identidad**: Integración con Stripe Identity o similar para verificar DNI/pasaporte de profesionales
+- [ ] **Política de disputas**: Flujo para que un cliente abra una disputa post-sesión (reembolso parcial, mediación)
+- [ ] **Límites anti-abuso**: Evitar abuso del sistema de primera sesión gratuita (1 por usuario/profesional)
+- [ ] **2FA para profesionales**: Doble factor de autenticación en cuentas con acceso a pagos
+
 ---
 
 ## Prioridad Recomendada
 
 | Prioridad | Fase | Razón |
 |-----------|------|-------|
+| Inmediata | Fase 0 | Sin validación real no hay producto viable a largo plazo |
 | Alta | Fase 1 | Sin estabilidad no hay producto viable |
 | Alta | Fase 2.1 | Sin pagos a profesionales no hay marketplace |
+| Alta | Fase 5.1 (SEO) | Landing pages y sitemap son críticos para tráfico orgánico temprano |
 | Media | Fase 2.2-2.3 | Mejoran retención de usuarios |
 | Media | Fase 3 | Diferenciación y experiencia premium |
+| Media | Fase 5.6 | Confianza es diferenciador clave en marketplaces de servicios |
 | Baja | Fase 4 | Features avanzados para escalar |
-| Baja | Fase 5 | Crecimiento a largo plazo |
+| Baja | Fase 5 (resto) | Crecimiento a largo plazo |
 
 ---
 
