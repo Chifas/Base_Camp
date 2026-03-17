@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -99,6 +100,9 @@ export async function POST(
         link: isClient ? "/dashboard/professional" : "/dashboard/client",
       },
     ]);
+
+    revalidatePath("/dashboard/client");
+    revalidatePath("/dashboard/professional");
 
     return NextResponse.json(reschedule, { status: 201 });
   } catch {
@@ -205,6 +209,9 @@ export async function PATCH(
         link: isClient ? "/dashboard/professional" : "/dashboard/client",
       },
     ]);
+
+    revalidatePath("/dashboard/client");
+    revalidatePath("/dashboard/professional");
 
     return NextResponse.json(updated);
   } catch {

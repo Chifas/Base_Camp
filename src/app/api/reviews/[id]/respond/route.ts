@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -54,6 +55,8 @@ export async function POST(
         respondedAt: new Date(),
       },
     });
+
+    revalidatePath("/dashboard/professional");
 
     return NextResponse.json({ id: updated.id, professionalResponse: updated.professionalResponse });
   } catch (error) {

@@ -40,6 +40,7 @@ import { FadeIn } from "@/components/shared/motion-wrapper";
 import { DashboardSkeleton } from "@/components/shared/dashboard-skeleton";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PhotoUpload } from "@/components/shared/photo-upload";
+import { ReferralPanel } from "@/components/shared/referral-panel";
 import { formatCurrency, formatDate, formatTime } from "@/lib/utils";
 interface CategoryOption {
   id: string;
@@ -182,6 +183,15 @@ export default function ProfessionalDashboard() {
   const [transfers, setTransfers] = useState<Transfer[]>([]);
   const [earningsSummary, setEarningsSummary] = useState<EarningsSummary | null>(null);
 
+  // Referrals
+  const [referrals, setReferrals] = useState<{ referrals: never[]; stats: { total: 0; completed: 0; pending: 0; totalCredits: 0 } }>({ referrals: [], stats: { total: 0, completed: 0, pending: 0, totalCredits: 0 } });
+  const fetchReferrals = useCallback(() => {
+    fetch("/api/referrals")
+      .then((r) => r.ok ? r.json() : { referrals: [], stats: { total: 0, completed: 0, pending: 0, totalCredits: 0 } })
+      .then(setReferrals)
+      .catch(() => {});
+  }, []);
+
   // Load all data on mount
   useEffect(() => {
     Promise.all([
@@ -243,6 +253,9 @@ export default function ProfessionalDashboard() {
         if (data) setStripeStatus(data);
       })
       .catch(() => {});
+
+    // Load referrals
+    fetchReferrals();
 
     // Load earnings data
     fetch("/api/stripe/transfers")
@@ -500,6 +513,7 @@ export default function ProfessionalDashboard() {
             <TabsTrigger value="availability">Disponibilidad</TabsTrigger>
             <TabsTrigger value="profile">Perfil</TabsTrigger>
             <TabsTrigger value="reviews">Reseñas ({reviews.length})</TabsTrigger>
+            <TabsTrigger value="referrals">Referidos</TabsTrigger>
             <TabsTrigger value="earnings">Ingresos</TabsTrigger>
           </TabsList>
 
@@ -1035,6 +1049,16 @@ export default function ProfessionalDashboard() {
           </TabsContent>
 
           {/* ===== Earnings ===== */}
+          {/* ===== Referrals ===== */}
+          <TabsContent value="referrals" className="mt-6">
+            <ReferralPanel
+              referrals={referrals.referrals}
+              stats={referrals.stats}
+              userRole="PROFESSIONAL"
+              onRefresh={fetchReferrals}
+            />
+          </TabsContent>
+
           <TabsContent value="earnings" className="mt-6 space-y-6">
             {/* Stripe Connect status */}
             <div className="rounded-xl border bg-card p-6">

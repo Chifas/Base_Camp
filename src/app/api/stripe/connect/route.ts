@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -60,6 +61,8 @@ export async function POST() {
       return_url: `${baseUrl}/dashboard/professional?stripe=success`,
       type: "account_onboarding",
     });
+
+    revalidatePath("/dashboard/professional");
 
     return NextResponse.json({ url: accountLink.url });
   } catch (error) {

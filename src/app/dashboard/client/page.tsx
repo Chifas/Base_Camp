@@ -23,6 +23,8 @@ import { FadeIn } from "@/components/shared/motion-wrapper";
 import { DashboardSkeleton } from "@/components/shared/dashboard-skeleton";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PhotoUpload } from "@/components/shared/photo-upload";
+import { BetaFeedbackModal } from "@/components/shared/beta-feedback-modal";
+import { ReferralPanel } from "@/components/shared/referral-panel";
 import { STATUS_LABELS, type Session } from "@/types";
 import { formatCurrency, formatDate, formatTime } from "@/lib/utils";
 
@@ -75,6 +77,17 @@ export default function ClientDashboard() {
   const [reviewValue, setReviewValue] = useState(0);
   const [submittingReview, setSubmittingReview] = useState(false);
   const [reviewedSessionIds, setReviewedSessionIds] = useState<Set<string>>(new Set());
+  const [feedbackSessionId, setFeedbackSessionId] = useState<string | null>(null);
+
+  // Referrals state
+  const [referrals, setReferrals] = useState<{ referrals: never[]; stats: { total: 0; completed: 0; pending: 0; totalCredits: 0 } }>({ referrals: [], stats: { total: 0, completed: 0, pending: 0, totalCredits: 0 } });
+
+  const fetchReferrals = useCallback(() => {
+    fetch("/api/referrals")
+      .then((r) => r.ok ? r.json() : { referrals: [], stats: { total: 0, completed: 0, pending: 0, totalCredits: 0 } })
+      .then(setReferrals)
+      .catch(() => {});
+  }, []);
 
   const handleSubmitReview = useCallback(async () => {
     if (!reviewSessionId || reviewRating === 0) return;
@@ -124,7 +137,8 @@ export default function ClientDashboard() {
       .then((data) => setSessions(Array.isArray(data) ? data : []))
       .catch(() => setSessions([]))
       .finally(() => setLoadingSessions(false));
-  }, []);
+    fetchReferrals();
+  }, [fetchReferrals]);
 
   useEffect(() => {
     const interval = setInterval(() => setNow(Date.now()), 30000);
@@ -203,6 +217,7 @@ export default function ClientDashboard() {
             <TabsTrigger value="past">
               Historial ({pastSessions.length})
             </TabsTrigger>
+            <TabsTrigger value="referrals">Referidos</TabsTrigger>
             <TabsTrigger value="profile">Mi perfil</TabsTrigger>
           </TabsList>
 
@@ -350,12 +365,32 @@ export default function ClientDashboard() {
                         Dejar reseña
                       </Button>
                     )}
+                    {session.status === "COMPLETED" && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setFeedbackSessionId(session.id)}
+                      >
+                        <MessageSquare className="mr-2 h-4 w-4" />
+                        Feedback beta
+                      </Button>
+                    )}
                   </div>
                 </motion.div>
               ))}
             </div>
             )}
           </TabsContent>
+          {/* ===== Referrals ===== */}
+          <TabsContent value="referrals" className="mt-6">
+            <ReferralPanel
+              referrals={referrals.referrals}
+              stats={referrals.stats}
+              userRole="CLIENT"
+              onRefresh={fetchReferrals}
+            />
+          </TabsContent>
+
           {/* ===== Profile ===== */}
           <TabsContent value="profile" className="mt-6">
             <div className="rounded-xl border bg-card p-6">
@@ -372,6 +407,14 @@ export default function ClientDashboard() {
           </TabsContent>
         </Tabs>
       </FadeIn>
+
+      {/* Beta feedback modal */}
+      {feedbackSessionId && (
+        <BetaFeedbackModal
+          sessionId={feedbackSessionId}
+          onClose={() => setFeedbackSessionId(null)}
+        />
+      )}
 
       {/* Review modal */}
       {reviewSessionId && (

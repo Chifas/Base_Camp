@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -112,6 +113,9 @@ export async function POST(req: Request) {
       category: profile.category,
     });
 
+    revalidatePath("/dashboard/professional");
+    revalidatePath("/explore");
+
     return NextResponse.json(profile, { status: 201 });
   } catch (error) {
     logger.error("Error POST /api/professionals/me", { error: String(error) });
@@ -178,6 +182,9 @@ export async function PUT(req: Request) {
       profileId: existing.id,
       userId: session.user.id,
     });
+
+    revalidatePath("/dashboard/professional");
+    revalidatePath("/explore");
 
     return NextResponse.json(updated);
   } catch (error) {
