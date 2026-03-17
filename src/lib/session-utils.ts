@@ -12,8 +12,8 @@ interface SessionWithRelations {
   dailyRoomUrl: string | null;
   notes: string | null;
   cancellationFee: number | null;
-  client?: { name: string | null; image: string | null };
-  professional?: { user: { name: string | null; image: string | null } };
+  client?: { name: string | null; image: string | null; [key: string]: unknown };
+  professional?: { user?: { name: string | null; image: string | null }; [key: string]: unknown };
 }
 
 /**
