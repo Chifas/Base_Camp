@@ -116,3 +116,27 @@ export const certificationSchema = z.object({
   institution: z.string().min(1, "La institución es obligatoria").max(200),
   year: z.number().int().min(1950).max(2030).optional(),
 });
+
+// POST /api/feedback
+export const betaFeedbackSchema = z.object({
+  sessionId: z.string().optional(),
+  rating: z.number().int().min(1).max(5),
+  feedback: z.string().min(5, "El feedback debe tener al menos 5 caracteres").max(2000),
+});
+
+// POST /api/referrals
+export const createReferralSchema = z.object({
+  type: z.enum(["PROFESSIONAL_TO_PROFESSIONAL", "CLIENT_TO_CLIENT"]),
+});
+
+// POST /api/referrals/redeem
+export const redeemReferralSchema = z.object({
+  code: z.string().min(1, "El código es obligatorio"),
+});
+
+// POST /api/waitlist
+export const waitlistSchema = z.object({
+  email: z.string().email("Email no válido"),
+  name: z.string().optional(),
+  source: z.string().optional(),
+});

@@ -288,6 +288,7 @@ export const TESTIMONIALS = [
     role: "Diseñadora UX en una scale-up",
     image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face",
     quote: "Mi coach en GuidePath me ayudó a dar el salto de IC a lead. En 3 meses pasé de estar estancada a liderar un equipo de 5 diseñadores. No lo hubiera conseguido sola.",
+    rating: 5,
   },
   {
     id: "test-2",
@@ -295,6 +296,7 @@ export const TESTIMONIALS = [
     role: "Engineering Manager",
     image: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=100&h=100&fit=crop&crop=face",
     quote: "Estaba en pleno burnout y a punto de dejar una empresa que me encantaba. La psicóloga laboral que encontré aquí entendió mi situación desde la primera sesión y me ayudó a reencauzarlo todo.",
+    rating: 5,
   },
   {
     id: "test-3",
@@ -302,5 +304,6 @@ export const TESTIMONIALS = [
     role: "Fundadora de startup B2B",
     image: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=100&h=100&fit=crop&crop=face",
     quote: "Reservé una sesión con un experto en producto en menos de 5 minutos. La videollamada fue impecable y el feedback que recibí valió más que meses de consultoría tradicional.",
+    rating: 5,
   },
 ];

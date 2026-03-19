@@ -42,7 +42,7 @@ export async function POST(req: Request) {
           ],
           resource_type: "image",
         },
-        (error, result) => {
+        (error: unknown, result: { secure_url: string } | undefined) => {
           if (error || !result) reject(error || new Error("Upload failed"));
           else resolve(result);
         }

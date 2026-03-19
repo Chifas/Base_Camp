@@ -61,6 +61,9 @@ model User {
   reviews              Review[]
   notifications        Notification[]
   rescheduleRequests   RescheduleRequest[]
+  betaFeedbacks        BetaFeedback[]
+  referralsMade        Referral[]         @relation("ReferralReferrer")
+  referralsReceived    Referral[]         @relation("ReferralReferred")
 
   @@map("users")
 }
@@ -106,21 +109,23 @@ model VerificationToken {
 }
 
 model ProfessionalProfile {
-  id              String               @id @default(cuid())
-  userId          String               @unique
-  category        ProfessionalCategory
-  headline        String?
-  hourlyRate      Float
-  stripeAccountId String?
-  stripeConnected Boolean              @default(false)
-  rating          Float                @default(0)
-  reviewCount     Int                  @default(0)
-  verified        Boolean              @default(false)
-  verifiedAt      DateTime?
-  languages       String[]             @default(["es"])
-  yearsExperience Int?
-  createdAt       DateTime             @default(now())
-  updatedAt       DateTime             @updatedAt
+  id                  String               @id @default(cuid())
+  userId              String               @unique
+  category            ProfessionalCategory
+  headline            String?
+  hourlyRate          Float
+  stripeAccountId     String?
+  stripeConnected     Boolean              @default(false)
+  rating              Float                @default(0)
+  reviewCount         Int                  @default(0)
+  verified            Boolean              @default(false)
+  verifiedAt          DateTime?
+  languages           String[]             @default(["es"])
+  yearsExperience     Int?
+  onboardingDone      Boolean              @default(false)
+  onboardingEmailStep Int                  @default(0)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
 
   user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   availability    Availability[]
@@ -242,4 +247,65 @@ model RescheduleRequest {
 
   @@index([sessionId])
   @@map("reschedule_requests")
+}
+
+// ── Beta Feedback ──────────────────────────────────────────────────────────
+
+model BetaFeedback {
+  id        String   @id @default(cuid())
+  userId    String
+  sessionId String?
+  rating    Int
+  feedback  String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("beta_feedbacks")
+}
+
+// ── Referrals ──────────────────────────────────────────────────────────────
+
+enum ReferralType {
+  PROFESSIONAL_TO_PROFESSIONAL
+  CLIENT_TO_CLIENT
+}
+
+enum ReferralStatus {
+  PENDING
+  COMPLETED
+  EXPIRED
+}
+
+model Referral {
+  id           String         @id @default(cuid())
+  code         String         @unique
+  type         ReferralType
+  referrerId   String
+  referredId   String?
+  status       ReferralStatus @default(PENDING)
+  creditAmount Float?
+  completedAt  DateTime?
+  expiresAt    DateTime
+  createdAt    DateTime       @default(now())
+
+  referrer User  @relation("ReferralReferrer", fields: [referrerId], references: [id])
+  referred User? @relation("ReferralReferred", fields: [referredId], references: [id])
+
+  @@index([referrerId])
+  @@index([code])
+  @@map("referrals")
+}
+
+// ── Waitlist ───────────────────────────────────────────────────────────────
+
+model WaitlistEntry {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  source    String?
+  createdAt DateTime @default(now())
+
+  @@map("waitlist_entries")
 }
