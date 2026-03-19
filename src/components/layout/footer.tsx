@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Compass } from "lucide-react";
+import Image from "next/image";
 
 const footerLinks = {
   plataforma: [
@@ -28,9 +28,12 @@ export function Footer() {
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                <Compass className="h-5 w-5" />
-              </div>
+              <Image
+                src="/logo.png"
+                alt="GuidePath"
+                width={32}
+                height={32}
+              />
               <span className="font-heading text-lg font-bold">GuidePath</span>
             </Link>
             <p className="mt-4 text-sm text-muted-foreground">

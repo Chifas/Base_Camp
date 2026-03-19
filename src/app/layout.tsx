@@ -29,6 +29,10 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   manifest: "/manifest.json",
   themeColor: "#4f46e5",
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
   title: {
     default: "GuidePath — Encuentra tu camino con profesionales que te guían",
     template: "%s | GuidePath",
