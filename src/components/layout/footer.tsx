@@ -29,10 +29,11 @@ export function Footer() {
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="flex items-center gap-2">
               <Image
-                src="/logo.png"
+                src="/logo.svg"
                 alt="GuidePath"
-                width={32}
-                height={32}
+                width={44}
+                height={40}
+                className="brightness-150 saturate-150 dark:brightness-200 dark:saturate-200"
               />
               <span className="font-heading text-lg font-bold">GuidePath</span>
             </Link>

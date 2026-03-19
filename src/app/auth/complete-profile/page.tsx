@@ -47,7 +47,9 @@ export default function CompleteProfilePage() {
   return (
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
       <div className="text-center">
-        <Image src="/logo.png" alt="GuidePath" width={48} height={48} className="mx-auto" />
+        <div className="mx-auto mb-2">
+          <Image src="/logo.svg" alt="GuidePath" width={140} height={126} className="mx-auto drop-shadow-[0_0_20px_rgba(37,99,235,0.25)]" />
+        </div>
         <div className="mt-4 flex items-center gap-2 text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" />
           <span>Preparando tu cuenta...</span>

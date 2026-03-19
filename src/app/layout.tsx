@@ -30,8 +30,9 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
   themeColor: "#4f46e5",
   icons: {
-    icon: "/favicon.ico",
-    apple: "/apple-touch-icon.png",
+    icon: "/logo.svg",
+    shortcut: "/logo.svg",
+    apple: "/logo.svg",
   },
   title: {
     default: "GuidePath — Encuentra tu camino con profesionales que te guían",

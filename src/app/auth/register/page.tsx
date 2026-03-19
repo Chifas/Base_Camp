@@ -93,11 +93,13 @@ export default function RegisterPage() {
       >
         {/* Header */}
         <div className="text-center">
-          <Image src="/logo.png" alt="GuidePath" width={48} height={48} className="mx-auto" />
-          <h1 className="mt-4 font-heading text-2xl font-bold">
+          <div className="mx-auto mb-4">
+            <Image src="/logo.svg" alt="GuidePath" width={140} height={126} className="mx-auto drop-shadow-[0_0_20px_rgba(37,99,235,0.25)]" />
+          </div>
+          <h1 className="font-heading text-3xl font-bold">
             Crea tu cuenta
           </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <p className="mt-2 text-muted-foreground">
             Empieza tu camino hacia el bienestar
           </p>
         </div>
