@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { Loader2, Briefcase, DollarSign, FileText, Tag } from "lucide-react";
+import { Loader2, Briefcase, FileText, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createProfessionalProfileSchema } from "@/lib/validations";
@@ -31,7 +31,6 @@ export default function ProfessionalOnboardingPage() {
   // Form fields
   const [category, setCategory] = useState("");
   const [headline, setHeadline] = useState("");
-  const [hourlyRate, setHourlyRate] = useState("");
   const [bio, setBio] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
@@ -59,11 +58,10 @@ export default function ProfessionalOnboardingPage() {
     setError("");
     setFieldErrors({});
 
-    const rate = parseFloat(hourlyRate);
     const parsed = createProfessionalProfileSchema.safeParse({
       category: category || undefined,
       headline,
-      hourlyRate: isNaN(rate) ? 0 : rate,
+      hourlyRate: 0,
       bio: bio || undefined,
     });
 
@@ -86,7 +84,7 @@ export default function ProfessionalOnboardingPage() {
         body: JSON.stringify({
           category,
           headline,
-          hourlyRate: rate,
+          hourlyRate: 0,
           bio: bio || undefined,
         }),
       });
@@ -183,25 +181,6 @@ export default function ProfessionalOnboardingPage() {
               Una frase corta que describa tu perfil ({headline.length}/120)
             </p>
             {fieldErrors.headline && <p className="text-xs text-destructive">{fieldErrors.headline}</p>}
-          </div>
-
-          {/* Hourly rate */}
-          <div className="space-y-2">
-            <label htmlFor="rate" className="flex items-center gap-2 text-sm font-medium">
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-              Tarifa por sesión (€) *
-            </label>
-            <Input
-              id="rate"
-              type="number"
-              min="1"
-              step="0.01"
-              placeholder="65"
-              className={fieldErrors.hourlyRate ? "border-destructive" : ""}
-              value={hourlyRate}
-              onChange={(e) => { setHourlyRate(e.target.value); setFieldErrors((prev) => ({ ...prev, hourlyRate: "" })); }}
-            />
-            {fieldErrors.hourlyRate && <p className="text-xs text-destructive">{fieldErrors.hourlyRate}</p>}
           </div>
 
           {/* Bio */}

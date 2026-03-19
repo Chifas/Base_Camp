@@ -7,7 +7,6 @@ import { toast } from "sonner";
 import {
   Calendar,
   Clock,
-  DollarSign,
   TrendingUp,
   Users,
   Video,
@@ -24,6 +23,9 @@ import {
   Globe,
   Award,
   MessageSquare,
+  Sparkles,
+  Heart,
+  Gift,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,7 +43,8 @@ import { DashboardSkeleton } from "@/components/shared/dashboard-skeleton";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PhotoUpload } from "@/components/shared/photo-upload";
 import { ReferralPanel } from "@/components/shared/referral-panel";
-import { formatCurrency, formatDate, formatTime } from "@/lib/utils";
+import { formatDate, formatTime } from "@/lib/utils";
+import { CREDITS_CONFIG } from "@/lib/credits-config";
 interface CategoryOption {
   id: string;
   name: string;
@@ -83,7 +86,6 @@ interface SessionItem {
 interface ProfileData {
   id: string;
   headline: string | null;
-  hourlyRate: number;
   category: string;
   categoryName: string;
   name: string | null;
@@ -92,6 +94,17 @@ interface ProfileData {
   languages: string[];
   yearsExperience: number | null;
   hasProfile: boolean;
+  impactPoints: number;
+  totalSessionsCompleted: number;
+  socialImpactScore: number;
+}
+
+interface RedemptionItem {
+  id: string;
+  type: string;
+  pointsSpent: number;
+  description: string | null;
+  createdAt: string;
 }
 
 interface CertificationItem {
@@ -134,7 +147,6 @@ export default function ProfessionalDashboard() {
 
   // Profile edit state
   const [editHeadline, setEditHeadline] = useState("");
-  const [editHourlyRate, setEditHourlyRate] = useState("");
   const [editCategory, setEditCategory] = useState("");
   const [editBio, setEditBio] = useState("");
   const [editLanguages, setEditLanguages] = useState<string[]>(["es"]);
@@ -156,32 +168,9 @@ export default function ProfessionalDashboard() {
   const [responseText, setResponseText] = useState("");
   const [savingResponse, setSavingResponse] = useState(false);
 
-  // Stripe Connect state
-  const [stripeStatus, setStripeStatus] = useState<{
-    connected: boolean;
-    onboarded: boolean;
-  } | null>(null);
-  const [connectingStripe, setConnectingStripe] = useState(false);
-
-  // Earnings state
-  interface Transfer {
-    sessionId: string;
-    clientName: string;
-    scheduledAt: string;
-    grossAmount: number;
-    commission: number;
-    netAmount: number;
-    transferred: boolean;
-  }
-  interface EarningsSummary {
-    totalGross: number;
-    totalNet: number;
-    totalCommission: number;
-    totalSessions: number;
-    transferredCount: number;
-  }
-  const [transfers, setTransfers] = useState<Transfer[]>([]);
-  const [earningsSummary, setEarningsSummary] = useState<EarningsSummary | null>(null);
+  // Impact / Rewards state
+  const [redemptions, setRedemptions] = useState<RedemptionItem[]>([]);
+  const [redeemingType, setRedeemingType] = useState<string | null>(null);
 
   // Referrals
   const [referrals, setReferrals] = useState<{ referrals: never[]; stats: { total: 0; completed: 0; pending: 0; totalCredits: 0 } }>({ referrals: [], stats: { total: 0, completed: 0, pending: 0, totalCredits: 0 } });
@@ -216,7 +205,6 @@ export default function ProfessionalDashboard() {
 
         setProfile(profData);
         setEditHeadline(profData.headline ?? "");
-        setEditHourlyRate(profData.hourlyRate?.toString() ?? "");
         setEditCategory(profData.category ?? "");
         setEditBio(profData.bio ?? "");
         setEditLanguages(profData.languages ?? ["es"]);
@@ -246,66 +234,43 @@ export default function ProfessionalDashboard() {
       })
       .finally(() => setLoadingAll(false));
 
-    // Load Stripe Connect status
-    fetch("/api/stripe/connect")
-      .then((r) => r.ok ? r.json() : null)
-      .then((data) => {
-        if (data) setStripeStatus(data);
-      })
-      .catch(() => {});
-
     // Load referrals
     fetchReferrals();
 
-    // Load earnings data
-    fetch("/api/stripe/transfers")
+    // Load rewards / redemptions
+    fetch("/api/rewards")
       .then((r) => r.ok ? r.json() : null)
       .then((data) => {
-        if (data) {
-          setTransfers(data.transfers ?? []);
-          setEarningsSummary(data.summary ?? null);
-        }
+        if (data?.redemptions) setRedemptions(data.redemptions);
       })
       .catch(() => {});
-
-    // Handle Stripe redirect params
-    const url = new URL(window.location.href);
-    const stripeParam = url.searchParams.get("stripe");
-    if (stripeParam === "success") {
-      // Re-fetch status after successful onboarding
-      fetch("/api/stripe/connect")
-        .then((r) => r.ok ? r.json() : null)
-        .then((data) => { if (data) setStripeStatus(data); })
-        .catch(() => {});
-      // Clean up URL
-      url.searchParams.delete("stripe");
-      window.history.replaceState({}, "", url.pathname);
-    } else if (stripeParam === "refresh") {
-      // Onboarding link expired, auto-trigger new one
-      fetch("/api/stripe/connect", { method: "POST" })
-        .then((r) => r.ok ? r.json() : null)
-        .then((data) => { if (data?.url) window.location.href = data.url; })
-        .catch(() => {});
-      url.searchParams.delete("stripe");
-      window.history.replaceState({}, "", url.pathname);
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
-  // Stripe Connect handler
-  const handleConnectStripe = useCallback(async () => {
-    setConnectingStripe(true);
+  // Redeem rewards handler
+  const handleRedeem = useCallback(async (type: "CERTIFICATION" | "DONATION") => {
+    setRedeemingType(type);
     try {
-      const res = await fetch("/api/stripe/connect", { method: "POST" });
+      const res = await fetch("/api/rewards", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type }),
+      });
       if (res.ok) {
         const data = await res.json();
-        if (data.url) {
-          window.location.href = data.url;
-          return;
-        }
+        toast.success(type === "CERTIFICATION" ? "Certificación canjeada" : "Donación realizada");
+        setRedemptions((prev) => [data.redemption, ...prev]);
+        // Update local profile points
+        setProfile((p) => p ? { ...p, impactPoints: data.remainingPoints } : p);
+      } else {
+        const data = await res.json();
+        toast.error(data.error ?? "Error al canjear");
       }
-    } catch {}
-    setConnectingStripe(false);
+    } catch {
+      toast.error("Error de conexión");
+    } finally {
+      setRedeemingType(null);
+    }
   }, []);
 
   // Session action handler (accept / reject)
@@ -352,19 +317,12 @@ export default function ProfessionalDashboard() {
   // Save profile handler
   const handleSaveProfile = useCallback(async () => {
     setSavingProfile(true);
-    const rate = parseFloat(editHourlyRate);
-    if (isNaN(rate) || rate < 1) {
-      toast.error("La tarifa debe ser al menos 1€");
-      setSavingProfile(false);
-      return;
-    }
     try {
       const res = await fetch("/api/professionals/me", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           headline: editHeadline || undefined,
-          hourlyRate: rate,
           category: editCategory || undefined,
           bio: editBio || undefined,
           languages: editLanguages,
@@ -382,7 +340,7 @@ export default function ProfessionalDashboard() {
     } finally {
       setSavingProfile(false);
     }
-  }, [editHeadline, editHourlyRate, editCategory, editBio, editLanguages, editYearsExperience]);
+  }, [editHeadline, editCategory, editBio, editLanguages, editYearsExperience]);
 
   // Add certification handler
   const handleAddCertification = useCallback(async () => {
@@ -466,10 +424,6 @@ export default function ProfessionalDashboard() {
     () => sessions.filter((s) => s.status === "PENDING"),
     [sessions]
   );
-  const totalEarnings = useMemo(
-    () => sessions.filter((s) => s.status === "COMPLETED").reduce((acc, s) => acc + s.price, 0),
-    [sessions]
-  );
   const totalSessions = sessions.filter((s) => s.status === "COMPLETED").length;
 
   if (loadingAll) return <DashboardSkeleton />;
@@ -481,7 +435,7 @@ export default function ProfessionalDashboard() {
           Panel Profesional
         </h1>
         <p className="mt-1 text-muted-foreground">
-          Gestiona tus sesiones, disponibilidad e ingresos.
+          Gestiona tus sesiones, disponibilidad e impacto social.
         </p>
       </FadeIn>
 
@@ -489,9 +443,9 @@ export default function ProfessionalDashboard() {
       <FadeIn delay={0.1}>
         <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
           {[
-            { label: "Ingresos totales", value: formatCurrency(totalEarnings), icon: DollarSign },
-            { label: "Tarifa/sesión", value: profile ? formatCurrency(profile.hourlyRate) : "—", icon: TrendingUp },
-            { label: "Sesiones totales", value: totalSessions.toString(), icon: Users },
+            { label: "Puntos de impacto", value: (profile?.impactPoints ?? 0).toString(), icon: Sparkles },
+            { label: "Impacto social", value: (profile?.socialImpactScore ?? 0).toFixed(1), icon: TrendingUp },
+            { label: "Sesiones completadas", value: totalSessions.toString(), icon: Users },
             { label: "Próximas sesiones", value: (confirmedSessions.length + pendingSessions.length).toString(), icon: Calendar },
           ].map((stat) => (
             <div key={stat.label} className="rounded-xl border bg-card p-4">
@@ -514,7 +468,7 @@ export default function ProfessionalDashboard() {
             <TabsTrigger value="profile">Perfil</TabsTrigger>
             <TabsTrigger value="reviews">Reseñas ({reviews.length})</TabsTrigger>
             <TabsTrigger value="referrals">Referidos</TabsTrigger>
-            <TabsTrigger value="earnings">Ingresos</TabsTrigger>
+            <TabsTrigger value="impact">Impacto Social</TabsTrigger>
           </TabsList>
 
           {/* ===== Sessions ===== */}
@@ -599,8 +553,8 @@ export default function ProfessionalDashboard() {
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
-                        <span className="text-sm font-medium">
-                          {formatCurrency(session.price)}
+                        <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                          Gratuita
                         </span>
                         <Button size="sm" onClick={() => router.push(`/session/${session.id}`)}>
                           <Video className="mr-2 h-4 w-4" />
@@ -744,22 +698,6 @@ export default function ProfessionalDashboard() {
                     value={editHeadline}
                     onChange={(e) => setEditHeadline(e.target.value)}
                     maxLength={120}
-                  />
-                </div>
-
-                {/* Rate */}
-                <div className="space-y-2">
-                  <label htmlFor="edit-rate" className="flex items-center gap-2 text-sm font-medium">
-                    <DollarSign className="h-4 w-4 text-muted-foreground" />
-                    Tarifa por sesión (€)
-                  </label>
-                  <Input
-                    id="edit-rate"
-                    type="number"
-                    min="1"
-                    step="0.01"
-                    value={editHourlyRate}
-                    onChange={(e) => setEditHourlyRate(e.target.value)}
                   />
                 </div>
 
@@ -1048,7 +986,6 @@ export default function ProfessionalDashboard() {
             </div>
           </TabsContent>
 
-          {/* ===== Earnings ===== */}
           {/* ===== Referrals ===== */}
           <TabsContent value="referrals" className="mt-6">
             <ReferralPanel
@@ -1059,109 +996,170 @@ export default function ProfessionalDashboard() {
             />
           </TabsContent>
 
-          <TabsContent value="earnings" className="mt-6 space-y-6">
-            {/* Stripe Connect status */}
+          {/* ===== Impact Social ===== */}
+          <TabsContent value="impact" className="mt-6 space-y-6">
+            {/* Impact summary */}
             <div className="rounded-xl border bg-card p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-heading text-lg font-semibold">Stripe Connect</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {stripeStatus?.onboarded
-                      ? "Tu cuenta está conectada. Los pagos se transfieren automáticamente."
-                      : stripeStatus?.connected
-                        ? "Tu cuenta está creada pero necesita completar la configuración."
-                        : "Conecta tu cuenta de Stripe para recibir pagos por tus sesiones."}
+              <h3 className="font-heading text-lg font-semibold">
+                Tu impacto social
+              </h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Cada sesión completada suma puntos de impacto que puedes canjear por recompensas.
+              </p>
+
+              <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-primary" />
+                    <p className="text-sm text-primary">Puntos disponibles</p>
+                  </div>
+                  <p className="mt-2 font-heading text-3xl font-bold text-primary">
+                    {profile?.impactPoints ?? 0}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    +{CREDITS_CONFIG.IMPACT_POINTS_PER_SESSION} pts por sesión completada
                   </p>
                 </div>
-                {stripeStatus?.onboarded ? (
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                    <Check className="h-3.5 w-3.5" />
-                    Conectado
-                  </span>
-                ) : (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleConnectStripe}
-                    disabled={connectingStripe}
-                  >
-                    {connectingStripe ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <DollarSign className="mr-2 h-4 w-4" />
-                    )}
-                    {stripeStatus?.connected ? "Completar configuración" : "Configurar Stripe"}
-                  </Button>
-                )}
+                <div className="rounded-lg border p-4">
+                  <div className="flex items-center gap-2">
+                    <Users className="h-5 w-5 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground">Sesiones completadas</p>
+                  </div>
+                  <p className="mt-2 font-heading text-3xl font-bold">
+                    {profile?.totalSessionsCompleted ?? 0}
+                  </p>
+                </div>
+                <div className="rounded-lg border p-4">
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground">Puntuación de impacto</p>
+                  </div>
+                  <p className="mt-2 font-heading text-3xl font-bold">
+                    {(profile?.socialImpactScore ?? 0).toFixed(1)}
+                  </p>
+                </div>
               </div>
             </div>
 
-            {/* Earnings summary */}
+            {/* Redeem rewards */}
             <div className="rounded-xl border bg-card p-6">
               <h3 className="font-heading text-lg font-semibold">
-                Resumen de ingresos
+                Canjear recompensas
+              </h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Utiliza tus puntos de impacto para obtener reconocimientos o contribuir a causas sociales.
+              </p>
+
+              <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {/* Certification reward */}
+                <div className="flex flex-col justify-between rounded-xl border p-5">
+                  <div>
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-100 dark:bg-indigo-900/30">
+                        <Award className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold">Certificación profesional</h4>
+                        <p className="text-xs text-muted-foreground">{CREDITS_CONFIG.IMPACT_POINTS_CERTIFICATION} puntos</p>
+                      </div>
+                    </div>
+                    <p className="mt-3 text-sm text-muted-foreground">
+                      Obtén un certificado que acredita tu compromiso con el desarrollo profesional y el impacto social.
+                    </p>
+                  </div>
+                  <Button
+                    className="mt-4 w-full"
+                    variant={(profile?.impactPoints ?? 0) >= CREDITS_CONFIG.IMPACT_POINTS_CERTIFICATION ? "default" : "outline"}
+                    disabled={(profile?.impactPoints ?? 0) < CREDITS_CONFIG.IMPACT_POINTS_CERTIFICATION || redeemingType === "CERTIFICATION"}
+                    onClick={() => handleRedeem("CERTIFICATION")}
+                  >
+                    {redeemingType === "CERTIFICATION" ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Gift className="mr-2 h-4 w-4" />
+                    )}
+                    {(profile?.impactPoints ?? 0) >= CREDITS_CONFIG.IMPACT_POINTS_CERTIFICATION
+                      ? "Canjear certificación"
+                      : `Faltan ${CREDITS_CONFIG.IMPACT_POINTS_CERTIFICATION - (profile?.impactPoints ?? 0)} pts`}
+                  </Button>
+                </div>
+
+                {/* Donation reward */}
+                <div className="flex flex-col justify-between rounded-xl border p-5">
+                  <div>
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-pink-100 dark:bg-pink-900/30">
+                        <Heart className="h-5 w-5 text-pink-600 dark:text-pink-400" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold">Donación solidaria</h4>
+                        <p className="text-xs text-muted-foreground">{CREDITS_CONFIG.IMPACT_POINTS_DONATION} puntos</p>
+                      </div>
+                    </div>
+                    <p className="mt-3 text-sm text-muted-foreground">
+                      Contribuye a programas de orientación profesional para personas en situación de vulnerabilidad.
+                    </p>
+                  </div>
+                  <Button
+                    className="mt-4 w-full"
+                    variant={(profile?.impactPoints ?? 0) >= CREDITS_CONFIG.IMPACT_POINTS_DONATION ? "default" : "outline"}
+                    disabled={(profile?.impactPoints ?? 0) < CREDITS_CONFIG.IMPACT_POINTS_DONATION || redeemingType === "DONATION"}
+                    onClick={() => handleRedeem("DONATION")}
+                  >
+                    {redeemingType === "DONATION" ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Heart className="mr-2 h-4 w-4" />
+                    )}
+                    {(profile?.impactPoints ?? 0) >= CREDITS_CONFIG.IMPACT_POINTS_DONATION
+                      ? "Realizar donación"
+                      : `Faltan ${CREDITS_CONFIG.IMPACT_POINTS_DONATION - (profile?.impactPoints ?? 0)} pts`}
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Redemption history */}
+            <div className="rounded-xl border bg-card p-6">
+              <h3 className="font-heading text-lg font-semibold">
+                Historial de canjes
               </h3>
 
-              {earningsSummary && earningsSummary.totalSessions > 0 ? (
-                <>
-                  <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
-                    <div className="rounded-lg border p-4">
-                      <p className="text-sm text-muted-foreground">Ingresos brutos</p>
-                      <p className="mt-1 font-heading text-xl font-bold">
-                        {formatCurrency(earningsSummary.totalGross)}
-                      </p>
-                    </div>
-                    <div className="rounded-lg border p-4">
-                      <p className="text-sm text-muted-foreground">Comisión (15%)</p>
-                      <p className="mt-1 font-heading text-xl font-bold text-muted-foreground">
-                        -{formatCurrency(earningsSummary.totalCommission)}
-                      </p>
-                    </div>
-                    <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
-                      <p className="text-sm text-primary">Neto recibido</p>
-                      <p className="mt-1 font-heading text-xl font-bold text-primary">
-                        {formatCurrency(earningsSummary.totalNet)}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Transfers list */}
-                  <div className="mt-6">
-                    <h4 className="text-sm font-medium text-muted-foreground">
-                      Historial ({earningsSummary.totalSessions} sesiones)
-                    </h4>
-                    <div className="mt-3 space-y-2">
-                      {transfers.slice(0, 10).map((t) => (
-                        <div
-                          key={t.sessionId}
-                          className="flex items-center justify-between rounded-lg border px-4 py-3 text-sm"
-                        >
-                          <div>
-                            <p className="font-medium">{t.clientName}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {formatDate(t.scheduledAt)}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <span className="font-medium">{formatCurrency(t.netAmount)}</span>
-                            {t.transferred ? (
-                              <span className="text-xs text-green-600">✓ Transferido</span>
-                            ) : (
-                              <span className="text-xs text-yellow-600">Pendiente</span>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </>
-              ) : (
+              {redemptions.length === 0 ? (
                 <div className="mt-4">
                   <EmptyState
-                    icon={DollarSign}
-                    title="Sin ingresos todavía"
-                    description="Cuando completes sesiones, verás aquí tu resumen de ingresos."
+                    icon={Sparkles}
+                    title="Sin canjes todavía"
+                    description="Cuando canjees tus puntos de impacto, el historial aparecerá aquí."
                   />
+                </div>
+              ) : (
+                <div className="mt-4 space-y-2">
+                  {redemptions.map((r) => (
+                    <div
+                      key={r.id}
+                      className="flex items-center justify-between rounded-lg border px-4 py-3 text-sm"
+                    >
+                      <div className="flex items-center gap-3">
+                        {r.type === "CERTIFICATION" ? (
+                          <Award className="h-4 w-4 text-indigo-500" />
+                        ) : (
+                          <Heart className="h-4 w-4 text-pink-500" />
+                        )}
+                        <div>
+                          <p className="font-medium">
+                            {r.type === "CERTIFICATION" ? "Certificación profesional" : "Donación solidaria"}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {formatDate(r.createdAt)}
+                          </p>
+                        </div>
+                      </div>
+                      <span className="text-sm font-medium text-muted-foreground">
+                        -{r.pointsSpent} pts
+                      </span>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
