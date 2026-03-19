@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { Hero } from "@/components/landing/hero";
+import { Categories } from "@/components/landing/categories";
 import { HowItWorks } from "@/components/landing/how-it-works";
 import { FeaturedProfessionals } from "@/components/landing/featured-professionals";
 import { Testimonials } from "@/components/landing/testimonials";
@@ -25,9 +26,6 @@ export const metadata: Metadata = {
 async function getFeaturedProfessionals(): Promise<Professional[]> {
   try {
     const professionals = await prisma.professionalProfile.findMany({
-      where: {
-        reviewCount: { gte: 1 },
-      },
       include: {
         user: { select: { id: true, name: true, image: true, bio: true } },
         availability: true,
@@ -80,6 +78,7 @@ export default async function HomePage() {
   return (
     <>
       <Hero />
+      <Categories />
       <HowItWorks />
       <FeaturedProfessionals professionals={professionals} />
       <Testimonials />

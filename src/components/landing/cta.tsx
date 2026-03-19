@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FadeIn } from "@/components/shared/motion-wrapper";
 
@@ -20,32 +20,56 @@ export function CTA() {
               <motion.div
                 className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/10 blur-3xl"
                 animate={{ x: [0, 30, 0], y: [0, -20, 0] }}
-                transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+                transition={{
+                  duration: 15,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
               />
               <motion.div
                 className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-white/10 blur-3xl"
                 animate={{ x: [0, -25, 0], y: [0, 25, 0] }}
-                transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
+                transition={{
+                  duration: 18,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
               />
               <motion.div
                 className="absolute left-1/2 top-1/2 h-48 w-48 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/5 blur-2xl"
                 animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+                transition={{
+                  duration: 10,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
               />
             </div>
 
             <div className="relative">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
+                className="mx-auto mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm"
+              >
+                <Sparkles className="h-6 w-6 text-white" />
+              </motion.div>
+
               <h2 className="font-heading text-3xl font-bold tracking-tight text-primary-foreground sm:text-4xl lg:text-5xl">
-                ¿Listo para dar el siguiente paso en tu carrera?
+                ¿Listo para dar el siguiente
+                <br className="hidden sm:block" /> paso en tu carrera?
               </h2>
-              <p className="mx-auto mt-4 max-w-xl text-lg text-primary-foreground/80">
-                Conecta con el mentor o coach que necesitas. Reserva tu primera sesión hoy y empieza a construir la carrera que mereces.
+              <p className="mx-auto mt-4 max-w-xl text-lg text-primary-foreground/80 leading-relaxed">
+                Conecta con el mentor o coach que necesitas. Reserva tu primera
+                sesión hoy y empieza a construir la carrera que mereces.
               </p>
-              <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
+              <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
                 <Button
                   size="lg"
                   variant="secondary"
-                  className="w-full sm:w-auto group shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:shadow-[0_0_30px_rgba(255,255,255,0.25)] transition-shadow"
+                  className="w-full sm:w-auto group shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:shadow-[0_0_30px_rgba(255,255,255,0.25)] transition-all h-12 px-8 text-base"
                   asChild
                 >
                   <Link href="/auth/register">
@@ -56,7 +80,7 @@ export function CTA() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="w-full sm:w-auto !border-white/30 !text-white !bg-white/10 hover:!bg-white/20"
+                  className="w-full sm:w-auto !border-white/30 !text-white !bg-white/10 hover:!bg-white/20 h-12 px-8 text-base"
                   asChild
                 >
                   <Link href="/explore">Explorar profesionales</Link>
