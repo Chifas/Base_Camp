@@ -2,7 +2,8 @@
 
 import { useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
-import { Compass, Loader2 } from "lucide-react";
+import Image from "next/image";
+import { Loader2 } from "lucide-react";
 
 export default function CompleteProfilePage() {
   const { data: session, status } = useSession();
@@ -46,9 +47,7 @@ export default function CompleteProfilePage() {
   return (
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
       <div className="text-center">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-          <Compass className="h-7 w-7" />
-        </div>
+        <Image src="/logo.png" alt="GuidePath" width={48} height={48} className="mx-auto" />
         <div className="mt-4 flex items-center gap-2 text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" />
           <span>Preparando tu cuenta...</span>

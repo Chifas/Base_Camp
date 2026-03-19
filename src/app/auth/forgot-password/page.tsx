@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Compass, Mail, ArrowLeft, CheckCircle2 } from "lucide-react";
+import Image from "next/image";
+import { Mail, ArrowLeft, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -32,9 +33,7 @@ export default function ForgotPasswordPage() {
       >
         {/* Header */}
         <div className="text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-            <Compass className="h-7 w-7" />
-          </div>
+          <Image src="/logo.png" alt="GuidePath" width={48} height={48} className="mx-auto" />
           <h1 className="mt-4 font-heading text-2xl font-bold">
             ¿Olvidaste tu contraseña?
           </h1>
