@@ -2,6 +2,7 @@
   "name": "guidepath",
   "version": "0.1.0",
   "private": true,
+  "description": "Benign change",
   "engines": {
     "node": ">=18.17.0"
   },
