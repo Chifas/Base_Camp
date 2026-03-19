@@ -146,7 +146,7 @@ export function bookingConfirmedHtml(p: BookingConfirmedProps): string {
       ["Fecha",        fmtDate(p.scheduledAt)],
       ["Hora",         fmtTime(p.scheduledAt)],
       ["Duración",     "60 minutos"],
-      ["Importe",      fmtCurrency(p.price)],
+      ["Tipo",         p.price > 0 ? fmtCurrency(p.price) : "Sesión gratuita"],
     ])}
 
     ${ctaButton("Ver mi sesión", `${APP_URL}/dashboard/client`)}
@@ -167,7 +167,6 @@ interface NewSessionProps {
 }
 
 export function newSessionHtml(p: NewSessionProps): string {
-  const net = p.price * 0.85;
   return layout(`
     <h2 style="margin:0 0 8px;font-size:22px;font-weight:700;">Nueva sesión programada 📅</h2>
     <p style="margin:0 0 4px;color:#475569;font-size:15px;">
@@ -178,11 +177,11 @@ export function newSessionHtml(p: NewSessionProps): string {
     </p>
 
     ${sessionCard([
-      ["Cliente",      p.clientName ?? "—"],
-      ["Fecha",        fmtDate(p.scheduledAt)],
-      ["Hora",         fmtTime(p.scheduledAt)],
-      ["Duración",     "60 minutos"],
-      ["Tus ingresos", fmtCurrency(net) + " (neto, 15 % comisión)"],
+      ["Cliente",           p.clientName ?? "—"],
+      ["Fecha",             fmtDate(p.scheduledAt)],
+      ["Hora",              fmtTime(p.scheduledAt)],
+      ["Duración",          "60 minutos"],
+      ["Puntos de impacto", "+10 pts al completar"],
     ])}
 
     ${ctaButton("Ir a mi panel", `${APP_URL}/dashboard/professional`)}

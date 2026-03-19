@@ -2,22 +2,24 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import {
   Calendar,
   Clock,
-  CreditCard,
   Shield,
   ChevronLeft,
   Loader2,
+  Sparkles,
+  Heart,
+  Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import type { Professional } from "@/types";
-import { formatCurrency } from "@/lib/utils";
+import { CREDITS_CONFIG } from "@/lib/credits-config";
 
 function addHour(time: string): string {
   const [h, m] = time.split(":").map(Number);
@@ -26,9 +28,11 @@ function addHour(time: string): string {
 
 export default function BookingPage() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [isProcessing, setIsProcessing] = useState(false);
   const [notes, setNotes] = useState("");
   const [professional, setProfessional] = useState<Professional | null>(null);
+  const [credits, setCredits] = useState<{ used: number; limit: number; remaining: number } | null>(null);
 
   const professionalId = searchParams.get("professional");
   const dateParam = searchParams.get("date");
@@ -42,6 +46,13 @@ export default function BookingPage() {
       .catch(() => setProfessional(null));
   }, [professionalId]);
 
+  useEffect(() => {
+    fetch("/api/credits")
+      .then((r) => (r.ok ? r.json() : null))
+      .then(setCredits)
+      .catch(() => setCredits(null));
+  }, []);
+
   const bookingDate = dateParam
     ? new Date(dateParam).toLocaleDateString("es-ES", {
         weekday: "long",
@@ -51,8 +62,7 @@ export default function BookingPage() {
       })
     : "";
   const bookingTime = timeParam ? `${timeParam} - ${addHour(timeParam)}` : "";
-  const platformFee = professional ? professional.hourlyRate * 0.1 : 0;
-  const total = professional?.hourlyRate ?? 0;
+  const hasCredits = credits ? credits.remaining > 0 : false;
 
   if (!professional) {
     return (
@@ -62,17 +72,22 @@ export default function BookingPage() {
     );
   }
 
-  const handlePayment = async () => {
+  const handleBooking = async () => {
     setIsProcessing(true);
-
     try {
-      const response = await fetch("/api/checkout", {
+      const scheduledAt = dateParam && timeParam
+        ? new Date(`${dateParam.split("T")[0]}T${timeParam}:00`)
+        : null;
+
+      if (!scheduledAt) throw new Error("Fecha inválida");
+
+      const response = await fetch("/api/credits/use", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           professionalId: professional.id,
-          date: dateParam,
-          time: timeParam,
+          scheduledAt: scheduledAt.toISOString(),
+          duration: 60,
           notes,
         }),
       });
@@ -80,17 +95,14 @@ export default function BookingPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Error al crear checkout");
+        throw new Error(data.error || "Error al reservar");
       }
 
-      // Redirect to Stripe Checkout
-      if (data.checkoutUrl) {
-        window.location.href = data.checkoutUrl;
-      }
+      router.push(`/dashboard/client`);
     } catch (error) {
       console.error("Error:", error);
       setIsProcessing(false);
-      alert("Error al procesar el pago. Inténtalo de nuevo.");
+      alert(error instanceof Error ? error.message : "Error al reservar. Inténtalo de nuevo.");
     }
   };
 
@@ -150,36 +162,58 @@ export default function BookingPage() {
               />
             </div>
 
+            {/* Credits info */}
             <div className="rounded-xl border bg-card p-6">
               <h2 className="flex items-center gap-2 font-heading text-lg font-semibold">
-                <CreditCard className="h-5 w-5" />
-                Pago seguro
+                <Sparkles className="h-5 w-5 text-primary" />
+                Sesión gratuita
               </h2>
               <p className="mt-2 text-sm text-muted-foreground">
-                Serás redirigido a Stripe para completar el pago de forma
-                segura. Aceptamos tarjetas de crédito, débito y otros métodos.
+                Esta sesión se confirma al instante sin coste alguno.
+                Tu profesional recibe puntos de impacto social por cada sesión realizada.
               </p>
+              {credits && (
+                <div className="mt-3 flex items-center gap-2 text-sm">
+                  <Heart className="h-4 w-4 text-pink-500" />
+                  <span>
+                    {credits.remaining} de {credits.limit} sesiones disponibles este mes
+                  </span>
+                </div>
+              )}
               <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
                 <Shield className="h-4 w-4" />
-                Pago encriptado y protegido por Stripe
+                Cancelación gratuita hasta 24h antes
               </div>
             </div>
 
-            <Button
-              className="w-full"
-              size="lg"
-              onClick={handlePayment}
-              disabled={isProcessing}
-            >
-              {isProcessing ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Redirigiendo a Stripe...
-                </>
-              ) : (
-                `Pagar ${formatCurrency(total)}`
-              )}
-            </Button>
+            {hasCredits ? (
+              <Button
+                className="w-full"
+                size="lg"
+                onClick={handleBooking}
+                disabled={isProcessing}
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Confirmando...
+                  </>
+                ) : (
+                  "Confirmar reserva gratuita"
+                )}
+              </Button>
+            ) : (
+              <div className="rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 p-6 text-center">
+                <Lock className="mx-auto h-8 w-8 text-primary/60" />
+                <h3 className="mt-3 font-heading text-lg font-semibold">
+                  Has agotado tus sesiones gratuitas
+                </h3>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Has usado tus {CREDITS_CONFIG.FREE_SESSIONS_PER_MONTH} sesiones de este mes.
+                  Tus créditos se renuevan automáticamente el primer día del próximo mes.
+                </p>
+              </div>
+            )}
           </motion.div>
         </div>
 
@@ -211,18 +245,20 @@ export default function BookingPage() {
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Sesión (60 min)</span>
-                <span>{formatCurrency(professional.hourlyRate)}</span>
+                <Badge variant="secondary" className="text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                  Gratuito
+                </Badge>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">
-                  Tarifa de servicio
+                <span className="text-muted-foreground">Impacto social</span>
+                <span className="text-xs text-muted-foreground">
+                  +{CREDITS_CONFIG.IMPACT_POINTS_PER_SESSION} pts para el profesional
                 </span>
-                <span>{formatCurrency(platformFee)}</span>
               </div>
               <Separator />
               <div className="flex justify-between font-semibold">
                 <span>Total</span>
-                <span className="text-primary">{formatCurrency(total)}</span>
+                <span className="text-green-600 dark:text-green-400">Gratis</span>
               </div>
             </div>
           </div>

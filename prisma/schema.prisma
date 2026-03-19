@@ -43,16 +43,19 @@ enum RescheduleStatus {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String    @unique
-  emailVerified DateTime?
-  password      String?
-  image         String?
-  bio           String?
-  role          UserRole  @default(CLIENT)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id               String    @id @default(cuid())
+  name             String?
+  email            String    @unique
+  emailVerified    DateTime?
+  password         String?
+  image            String?
+  bio              String?
+  role             UserRole  @default(CLIENT)
+  freeCreditsUsed  Int       @default(0)
+  creditsResetAt   DateTime?
+  subscriptionTier String    @default("free")
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   accounts             Account[]
   sessions             AuthSession[]
@@ -109,28 +112,32 @@ model VerificationToken {
 }
 
 model ProfessionalProfile {
-  id                  String               @id @default(cuid())
-  userId              String               @unique
-  category            ProfessionalCategory
-  headline            String?
-  hourlyRate          Float
-  stripeAccountId     String?
-  stripeConnected     Boolean              @default(false)
-  rating              Float                @default(0)
-  reviewCount         Int                  @default(0)
-  verified            Boolean              @default(false)
-  verifiedAt          DateTime?
-  languages           String[]             @default(["es"])
-  yearsExperience     Int?
-  onboardingDone      Boolean              @default(false)
-  onboardingEmailStep Int                  @default(0)
-  createdAt           DateTime             @default(now())
-  updatedAt           DateTime             @updatedAt
+  id                     String               @id @default(cuid())
+  userId                 String               @unique
+  category               ProfessionalCategory
+  headline               String?
+  hourlyRate             Float                @default(0)
+  stripeAccountId        String?
+  stripeConnected        Boolean              @default(false)
+  rating                 Float                @default(0)
+  reviewCount            Int                  @default(0)
+  verified               Boolean              @default(false)
+  verifiedAt             DateTime?
+  languages              String[]             @default(["es"])
+  yearsExperience        Int?
+  impactPoints           Int                  @default(0)
+  totalSessionsCompleted Int                  @default(0)
+  socialImpactScore      Float                @default(0)
+  onboardingDone         Boolean              @default(false)
+  onboardingEmailStep    Int                  @default(0)
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @updatedAt
 
-  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   availability    Availability[]
-  sessions        Session[]         @relation("ProfessionalSessions")
+  sessions        Session[]           @relation("ProfessionalSessions")
   certifications  Certification[]
+  redemptions     RewardRedemption[]
 
   @@index([category])
   @@map("professional_profiles")
@@ -146,7 +153,8 @@ model Session {
   dailyRoomUrl          String?
   stripePaymentIntentId String?
   stripeTransferId      String?
-  price                 Float
+  price                 Float         @default(0)
+  isFreeSession         Boolean       @default(true)
   notes                 String?
   cancellationFee       Float?
   cancelledAt           DateTime?
@@ -296,6 +304,22 @@ model Referral {
   @@index([referrerId])
   @@index([code])
   @@map("referrals")
+}
+
+// ── Reward Redemptions ────────────────────────────────────────────────────
+
+model RewardRedemption {
+  id              String              @id @default(cuid())
+  professionalId  String
+  type            String              // "CERTIFICATION" | "DONATION"
+  pointsSpent     Int
+  description     String
+  createdAt       DateTime            @default(now())
+
+  professional ProfessionalProfile @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+
+  @@index([professionalId])
+  @@map("reward_redemptions")
 }
 
 // ── Waitlist ───────────────────────────────────────────────────────────────

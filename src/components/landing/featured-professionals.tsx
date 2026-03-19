@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/shared/motion-wrapper";
 import type { Professional } from "@/types";
-import { formatCurrency } from "@/lib/utils";
 
 interface FeaturedProfessionalsProps {
   professionals: Professional[];
@@ -96,11 +95,8 @@ export function FeaturedProfessionals({ professionals }: FeaturedProfessionalsPr
                         ({pro.reviewCount})
                       </span>
                     </div>
-                    <span className="font-heading text-lg font-bold text-primary transition-transform duration-200 group-hover:scale-105 origin-right">
-                      {formatCurrency(pro.hourlyRate)}
-                      <span className="text-xs font-normal text-muted-foreground">
-                        /h
-                      </span>
+                    <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-sm font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                      Gratuito
                     </span>
                   </div>
                 </div>

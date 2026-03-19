@@ -26,7 +26,6 @@ import {
 } from "@/components/ui/select";
 import { Pagination } from "@/components/shared/pagination";
 import type { Category, Professional } from "@/types";
-import { formatCurrency } from "@/lib/utils";
 
 export default function ExplorePage() {
   const router = useRouter();
@@ -44,8 +43,6 @@ export default function ExplorePage() {
   const sortBy = searchParams.get("sort") || "relevance";
   const page = parseInt(searchParams.get("page") || "1");
   const minRating = searchParams.get("minRating") || "";
-  const minPrice = searchParams.get("minPrice") || "";
-  const maxPrice = searchParams.get("maxPrice") || "";
 
   // Advanced filters panel
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -93,8 +90,6 @@ export default function ExplorePage() {
     if (selectedCategory !== "ALL") params.set("category", selectedCategory);
     if (sortBy) params.set("sort", sortBy);
     if (minRating) params.set("minRating", minRating);
-    if (minPrice) params.set("minPrice", minPrice);
-    if (maxPrice) params.set("maxPrice", maxPrice);
     params.set("page", page.toString());
     params.set("limit", "12");
 
@@ -109,7 +104,7 @@ export default function ExplorePage() {
         setProfessionals([]);
       })
       .finally(() => setLoading(false));
-  }, [searchQuery, selectedCategory, sortBy, page, minRating, minPrice, maxPrice]);
+  }, [searchQuery, selectedCategory, sortBy, page, minRating]);
 
   // Fetch categories once
   useEffect(() => {
@@ -119,7 +114,7 @@ export default function ExplorePage() {
       .catch(() => setCategories([]));
   }, []);
 
-  const hasActiveFilters = minRating || minPrice || maxPrice;
+  const hasActiveFilters = !!minRating;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
@@ -184,8 +179,6 @@ export default function ExplorePage() {
             <SelectItem value="relevance">Más relevantes</SelectItem>
             <SelectItem value="rating">Mejor valorados</SelectItem>
             <SelectItem value="reviews">Más reseñas</SelectItem>
-            <SelectItem value="price-low">Precio: menor a mayor</SelectItem>
-            <SelectItem value="price-high">Precio: mayor a menor</SelectItem>
           </SelectContent>
         </Select>
 
@@ -200,7 +193,7 @@ export default function ExplorePage() {
           Filtros
           {hasActiveFilters && (
             <span className="ml-1 rounded-full bg-white/20 px-1.5 text-xs">
-              {[minRating, minPrice, maxPrice].filter(Boolean).length}
+              {[minRating].filter(Boolean).length}
             </span>
           )}
         </Button>
@@ -235,36 +228,12 @@ export default function ExplorePage() {
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-muted-foreground">Precio mín. (€)</label>
-            <Input
-              type="number"
-              min="0"
-              placeholder="0"
-              value={minPrice}
-              onChange={(e) => updateParams({ minPrice: e.target.value })}
-              className="h-9 w-24"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-muted-foreground">Precio máx. (€)</label>
-            <Input
-              type="number"
-              min="0"
-              placeholder="∞"
-              value={maxPrice}
-              onChange={(e) => updateParams({ maxPrice: e.target.value })}
-              className="h-9 w-24"
-            />
-          </div>
-
           {hasActiveFilters && (
             <Button
               variant="ghost"
               size="sm"
               className="mt-auto"
-              onClick={() => updateParams({ minRating: "", minPrice: "", maxPrice: "" })}
+              onClick={() => updateParams({ minRating: "" })}
             >
               <X className="mr-1 h-3.5 w-3.5" />
               Limpiar
@@ -362,11 +331,8 @@ export default function ExplorePage() {
 
                   {/* Footer */}
                   <div className="flex items-center justify-between border-t px-5 py-3">
-                    <span className="font-heading text-lg font-bold text-primary">
-                      {formatCurrency(pro.hourlyRate)}
-                      <span className="text-xs font-normal text-muted-foreground">
-                        /sesión
-                      </span>
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-green-100 px-3 py-1 text-sm font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                      Gratuito
                     </span>
                     <Button
                       size="sm"

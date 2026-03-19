@@ -3,10 +3,10 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Calendar, Clock, MessageSquare, Video } from "lucide-react";
+import { Calendar, Clock, MessageSquare, Video, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { formatCurrency } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 import type { AvailabilitySlot } from "@/types";
 
 const TIME_SLOTS = [
@@ -31,11 +31,12 @@ function getNextDays(count: number) {
 
 interface BookingCardProps {
   professionalId: string;
-  hourlyRate: number;
+  hourlyRate?: number;
   availability: AvailabilitySlot[];
+  socialImpactScore?: number;
 }
 
-export function BookingCard({ professionalId, hourlyRate, availability }: BookingCardProps) {
+export function BookingCard({ professionalId, availability, socialImpactScore }: BookingCardProps) {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
 
@@ -67,10 +68,15 @@ export function BookingCard({ professionalId, hourlyRate, availability }: Bookin
     >
       <div className="rounded-2xl border bg-card p-6 shadow-sm">
         <div className="text-center">
-          <span className="font-heading text-3xl font-bold text-primary">
-            {formatCurrency(hourlyRate)}
-          </span>
-          <span className="text-muted-foreground"> / sesión</span>
+          <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-sm px-4 py-1">
+            <Sparkles className="mr-1.5 h-4 w-4" />
+            Sesión gratuita
+          </Badge>
+          {socialImpactScore !== undefined && socialImpactScore > 0 && (
+            <p className="mt-2 text-xs text-muted-foreground">
+              Impacto social: {socialImpactScore.toFixed(1)} pts
+            </p>
+          )}
         </div>
 
         <Separator className="my-6" />
@@ -131,7 +137,7 @@ export function BookingCard({ professionalId, hourlyRate, availability }: Bookin
         >
           {selectedDate && selectedTime ? (
             <Link href={`/book/new?professional=${professionalId}&date=${selectedDate.toISOString()}&time=${selectedTime}`}>
-              Reservar sesión
+              Reservar sesión gratuita
             </Link>
           ) : (
             <span>Selecciona fecha y hora</span>

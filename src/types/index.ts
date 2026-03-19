@@ -19,6 +19,8 @@ export interface User {
   role: UserRole;
   image?: string;
   bio?: string;
+  freeCreditsUsed?: number;
+  creditsLimit?: number;
 }
 
 export interface Certification {
@@ -38,13 +40,16 @@ export interface Professional {
   headline: string;
   category: ProfessionalCategory;
   categoryName?: string;
-  hourlyRate: number;
+  hourlyRate?: number;
   rating: number;
   reviewCount: number;
   verified: boolean;
   verifiedAt?: string;
   languages?: string[];
   yearsExperience?: number;
+  impactPoints?: number;
+  totalSessionsCompleted?: number;
+  socialImpactScore?: number;
   certifications?: Certification[];
   availability: AvailabilitySlot[];
 }
@@ -67,7 +72,9 @@ export interface Session {
   duration: number;
   status: SessionStatus;
   price: number;
+  isFreeSession?: boolean;
   dailyRoomUrl?: string;
+  cancellationFee?: number;
 }
 
 export interface Review {

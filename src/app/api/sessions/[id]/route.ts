@@ -7,6 +7,7 @@ import { sendCancellationEmails } from "@/lib/emails";
 import { updateSessionSchema } from "@/lib/validations";
 import { calculateCancellation } from "@/lib/cancellation";
 import { createNotifications } from "@/lib/notifications";
+import { CREDITS_CONFIG } from "@/lib/credits-config";
 import { log } from "@/lib/logger";
 
 // GET /api/sessions/[id] — load a single session for participants only
@@ -230,12 +231,48 @@ export async function PATCH(
       });
     }
 
-    // ── Completion with auto-transfer ─────────────────────────────────────
+    // ── Completion with impact points ──────────────────────────────────────
     if (status === "COMPLETED") {
       const updateData: Record<string, unknown> = { status: "COMPLETED" };
 
-      // Auto-transfer to professional if Stripe connected
+      // Award impact points to professional
+      const pointsToAward = CREDITS_CONFIG.IMPACT_POINTS_PER_SESSION;
+      try {
+        const updatedProfile = await prisma.professionalProfile.update({
+          where: { id: existing.professionalId },
+          data: {
+            impactPoints: { increment: pointsToAward },
+            totalSessionsCompleted: { increment: 1 },
+            socialImpactScore: {
+              increment: pointsToAward * 0.1,
+            },
+          },
+        });
+
+        log.info("Impact points awarded", {
+          sessionId: existing.id,
+          professionalId: existing.professionalId,
+          pointsAwarded: pointsToAward,
+          totalPoints: updatedProfile.impactPoints,
+        });
+
+        // Notify professional about impact points
+        void createNotifications([
+          {
+            userId: existing.professional.userId,
+            type: "PAYMENT_RECEIVED",
+            title: "Puntos de impacto ganados",
+            message: `Has ganado ${pointsToAward} puntos de impacto por tu sesión completada. Total: ${updatedProfile.impactPoints} puntos.`,
+            link: "/dashboard/professional?tab=impact",
+          },
+        ]);
+      } catch (error) {
+        log.error("Error awarding impact points", { error: String(error), sessionId: existing.id });
+      }
+
+      // For paid sessions, still handle Stripe transfer
       if (
+        !existing.isFreeSession &&
         stripe &&
         existing.stripePaymentIntentId &&
         existing.professional.stripeAccountId &&
@@ -251,26 +288,8 @@ export async function PATCH(
             description: `Sesión ${existing.id}`,
           });
           updateData.stripeTransferId = transfer.id;
-
-          log.info("Transfer completado", {
-            sessionId: existing.id,
-            transferId: transfer.id,
-            amount: transferAmountCents / 100,
-          });
-
-          // Notify professional about payment
-          void createNotifications([
-            {
-              userId: existing.professional.userId,
-              type: "PAYMENT_RECEIVED",
-              title: "Pago recibido",
-              message: `Has recibido ${((existing.price * 0.85)).toFixed(2)}€ por tu sesión completada.`,
-              link: "/dashboard/professional?tab=earnings",
-            },
-          ]);
         } catch (error) {
           log.error("Error creando transfer", { error: String(error), sessionId: existing.id });
-          // Don't block completion — transfer can be retried manually
         }
       }
 

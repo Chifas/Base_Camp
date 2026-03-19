@@ -118,7 +118,7 @@ export default async function ProfessionalProfilePage({
         name: `Sesión con ${name}`,
         description: headline,
       },
-      price: professional.hourlyRate.toString(),
+      price: "0",
       priceCurrency: "EUR",
     },
     ...(professional.reviewCount > 0 && {
@@ -289,13 +289,13 @@ export default async function ProfessionalProfilePage({
           <div className="lg:col-span-1">
             <BookingCard
               professionalId={professional.id}
-              hourlyRate={professional.hourlyRate}
               availability={professional.availability.map((a) => ({
                 id: a.id,
                 dayOfWeek: a.dayOfWeek,
                 startTime: a.startTime,
                 endTime: a.endTime,
               }))}
+              socialImpactScore={professional.socialImpactScore}
             />
           </div>
         </div>

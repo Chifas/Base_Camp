@@ -26,7 +26,8 @@ import { PhotoUpload } from "@/components/shared/photo-upload";
 import { BetaFeedbackModal } from "@/components/shared/beta-feedback-modal";
 import { ReferralPanel } from "@/components/shared/referral-panel";
 import { STATUS_LABELS, type Session } from "@/types";
-import { formatCurrency, formatDate, formatTime } from "@/lib/utils";
+import { formatDate, formatTime } from "@/lib/utils";
+import { CREDITS_CONFIG } from "@/lib/credits-config";
 
 const statusColors: Record<string, string> = {
   PENDING: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400",
@@ -58,7 +59,7 @@ const CATEGORY_LABELS_REVIEW = {
   ratingPunctuality: "Puntualidad",
   ratingKnowledge: "Conocimiento",
   ratingCommunication: "Comunicación",
-  ratingValue: "Relación calidad-precio",
+  ratingValue: "Satisfacción general",
 } as const;
 
 export default function ClientDashboard() {
@@ -78,6 +79,9 @@ export default function ClientDashboard() {
   const [submittingReview, setSubmittingReview] = useState(false);
   const [reviewedSessionIds, setReviewedSessionIds] = useState<Set<string>>(new Set());
   const [feedbackSessionId, setFeedbackSessionId] = useState<string | null>(null);
+
+  // Credits state
+  const [credits, setCredits] = useState<{ used: number; limit: number; remaining: number } | null>(null);
 
   // Referrals state
   const [referrals, setReferrals] = useState<{ referrals: never[]; stats: { total: 0; completed: 0; pending: 0; totalCredits: 0 } }>({ referrals: [], stats: { total: 0, completed: 0, pending: 0, totalCredits: 0 } });
@@ -137,6 +141,10 @@ export default function ClientDashboard() {
       .then((data) => setSessions(Array.isArray(data) ? data : []))
       .catch(() => setSessions([]))
       .finally(() => setLoadingSessions(false));
+    fetch("/api/credits")
+      .then((r) => r.ok ? r.json() : null)
+      .then(setCredits)
+      .catch(() => {});
     fetchReferrals();
   }, [fetchReferrals]);
 
@@ -188,9 +196,9 @@ export default function ClientDashboard() {
       <FadeIn delay={0.1}>
         <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
           {[
-            { label: "Próximas sesiones", value: upcomingSessions.length.toString(), icon: Calendar },
+            { label: "Sesiones disponibles", value: credits ? `${credits.remaining}/${credits.limit}` : `—/${CREDITS_CONFIG.FREE_SESSIONS_PER_MONTH}`, icon: Calendar },
             { label: "Sesiones completadas", value: pastSessions.filter((s) => s.status === "COMPLETED").length.toString(), icon: Clock },
-            { label: "Total invertido", value: formatCurrency(sessions.reduce((acc, s) => acc + (s.status === "COMPLETED" ? s.price : 0), 0)), icon: Star },
+            { label: "Próximas sesiones", value: upcomingSessions.length.toString(), icon: Star },
             { label: "Reseñas dejadas", value: "2", icon: MessageSquare },
           ].map((stat) => (
             <div
@@ -343,7 +351,7 @@ export default function ClientDashboard() {
                       <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
                         <span>{formatDate(session.scheduledAt)}</span>
                         <span>·</span>
-                        <span>{formatCurrency(session.price)}</span>
+                        <span className="text-green-600 dark:text-green-400">Gratuita</span>
                       </div>
                     </div>
                   </div>
