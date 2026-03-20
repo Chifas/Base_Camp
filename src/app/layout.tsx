@@ -31,10 +31,10 @@ export const metadata: Metadata = {
   themeColor: "#4f46e5",
   icons: {
     icon: [
-      { url: "/logo.svg", type: "image/svg+xml" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
       { url: "/logo.png", type: "image/png" },
     ],
-    shortcut: "/logo.png",
+    shortcut: "/favicon.svg",
     apple: "/logo.png",
   },
   title: {
