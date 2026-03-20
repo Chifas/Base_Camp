@@ -6,8 +6,8 @@ import { Star, Quote } from "lucide-react";
 import { FadeIn } from "@/components/shared/motion-wrapper";
 import { TESTIMONIALS } from "@/data/mock";
 
-// Duplicate for seamless infinite scroll
-const marqueeItems = [...TESTIMONIALS, ...TESTIMONIALS];
+// Repeat enough times for seamless infinite scroll (need at least 2x viewport width)
+const marqueeItems = [...TESTIMONIALS, ...TESTIMONIALS, ...TESTIMONIALS, ...TESTIMONIALS];
 
 function TestimonialCard({
   testimonial,
