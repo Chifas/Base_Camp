@@ -30,6 +30,10 @@ function createLimiter(
   return new Ratelimit({ redis: r, limiter, prefix });
 }
 
+// POST /api/auth/[...nextauth] (credentials login) — max 10 per 15min per IP
+export const loginLimiter = () =>
+  createLimiter("rl:login", Ratelimit.slidingWindow(10, "15 m"));
+
 // POST /api/register — max 5 per hour per IP
 export const registerLimiter = () =>
   createLimiter("rl:register", Ratelimit.slidingWindow(5, "1 h"));

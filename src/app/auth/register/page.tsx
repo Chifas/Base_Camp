@@ -9,65 +9,60 @@ import Image from "next/image";
 import { Mail, Lock, Eye, EyeOff, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { registerSchema } from "@/lib/validations";
+import type { z } from "zod";
+
+type RegisterFormData = z.infer<typeof registerSchema>;
 
 export default function RegisterPage() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState<"CLIENT" | "PROFESSIONAL">("CLIENT");
   const [loading, setLoading] = useState(false);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [serverError, setServerError] = useState("");
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError("");
-    setFieldErrors({});
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
+    mode: "onBlur",
+  });
 
-    const parsed = registerSchema.safeParse({ name, email, password, role });
-    if (!parsed.success) {
-      const errors: Record<string, string> = {};
-      parsed.error.errors.forEach((err) => {
-        const field = err.path[0]?.toString();
-        if (field && !errors[field]) errors[field] = err.message;
-      });
-      setFieldErrors(errors);
-      return;
-    }
-
+  async function onSubmit(data: RegisterFormData) {
+    setServerError("");
     setLoading(true);
 
-    // Create account
     const res = await fetch("/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password, role }),
+      body: JSON.stringify({ ...data, role }),
     });
-    const data = await res.json();
+    const resData = await res.json();
 
     if (!res.ok) {
-      setError(data.error ?? "Error al crear la cuenta.");
+      setServerError(resData.error ?? "Error al crear la cuenta.");
       setLoading(false);
       return;
     }
 
-    // Auto sign-in after registration
     const result = await signIn("credentials", {
-      email,
-      password,
+      email: data.email,
+      password: data.password,
       redirect: false,
     });
 
     if (result?.error) {
       setLoading(false);
-      setError("Cuenta creada, pero error al iniciar sesión. Inténtalo manualmente.");
+      setServerError(
+        "Cuenta creada, pero error al iniciar sesión. Inténtalo manualmente."
+      );
       return;
     }
 
-    // Wait for session to be fully populated with role before redirecting
     const sessionRes = await fetch("/api/auth/session");
     const sessionData = await sessionRes.json();
     const userRole = sessionData?.user?.role ?? role;
@@ -94,11 +89,15 @@ export default function RegisterPage() {
         {/* Header */}
         <div className="text-center">
           <div className="mx-auto mb-4">
-            <Image src="/logo.svg" alt="GuidePath" width={140} height={126} className="mx-auto drop-shadow-[0_0_20px_rgba(37,99,235,0.25)]" />
+            <Image
+              src="/logo.svg"
+              alt="GuidePath"
+              width={140}
+              height={126}
+              className="mx-auto drop-shadow-[0_0_20px_rgba(37,99,235,0.25)]"
+            />
           </div>
-          <h1 className="font-heading text-3xl font-bold">
-            Crea tu cuenta
-          </h1>
+          <h1 className="font-heading text-3xl font-bold">Crea tu cuenta</h1>
           <p className="mt-2 text-muted-foreground">
             Empieza tu camino hacia el bienestar
           </p>
@@ -138,7 +137,6 @@ export default function RegisterPage() {
             className="w-full"
             size="lg"
             onClick={() => {
-              // localStorage persists across OAuth redirects reliably
               localStorage.setItem("guidepath-pending-role", role);
               signIn("google", { callbackUrl: "/auth/complete-profile" });
             }}
@@ -177,10 +175,10 @@ export default function RegisterPage() {
           </div>
 
           {/* Registration form */}
-          <form className="space-y-4" onSubmit={handleSubmit}>
-            {error && (
+          <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+            {serverError && (
               <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                {error}
+                {serverError}
               </p>
             )}
             <div className="space-y-2">
@@ -196,13 +194,15 @@ export default function RegisterPage() {
                   id="name"
                   type="text"
                   placeholder="Tu nombre"
-                  className={`pl-10 ${fieldErrors.name ? "border-destructive" : ""}`}
-                  value={name}
-                  onChange={(e) => { setName(e.target.value); setFieldErrors((prev) => ({ ...prev, name: "" })); }}
-                  required
+                  className={`pl-10 ${errors.name ? "border-destructive" : ""}`}
+                  {...register("name")}
                 />
               </div>
-              {fieldErrors.name && <p className="text-xs text-destructive">{fieldErrors.name}</p>}
+              {errors.name && (
+                <p className="text-xs text-destructive">
+                  {errors.name.message}
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -218,13 +218,15 @@ export default function RegisterPage() {
                   id="email"
                   type="email"
                   placeholder="tu@email.com"
-                  className={`pl-10 ${fieldErrors.email ? "border-destructive" : ""}`}
-                  value={email}
-                  onChange={(e) => { setEmail(e.target.value); setFieldErrors((prev) => ({ ...prev, email: "" })); }}
-                  required
+                  className={`pl-10 ${errors.email ? "border-destructive" : ""}`}
+                  {...register("email")}
                 />
               </div>
-              {fieldErrors.email && <p className="text-xs text-destructive">{fieldErrors.email}</p>}
+              {errors.email && (
+                <p className="text-xs text-destructive">
+                  {errors.email.message}
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -240,10 +242,8 @@ export default function RegisterPage() {
                   id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="Mínimo 8 caracteres"
-                  className={`pl-10 pr-10 ${fieldErrors.password ? "border-destructive" : ""}`}
-                  value={password}
-                  onChange={(e) => { setPassword(e.target.value); setFieldErrors((prev) => ({ ...prev, password: "" })); }}
-                  required
+                  className={`pl-10 pr-10 ${errors.password ? "border-destructive" : ""}`}
+                  {...register("password")}
                 />
                 <button
                   type="button"
@@ -257,10 +257,19 @@ export default function RegisterPage() {
                   )}
                 </button>
               </div>
-              {fieldErrors.password && <p className="text-xs text-destructive">{fieldErrors.password}</p>}
+              {errors.password && (
+                <p className="text-xs text-destructive">
+                  {errors.password.message}
+                </p>
+              )}
             </div>
 
-            <Button type="submit" className="w-full" size="lg" disabled={loading}>
+            <Button
+              type="submit"
+              className="w-full"
+              size="lg"
+              disabled={loading}
+            >
               {loading ? "Creando cuenta..." : "Crear cuenta"}
             </Button>
           </form>

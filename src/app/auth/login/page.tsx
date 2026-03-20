@@ -9,6 +9,16 @@ import Image from "next/image";
 import { Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+
+const loginSchema = z.object({
+  email: z.string().email("Email no válido"),
+  password: z.string().min(1, "La contraseña es obligatoria"),
+});
+
+type LoginFormData = z.infer<typeof loginSchema>;
 
 const OAUTH_ERRORS: Record<string, string> = {
   OAuthAccountNotLinked:
@@ -20,7 +30,13 @@ const OAUTH_ERRORS: Record<string, string> = {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="flex min-h-[calc(100vh-4rem)] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
+    <Suspense
+      fallback={
+        <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      }
+    >
       <LoginContent />
     </Suspense>
   );
@@ -32,38 +48,41 @@ function LoginContent() {
   const oauthError = searchParams.get("error");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState(
+  const [serverError, setServerError] = useState(
     oauthError ? (OAUTH_ERRORS[oauthError] ?? OAUTH_ERRORS.Default) : ""
   );
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError("");
-    if (!email || !password) {
-      setError("Por favor, completa todos los campos.");
-      return;
-    }
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    mode: "onBlur",
+  });
+
+  async function onSubmit(data: LoginFormData) {
+    setServerError("");
     setLoading(true);
     const result = await signIn("credentials", {
-      email,
-      password,
+      email: data.email,
+      password: data.password,
       redirect: false,
     });
     setLoading(false);
 
     if (result?.error) {
-      setError("Email o contraseña incorrectos.");
+      setServerError("Email o contraseña incorrectos.");
       return;
     }
 
-    // Redirect based on role
     const sessionRes = await fetch("/api/auth/session");
     const sessionData = await sessionRes.json();
     const userRole = sessionData?.user?.role ?? "CLIENT";
     router.push(
-      userRole === "PROFESSIONAL" ? "/dashboard/professional" : "/dashboard/client"
+      userRole === "PROFESSIONAL"
+        ? "/dashboard/professional"
+        : "/dashboard/client"
     );
     router.refresh();
   }
@@ -79,7 +98,13 @@ function LoginContent() {
         {/* Header */}
         <div className="text-center">
           <div className="mx-auto mb-4">
-            <Image src="/logo.svg" alt="GuidePath" width={140} height={126} className="mx-auto drop-shadow-[0_0_20px_rgba(37,99,235,0.25)]" />
+            <Image
+              src="/logo.svg"
+              alt="GuidePath"
+              width={140}
+              height={126}
+              className="mx-auto drop-shadow-[0_0_20px_rgba(37,99,235,0.25)]"
+            />
           </div>
           <h1 className="font-heading text-3xl font-bold">
             Bienvenido de nuevo
@@ -92,7 +117,14 @@ function LoginContent() {
         {/* Form */}
         <div className="mt-8 space-y-6">
           {/* Google OAuth */}
-          <Button variant="outline" className="w-full" size="lg" onClick={() => signIn("google", { callbackUrl: "/auth/complete-profile" })}>
+          <Button
+            variant="outline"
+            className="w-full"
+            size="lg"
+            onClick={() =>
+              signIn("google", { callbackUrl: "/auth/complete-profile" })
+            }
+          >
             <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
               <path
                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
@@ -127,10 +159,10 @@ function LoginContent() {
           </div>
 
           {/* Email/Password form */}
-          <form className="space-y-4" onSubmit={handleSubmit}>
-            {error && (
+          <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+            {serverError && (
               <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                {error}
+                {serverError}
               </p>
             )}
             <div className="space-y-2">
@@ -146,12 +178,15 @@ function LoginContent() {
                   id="email"
                   type="email"
                   placeholder="tu@email.com"
-                  className="pl-10"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
+                  className={`pl-10 ${errors.email ? "border-destructive" : ""}`}
+                  {...register("email")}
                 />
               </div>
+              {errors.email && (
+                <p className="text-xs text-destructive">
+                  {errors.email.message}
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -175,10 +210,8 @@ function LoginContent() {
                   id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
-                  className="pl-10 pr-10"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
+                  className={`pl-10 pr-10 ${errors.password ? "border-destructive" : ""}`}
+                  {...register("password")}
                 />
                 <button
                   type="button"
@@ -192,9 +225,19 @@ function LoginContent() {
                   )}
                 </button>
               </div>
+              {errors.password && (
+                <p className="text-xs text-destructive">
+                  {errors.password.message}
+                </p>
+              )}
             </div>
 
-            <Button type="submit" className="w-full" size="lg" disabled={loading}>
+            <Button
+              type="submit"
+              className="w-full"
+              size="lg"
+              disabled={loading}
+            >
               {loading ? "Iniciando sesión..." : "Iniciar sesión"}
             </Button>
           </form>

@@ -56,12 +56,12 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
+      // Only read role from DB at login or when session is explicitly updated
       if (user) {
         token.id = user.id;
-      }
-      // Always read role from DB — ensures JWT is never stale after role changes
-      if (token.id) {
+        token.role = (user as unknown as { role: string }).role;
+      } else if (trigger === "update" && token.id) {
         const fresh = await prisma.user.findUnique({
           where: { id: token.id as string },
           select: { role: true },

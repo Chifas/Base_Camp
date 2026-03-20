@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
 import { sendCancellationEmails } from "@/lib/emails";
 import { updateSessionSchema } from "@/lib/validations";
+import { stripHtml } from "@/lib/sanitize";
 import { calculateCancellation } from "@/lib/cancellation";
 import { createNotifications } from "@/lib/notifications";
 import { CREDITS_CONFIG } from "@/lib/credits-config";
@@ -76,7 +77,8 @@ export async function PATCH(
       );
     }
 
-    const { status, notes } = parsed.data;
+    const { status, notes: rawNotes } = parsed.data;
+    const notes = rawNotes ? stripHtml(rawNotes) : rawNotes;
 
     // Load full session with participants
     const existing = await prisma.session.findUnique({

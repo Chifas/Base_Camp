@@ -8,7 +8,7 @@ const requiredSchema = z.object({
   DIRECT_URL: z.string().min(1, "DIRECT_URL es obligatorio"),
 });
 
-// Variables opcionales: se validan cuando se usan (Stripe, Daily, Resend, Google)
+// Variables opcionales: se validan cuando se usan (Stripe, Daily, Resend, Google, Redis, Cron)
 const optionalSchema = z.object({
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
@@ -17,6 +17,12 @@ const optionalSchema = z.object({
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
   DAILY_API_KEY: z.string().optional(),
   RESEND_API_KEY: z.string().optional(),
+  UPSTASH_REDIS_REST_URL: z.string().optional(),
+  UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
+  CRON_SECRET: z.string().optional(),
+  CLOUDINARY_CLOUD_NAME: z.string().optional(),
+  CLOUDINARY_API_KEY: z.string().optional(),
+  CLOUDINARY_API_SECRET: z.string().optional(),
 });
 
 const envSchema = requiredSchema.merge(optionalSchema);

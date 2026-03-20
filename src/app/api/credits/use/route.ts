@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { CREDITS_CONFIG } from "@/lib/credits-config";
 import { sendBookingEmails, type EmailSessionData } from "@/lib/emails";
 import { createNotifications } from "@/lib/notifications";
+import { stripHtml } from "@/lib/sanitize";
 import { log } from "@/lib/logger";
 
 /**
@@ -103,7 +104,7 @@ export async function POST(req: Request) {
         price: 0,
         isFreeSession: true,
         status: "CONFIRMED",
-        notes: notes || null,
+        notes: notes ? stripHtml(notes) : null,
       },
     });
 

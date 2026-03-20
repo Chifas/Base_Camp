@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { createProfessionalProfileSchema, updateProfessionalProfileSchema } from "@/lib/validations";
+import { stripHtml } from "@/lib/sanitize";
 import { log as logger } from "@/lib/logger";
 
 /** Map enum values to human-readable names */
@@ -87,13 +88,15 @@ export async function POST(req: Request) {
     }
 
     const { category, headline, hourlyRate, bio } = parsed.data;
+    const cleanHeadline = stripHtml(headline);
+    const cleanBio = bio ? stripHtml(bio) : undefined;
 
     // Create profile + update user bio in a transaction
     const profile = await prisma.$transaction(async (tx) => {
-      if (bio) {
+      if (cleanBio) {
         await tx.user.update({
           where: { id: session.user.id },
-          data: { bio },
+          data: { bio: cleanBio },
         });
       }
 
@@ -101,8 +104,9 @@ export async function POST(req: Request) {
         data: {
           userId: session.user.id,
           category,
-          headline,
+          headline: cleanHeadline,
           hourlyRate,
+          onboardingDone: true,
         },
       });
     });
@@ -154,14 +158,14 @@ export async function PUT(req: Request) {
       if (bio !== undefined) {
         await tx.user.update({
           where: { id: session.user.id },
-          data: { bio },
+          data: { bio: stripHtml(bio) },
         });
       }
 
       // Build profile update data — only include fields that were sent
       const profileData: Record<string, unknown> = {};
       if (category !== undefined) profileData.category = category;
-      if (headline !== undefined) profileData.headline = headline;
+      if (headline !== undefined) profileData.headline = stripHtml(headline);
       if (hourlyRate !== undefined) profileData.hourlyRate = hourlyRate;
       if (languages !== undefined) profileData.languages = languages;
       if (yearsExperience !== undefined) profileData.yearsExperience = yearsExperience;

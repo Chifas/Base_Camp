@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { registerSchema } from "@/lib/validations";
+import { stripHtml } from "@/lib/sanitize";
 import { log } from "@/lib/logger";
 
 export async function POST(req: Request) {
@@ -15,7 +16,8 @@ export async function POST(req: Request) {
       );
     }
 
-    const { name, email, password, role } = parsed.data;
+    const { name: rawName, email, password, role } = parsed.data;
+    const name = stripHtml(rawName);
 
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {

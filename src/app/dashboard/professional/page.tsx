@@ -43,6 +43,7 @@ import { DashboardSkeleton } from "@/components/shared/dashboard-skeleton";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PhotoUpload } from "@/components/shared/photo-upload";
 import { ReferralPanel } from "@/components/shared/referral-panel";
+import ProfileCompleteness from "@/components/shared/ProfileCompleteness";
 import { formatDate, formatTime } from "@/lib/utils";
 import { CREDITS_CONFIG } from "@/lib/credits-config";
 interface CategoryOption {
@@ -456,6 +457,25 @@ export default function ProfessionalDashboard() {
           ))}
         </div>
       </FadeIn>
+
+      {/* Profile completeness */}
+      {profile && (
+        <FadeIn delay={0.15}>
+          <div className="mt-6">
+            <ProfileCompleteness
+              profile={{
+                headline: profile.headline,
+                bio: profile.bio,
+                image: profile.image,
+                category: profile.category,
+                languages: profile.languages,
+                yearsExperience: profile.yearsExperience,
+                availability,
+              }}
+            />
+          </div>
+        </FadeIn>
+      )}
 
       {/* Tabs */}
       <FadeIn delay={0.2}>

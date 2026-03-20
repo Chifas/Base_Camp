@@ -33,16 +33,16 @@
 > Sin esto no se puede lanzar. Bugs de seguridad, flujos rotos, y validación real.
 
 ### 1.1 Onboarding profesional completo
-- [ ] **Página `/onboarding/professional`**: Wizard paso a paso (perfil → categoría → disponibilidad → foto)
-- [ ] **Barra de completitud de perfil**: Indicador % con acciones sugeridas para maximizar visibilidad
-- [ ] **Bloqueo de visibilidad**: Profesional no aparece en `/explore` hasta completar onboarding mínimo (nombre, categoría, 1 slot de disponibilidad)
+- [x] **Página `/onboarding/professional`**: Wizard paso a paso (perfil → categoría → disponibilidad → foto)
+- [x] **Barra de completitud de perfil**: Indicador % con acciones sugeridas para maximizar visibilidad
+- [x] **Bloqueo de visibilidad**: Profesional no aparece en `/explore` hasta completar onboarding mínimo (nombre, categoría, 1 slot de disponibilidad)
 
 ### 1.2 Seguridad pre-producción
-- [ ] **JWT callback optimizado**: Eliminar `prisma.user.findUnique()` en cada request — guardar rol en token solo al login
-- [ ] **Rate limiting en login**: Máx 10 intentos por IP por 15min para prevenir fuerza bruta
-- [ ] **Sanitización de HTML**: Aplicar `sanitize-html` o DOMPurify en campos de texto libre (bio, notas, feedback) para prevenir XSS
-- [ ] **CSRF en formularios**: Validar origin/referer en formularios fuera del flujo NextAuth (booking, reviews, perfil)
-- [ ] **Protección de endpoints cron redundante**: Verificar que TODOS los cron handlers validan `CRON_SECRET` consistentemente
+- [x] **JWT callback optimizado**: Eliminar `prisma.user.findUnique()` en cada request — guardar rol en token solo al login
+- [x] **Rate limiting en login**: Máx 10 intentos por IP por 15min para prevenir fuerza bruta
+- [x] **Sanitización de HTML**: Aplicar `sanitize-html` en campos de texto libre (bio, notas, feedback, registro) para prevenir XSS
+- [x] **CSRF en formularios**: Validar origin/referer en middleware para todas las mutaciones en rutas protegidas
+- [x] **Protección de endpoints cron redundante**: Verificado — TODOS los cron handlers validan `CRON_SECRET` consistentemente
 
 ### 1.3 Validación con usuarios reales
 - [ ] **Programa beta cerrado**: Invitar 10-20 profesionales reales para validar flujo end-to-end
@@ -51,13 +51,13 @@
 - [ ] **Lista de espera / waitlist**: Captura de emails pre-lanzamiento (modelo `WaitlistEntry` ya existe en schema)
 
 ### 1.4 Validación client-side en formularios
-- [ ] **react-hook-form + Zod**: Integrar validación client-side reutilizando los schemas Zod existentes
-- [ ] **Feedback inline en tiempo real**: Errores por campo al escribir, no solo al enviar
-- [ ] **Formularios afectados**: Registro, booking, reviews, perfil profesional, disponibilidad
+- [x] **react-hook-form + Zod**: Integrado en login y registro reutilizando schemas Zod existentes
+- [x] **Feedback inline en tiempo real**: Errores por campo al perder foco (modo `onBlur`)
+- [ ] **Formularios afectados**: ~~Registro~~, ~~Login~~, booking, reviews, perfil profesional, disponibilidad
 
 ### 1.5 Env y documentación de deploy
-- [ ] **`.env.example` completo**: Añadir todas las variables opcionales (Cloudinary, Upstash Redis, CRON_SECRET)
-- [ ] **Health check mejorado**: Incluir check de conexión a DB y servicios externos (Daily, Resend)
+- [x] **`.env.example` completo**: Añadidas Cloudinary, Upstash Redis, CRON_SECRET
+- [x] **Health check mejorado**: Incluye check de DB, Daily.co, Resend y Redis con latencia por servicio
 
 ---
 

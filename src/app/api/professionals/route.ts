@@ -18,8 +18,11 @@ export async function GET(req: Request) {
     const page = parseInt(searchParams.get("page") || "1");
     const limit = Math.min(parseInt(searchParams.get("limit") || "12"), 100);
 
-    // Build where clause
-    const where: Prisma.ProfessionalProfileWhereInput = {};
+    // Build where clause — only show professionals who completed onboarding
+    const where: Prisma.ProfessionalProfileWhereInput = {
+      onboardingDone: true,
+      headline: { not: null },
+    };
 
     if (category) {
       where.category = category as Prisma.EnumProfessionalCategoryFilter;
