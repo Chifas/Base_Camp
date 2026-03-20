@@ -68,6 +68,8 @@ model User {
   messages             Message[]
   referralsMade        Referral[]         @relation("ReferralReferrer")
   referralsReceived    Referral[]         @relation("ReferralReferred")
+  conversations        Conversation[]     @relation("ClientConversations")
+  directMessages       DirectMessage[]    @relation("DirectMessageSender")
 
   @@map("users")
 }
@@ -140,6 +142,7 @@ model ProfessionalProfile {
   sessions        Session[]           @relation("ProfessionalSessions")
   certifications  Certification[]
   redemptions     RewardRedemption[]
+  conversations   Conversation[]
 
   @@index([category])
   @@map("professional_profiles")
@@ -371,4 +374,39 @@ model WaitlistEntry {
   createdAt DateTime @default(now())
 
   @@map("waitlist_entries")
+}
+
+// ── Direct Messaging ──────────────────────────────────────────────────────
+
+model Conversation {
+  id              String   @id @default(cuid())
+  clientId        String
+  professionalId  String
+  lastMessageAt   DateTime @default(now())
+  createdAt       DateTime @default(now())
+
+  client       User                @relation("ClientConversations", fields: [clientId], references: [id])
+  professional ProfessionalProfile @relation(fields: [professionalId], references: [id])
+  messages     DirectMessage[]
+
+  @@unique([clientId, professionalId])
+  @@index([clientId])
+  @@index([professionalId])
+  @@map("conversations")
+}
+
+model DirectMessage {
+  id              String   @id @default(cuid())
+  conversationId  String
+  senderId        String
+  content         String
+  read            Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation("DirectMessageSender", fields: [senderId], references: [id])
+
+  @@index([conversationId, createdAt])
+  @@index([senderId])
+  @@map("direct_messages")
 }

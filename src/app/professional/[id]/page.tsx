@@ -20,6 +20,7 @@ import { CATEGORY_LABELS } from "@/types";
 import type { ProfessionalCategory, Review } from "@/types";
 import { BookingCard } from "./booking-card";
 import { ReviewsSection } from "./reviews-section";
+import { SendMessageButton } from "./send-message-button";
 
 const DAYS = [
   "Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado",
@@ -285,8 +286,8 @@ export default async function ProfessionalProfilePage({
             </FadeIn>
           </div>
 
-          {/* Right column - Booking card */}
-          <div className="lg:col-span-1">
+          {/* Right column - Booking card + Message */}
+          <div className="lg:col-span-1 space-y-4">
             <BookingCard
               professionalId={professional.id}
               availability={professional.availability.map((a) => ({
@@ -297,6 +298,15 @@ export default async function ProfessionalProfilePage({
               }))}
               socialImpactScore={professional.socialImpactScore}
             />
+            <div className="rounded-xl border bg-card p-4">
+              <p className="text-sm text-muted-foreground mb-3">
+                ¿Tienes alguna pregunta antes de reservar?
+              </p>
+              <SendMessageButton
+                professionalId={professional.id}
+                professionalName={name}
+              />
+            </div>
           </div>
         </div>
       </div>
