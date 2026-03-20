@@ -43,7 +43,7 @@ export function SendMessageButton({ professionalId, professionalName }: SendMess
       }
 
       const data = await res.json();
-      setConversationId(data.conversation.id);
+      setConversationId(data.id);
     } catch {
       toast.error("Error de conexión");
     } finally {
