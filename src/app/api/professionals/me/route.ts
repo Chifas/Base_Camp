@@ -5,7 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { createProfessionalProfileSchema, updateProfessionalProfileSchema } from "@/lib/validations";
 import { stripHtml } from "@/lib/sanitize";
-import { log as logger } from "@/lib/logger";
+import { logger } from "@/lib/logger";
 
 /** Map enum values to human-readable names */
 const CATEGORY_LABELS: Record<string, { name: string; slug: string }> = {

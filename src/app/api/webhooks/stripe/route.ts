@@ -6,7 +6,7 @@ import { env } from "@/lib/env";
 import { sendBookingEmails, type EmailSessionData } from "@/lib/emails";
 import { createNotifications } from "@/lib/notifications";
 import type Stripe from "stripe";
-import { log } from "@/lib/logger";
+import { logger } from "@/lib/logger";
 
 export async function POST(req: Request) {
   if (!stripe) {
@@ -36,7 +36,7 @@ export async function POST(req: Request) {
     );
   } catch (err) {
     const message = err instanceof Error ? err.message : "Error desconocido";
-    log.error("Stripe webhook firma inválida", { message });
+    logger.error("Stripe webhook firma inválida", { message });
     return NextResponse.json(
       { error: `Firma inválida: ${message}` },
       { status: 400 }
@@ -51,7 +51,7 @@ export async function POST(req: Request) {
         const sessionId = checkoutSession.metadata?.sessionId;
 
         if (!sessionId) {
-          log.error("Stripe webhook: no sessionId in metadata");
+          logger.error("Stripe webhook: no sessionId in metadata");
           break;
         }
 
@@ -75,7 +75,7 @@ export async function POST(req: Request) {
           },
         });
 
-        log.info("Sesión confirmada", { sessionId, paymentIntentId: updatedSession.stripePaymentIntentId });
+        logger.info("Sesión confirmada", { sessionId, paymentIntentId: updatedSession.stripePaymentIntentId });
 
         // Send confirmation emails to both parties (fire-and-forget)
         sendBookingEmails(updatedSession as unknown as EmailSessionData).catch(() => {});
@@ -108,7 +108,7 @@ export async function POST(req: Request) {
             where: { stripeAccountId: account.id },
             data: { stripeConnected: true, verified: true },
           });
-          log.info("Stripe Connect account fully onboarded", { accountId: account.id });
+          logger.info("Stripe Connect account fully onboarded", { accountId: account.id });
         }
         break;
       }
@@ -123,18 +123,18 @@ export async function POST(req: Request) {
             where: { id: sessionId },
             data: { status: "CANCELLED" },
           });
-          log.info("Sesión cancelada por checkout expirado", { sessionId });
+          logger.info("Sesión cancelada por checkout expirado", { sessionId });
         }
         break;
       }
 
       default:
-        log.info("Stripe webhook evento no manejado", { type: event.type });
+        logger.info("Stripe webhook evento no manejado", { type: event.type });
     }
 
     return NextResponse.json({ received: true });
   } catch (error) {
-    log.error("Stripe webhook error procesando evento", { error: String(error) });
+    logger.error("Stripe webhook error procesando evento", { error: String(error) });
     return NextResponse.json(
       { error: "Error procesando webhook" },
       { status: 500 }

@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
 import { env } from "@/lib/env";
 import { checkoutSchema } from "@/lib/validations";
-import { log } from "@/lib/logger";
+import { logger } from "@/lib/logger";
 
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
@@ -101,7 +101,7 @@ export async function POST(req: Request) {
       sessionId: dbSession.id,
     });
   } catch (error) {
-    log.error("Error en checkout", { error: String(error) });
+    logger.error("Error en checkout", { error: String(error) });
     return NextResponse.json(
       { error: "Error al crear la sesión de pago" },
       { status: 500 }

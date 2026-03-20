@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendOnboardingEmail } from "@/lib/emails";
-import { log } from "@/lib/logger";
+import { logger } from "@/lib/logger";
 
 /**
  * GET /api/cron/onboarding-emails
@@ -19,7 +19,7 @@ import { log } from "@/lib/logger";
 export async function GET(req: Request) {
   const cronSecret = process.env.CRON_SECRET;
   if (!cronSecret) {
-    log.error("CRON_SECRET no configurado");
+    logger.error("CRON_SECRET no configurado");
     return NextResponse.json({ error: "CRON_SECRET no configurado" }, { status: 500 });
   }
   const authHeader = req.headers.get("authorization");
@@ -77,11 +77,11 @@ export async function GET(req: Request) {
       sent++;
     }
 
-    log.info("Cron: onboarding emails", { processed: professionals.length, sent });
+    logger.info("Cron: onboarding emails", { processed: professionals.length, sent });
 
     return NextResponse.json({ success: true, sent });
   } catch (error) {
-    log.error("Cron: error en onboarding emails", { error: String(error) });
+    logger.error("Cron: error en onboarding emails", { error: String(error) });
     return NextResponse.json(
       { error: "Error procesando emails de onboarding" },
       { status: 500 }

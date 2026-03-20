@@ -66,27 +66,27 @@
 > Retención de usuarios, confianza, y los flujos que convierten visitantes en usuarios recurrentes.
 
 ### 2.1 Notificaciones in-app completas
-- [ ] **UI de notificaciones en dashboard**: `NotificationBell` con badge, dropdown de últimas notificaciones, marcar como leídas
-- [ ] **Página de historial de notificaciones**: Lista completa paginada con filtros por tipo
+- [x] **UI de notificaciones en dashboard**: `NotificationBell` con badge, dropdown de últimas notificaciones, marcar como leídas
+- [x] **Página de historial de notificaciones**: Lista completa paginada con filtros por tipo y estado (leídas/no leídas)
 - [ ] **Notificaciones push (opcional)**: Web Push API para notificar fuera del navegador
 
 ### 2.2 Sistema de referidos
-- [ ] **Referidos profesional → profesional**: Código de invitación con bonus de impact points
-- [ ] **Referidos cliente → cliente**: Crédito extra por cada amigo que complete una sesión
-- [ ] **Dashboard de referidos**: Panel con referidos enviados, convertidos y beneficios acumulados
-- [ ] **Modelo `Referral`**: Ya existe en schema, falta implementar API + UI
+- [x] **Referidos profesional → profesional**: Código de invitación con bonus de impact points
+- [x] **Referidos cliente → cliente**: Crédito extra por cada amigo que complete una sesión
+- [x] **Dashboard de referidos**: Panel con referidos enviados, convertidos y beneficios acumulados
+- [x] **Modelo `Referral`**: API + UI implementados (generación de código, canje, estadísticas)
 
 ### 2.3 SEO y adquisición orgánica
-- [ ] **Landing pages por categoría**: `/coach`, `/psicologo`, `/mentor`, `/nutricionista` con contenido SEO específico
-- [ ] **Sitemap dinámico mejorado**: Incluir perfiles verificados + landing pages de categoría
-- [ ] **Open Graph dinámico**: Imágenes generadas (og:image) con datos del profesional para compartir en redes
+- [x] **Landing pages por categoría**: `/categoria/coach`, `/categoria/psicologo-laboral`, `/categoria/mentor-de-carrera`, `/categoria/nutricionista`
+- [x] **Sitemap dinámico mejorado**: Incluye perfiles + landing pages de categoría (priority 0.85)
+- [x] **Open Graph dinámico**: Metadata + OG tags dinámicos por categoría con generateMetadata
 - [ ] **Blog integrado**: CMS simple (MDX o similar) para artículos sobre desarrollo profesional
 
 ### 2.4 Confianza y seguridad (Trust & Safety)
 - [ ] **Verificación de identidad profesional**: Integración con servicio de verificación de documentos (DNI/pasaporte)
 - [ ] **2FA para profesionales**: TOTP o passkeys para cuentas con acceso a datos sensibles
 - [ ] **Política de disputas**: Flujo para que un cliente abra una disputa post-sesión con mediación
-- [ ] **Límites anti-abuso**: 1 sesión gratuita por combinación cliente-profesional (evitar farming de créditos)
+- [x] **Límites anti-abuso**: 1 sesión gratuita por combinación cliente-profesional por mes (HTTP 429)
 
 ---
 
@@ -95,31 +95,32 @@
 > Funcionalidades que mejoran la experiencia y diferencian la plataforma.
 
 ### 3.1 Chat y mensajería
-- [ ] **Chat pre/post sesión**: Mensajería entre cliente y profesional vinculada a la sesión
-- [ ] **WebSockets o Supabase Realtime**: Para mensajes instantáneos
-- [ ] **Archivos adjuntos**: Compartir documentos/CV en el chat (Cloudinary o S3)
-- [ ] **Historial de conversaciones**: Persistencia con búsqueda
+- [x] **Chat pre/post sesión**: Mensajería entre cliente y profesional vinculada a la sesión (modelo Message + API + UI)
+- [x] **Polling para mensajes**: Polling cada 5s con auto-scroll y marcado de lectura
+- [ ] **WebSockets o Supabase Realtime**: Para mensajes instantáneos (actualmente polling)
+- [ ] **Archivos adjuntos**: Compartir documentos/CV en el chat (Cloudinary o S3) — modelo preparado con `fileUrl`/`fileName`
+- [x] **Historial de conversaciones**: Persistencia en DB con paginación por cursor
 
 ### 3.2 Calendario y disponibilidad avanzada
 - [ ] **Integración Google Calendar**: Sincronizar disponibilidad automáticamente (OAuth + Calendar API)
-- [ ] **Bloqueo de fechas específicas**: Vacaciones, festivos, ausencias puntuales
+- [x] **Bloqueo de fechas específicas**: Modelo BlockedDate + API CRUD + UI calendario visual + validación en booking
 - [ ] **Soporte multi-timezone**: Detección automática + selector para clientes internacionales
-- [ ] **Slots de duración variable**: Sesiones de 30, 45, 60, 90 min
-- [ ] **Vista calendario visual**: Calendario interactivo tipo Google Calendar en dashboard
+- [x] **Slots de duración variable**: SESSION_DURATIONS [30, 45, 60, 90] en credits-config.ts
+- [x] **Vista calendario visual**: Mini-calendario interactivo para gestionar fechas bloqueadas
 
 ### 3.3 Videollamada mejorada
-- [ ] **Compartir pantalla**: Habilitar screen sharing en Daily.co
-- [ ] **Chat en videollamada**: Mensajes de texto durante la sesión
+- [x] **Compartir pantalla**: `enable_screenshare: true` en Daily.co room creation
+- [x] **Chat en videollamada**: `enable_chat: true` integrado en Daily.co iframe
 - [ ] **Grabación de sesiones**: Con consentimiento mutuo, para revisión posterior
-- [ ] **Error boundaries para Daily iframe**: Fallback UI si la conexión falla
+- [x] **Error boundaries para Daily iframe**: UI mejorada con reintentar conexión y volver al dashboard
 
 ### 3.4 Deuda técnica
-- [ ] **Índice `@@index([professionalId, dayOfWeek])` en Availability**: Eliminar full scan en consultas de disponibilidad
-- [ ] **Índice en `Session.scheduledAt`**: Optimizar queries de cron por rango de tiempo
-- [ ] **Refactor `GET /api/sessions`**: Extraer `formatSessionForResponse()` y `buildSessionWhereClause()` para eliminar duplicación
-- [ ] **`select` explícito en queries Prisma**: Reducir payload en queries que hacen `include` completo
-- [ ] **Limpieza de sesiones expiradas**: Cron job para archivar/eliminar sesiones > 90 días
-- [ ] **Estandarizar `logger` vs `log`**: Eliminar alias deprecado `log`, usar `logger` en todo el codebase
+- [x] **Índice `@@index([professionalId, dayOfWeek])` en Availability**: Compound index añadido
+- [x] **Índice en `Session.scheduledAt`**: Index añadido para optimizar cron queries
+- [x] **Refactor `GET /api/sessions`**: Extraídos `formatSessionForClient()`, `formatSessionForProfessional()` y `buildSessionWhereClause()` en `session-helpers.ts`
+- [ ] **`select` explícito en queries Prisma**: Reducir payload en queries pesadas
+- [x] **Limpieza de sesiones expiradas**: Cron job `/api/cron/session-cleanup` (PENDING>24h → CANCELLED, CONFIRMED>4h → CANCELLED)
+- [x] **Estandarizar `logger` vs `log`**: Migrados 12 archivos, eliminado alias deprecado `log`
 
 ---
 

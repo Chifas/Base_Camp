@@ -18,4 +18,10 @@ export const CREDITS_CONFIG = {
 
   /** Max free sessions per client-professional pair per month. */
   MAX_FREE_SESSIONS_PER_PROFESSIONAL: 1,
+
+  /** Available session durations in minutes. */
+  SESSION_DURATIONS: [30, 45, 60, 90] as readonly number[],
+
+  /** Default session duration in minutes. */
+  DEFAULT_SESSION_DURATION: 60,
 } as const;

@@ -8,7 +8,7 @@
  */
 
 import { resend, FROM_EMAIL } from "@/lib/resend";
-import { log } from "@/lib/logger";
+import { logger } from "@/lib/logger";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -270,7 +270,7 @@ export async function sendBookingEmails(s: EmailSessionData) {
 
   results.forEach((r, i) => {
     if (r.status === "rejected") {
-      log.error(`Error enviando email de reserva [${i}]`, { reason: String(r.reason) });
+      logger.error(`Error enviando email de reserva [${i}]`, { reason: String(r.reason) });
     }
   });
 }
@@ -375,7 +375,7 @@ export async function sendSessionReminderEmails(s: EmailSessionData) {
 
   results.forEach((r, i) => {
     if (r.status === "rejected") {
-      log.error(`Error enviando email de recordatorio [${i}]`, { reason: String(r.reason) });
+      logger.error(`Error enviando email de recordatorio [${i}]`, { reason: String(r.reason) });
     }
   });
 }
@@ -402,7 +402,7 @@ export async function sendNewReviewEmail(data: {
       }),
     });
   } catch (error) {
-    log.error("Error enviando email de nueva reseña", { error: String(error) });
+    logger.error("Error enviando email de nueva reseña", { error: String(error) });
   }
 }
 
@@ -453,7 +453,7 @@ export async function sendOnboardingEmail(data: {
       html: layout(bodies[data.step] ?? ""),
     });
   } catch (error) {
-    log.error("Error enviando email de onboarding", { error: String(error) });
+    logger.error("Error enviando email de onboarding", { error: String(error) });
   }
 }
 
@@ -477,7 +477,7 @@ export async function sendWaitlistConfirmationEmail(data: {
       `),
     });
   } catch (error) {
-    log.error("Error enviando email de waitlist", { error: String(error) });
+    logger.error("Error enviando email de waitlist", { error: String(error) });
   }
 }
 
@@ -518,7 +518,7 @@ export async function sendCancellationEmails(s: EmailSessionData) {
 
   results.forEach((r, i) => {
     if (r.status === "rejected") {
-      log.error(`Error enviando email de cancelación [${i}]`, { reason: String(r.reason) });
+      logger.error(`Error enviando email de cancelación [${i}]`, { reason: String(r.reason) });
     }
   });
 }

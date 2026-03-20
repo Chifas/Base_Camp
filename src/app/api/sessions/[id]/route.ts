@@ -9,7 +9,7 @@ import { stripHtml } from "@/lib/sanitize";
 import { calculateCancellation } from "@/lib/cancellation";
 import { createNotifications } from "@/lib/notifications";
 import { CREDITS_CONFIG } from "@/lib/credits-config";
-import { log } from "@/lib/logger";
+import { logger } from "@/lib/logger";
 
 // GET /api/sessions/[id] — load a single session for participants only
 export async function GET(
@@ -182,14 +182,14 @@ export async function PATCH(
               payment_intent: existing.stripePaymentIntentId,
               amount: refundAmountCents,
             });
-            log.info("Refund procesado", {
+            logger.info("Refund procesado", {
               sessionId: existing.id,
               amount: cancellation.refundAmount,
               fee: cancellation.cancellationFee,
             });
           }
         } catch (error) {
-          log.error("Error procesando refund", { error: String(error), sessionId: existing.id });
+          logger.error("Error procesando refund", { error: String(error), sessionId: existing.id });
           // Don't block the cancellation — refund can be done manually
         }
       }
@@ -251,7 +251,7 @@ export async function PATCH(
           },
         });
 
-        log.info("Impact points awarded", {
+        logger.info("Impact points awarded", {
           sessionId: existing.id,
           professionalId: existing.professionalId,
           pointsAwarded: pointsToAward,
@@ -269,7 +269,7 @@ export async function PATCH(
           },
         ]);
       } catch (error) {
-        log.error("Error awarding impact points", { error: String(error), sessionId: existing.id });
+        logger.error("Error awarding impact points", { error: String(error), sessionId: existing.id });
       }
 
       // For paid sessions, still handle Stripe transfer
@@ -291,7 +291,7 @@ export async function PATCH(
           });
           updateData.stripeTransferId = transfer.id;
         } catch (error) {
-          log.error("Error creando transfer", { error: String(error), sessionId: existing.id });
+          logger.error("Error creando transfer", { error: String(error), sessionId: existing.id });
         }
       }
 
@@ -323,7 +323,7 @@ export async function PATCH(
 
     return NextResponse.json(updated);
   } catch (error) {
-    log.error("Error actualizando sesión", { error: String(error) });
+    logger.error("Error actualizando sesión", { error: String(error) });
     return NextResponse.json(
       { error: "Error al actualizar la sesión" },
       { status: 500 }

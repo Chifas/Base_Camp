@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { registerSchema } from "@/lib/validations";
 import { stripHtml } from "@/lib/sanitize";
-import { log } from "@/lib/logger";
+import { logger } from "@/lib/logger";
 
 export async function POST(req: Request) {
   try {
@@ -39,7 +39,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ ok: true });
   } catch (error) {
-    log.error("Error en registro", { error: String(error) });
+    logger.error("Error en registro", { error: String(error) });
     return NextResponse.json(
       { error: "Error interno del servidor" },
       { status: 500 }

@@ -6,7 +6,7 @@
  */
 
 import { prisma } from "@/lib/prisma";
-import { log } from "@/lib/logger";
+import { logger } from "@/lib/logger";
 import type { NotificationType } from "@prisma/client";
 
 interface CreateNotificationInput {
@@ -30,7 +30,7 @@ export async function createNotification(data: CreateNotificationInput) {
       },
     });
   } catch (error) {
-    log.error("Error creando notificación", {
+    logger.error("Error creando notificación", {
       type: data.type,
       userId: data.userId,
       error: String(error),

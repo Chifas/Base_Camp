@@ -33,5 +33,3 @@ export const logger = {
   error: (message: string, context?: Record<string, unknown>) => emit("error", message, context),
 };
 
-/** @deprecated Use `logger` instead */
-export const log = logger;

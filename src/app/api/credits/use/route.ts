@@ -6,7 +6,7 @@ import { CREDITS_CONFIG } from "@/lib/credits-config";
 import { sendBookingEmails, type EmailSessionData } from "@/lib/emails";
 import { createNotifications } from "@/lib/notifications";
 import { stripHtml } from "@/lib/sanitize";
-import { log } from "@/lib/logger";
+import { logger } from "@/lib/logger";
 
 /**
  * POST /api/credits/use — book a free session using credits.
@@ -104,6 +104,24 @@ export async function POST(req: Request) {
       );
     }
 
+    // Check if professional has blocked this date
+    const requestedDate = new Date(scheduledAt);
+    const dateOnly = new Date(requestedDate.getFullYear(), requestedDate.getMonth(), requestedDate.getDate());
+
+    const isBlocked = await prisma.blockedDate.findFirst({
+      where: {
+        professionalId,
+        date: dateOnly,
+      },
+    });
+
+    if (isBlocked) {
+      return NextResponse.json(
+        { error: "El profesional no está disponible en esta fecha" },
+        { status: 409 }
+      );
+    }
+
     // Check scheduling conflicts
     const conflict = await prisma.session.findFirst({
       where: {
@@ -142,7 +160,7 @@ export async function POST(req: Request) {
 
     const creditsRemaining = CREDITS_CONFIG.FREE_SESSIONS_PER_MONTH - (currentUsed + 1);
 
-    log.info("Free session booked", {
+    logger.info("Free session booked", {
       sessionId: dbSession.id,
       userId: session.user.id,
       creditsRemaining,
@@ -182,7 +200,7 @@ export async function POST(req: Request) {
       status: "CONFIRMED",
     });
   } catch (error) {
-    log.error("Error booking free session", { error: String(error) });
+    logger.error("Error booking free session", { error: String(error) });
     return NextResponse.json(
       { error: "Error al reservar la sesión" },
       { status: 500 }

@@ -65,6 +65,7 @@ model User {
   notifications        Notification[]
   rescheduleRequests   RescheduleRequest[]
   betaFeedbacks        BetaFeedback[]
+  messages             Message[]
   referralsMade        Referral[]         @relation("ReferralReferrer")
   referralsReceived    Referral[]         @relation("ReferralReferred")
 
@@ -135,6 +136,7 @@ model ProfessionalProfile {
 
   user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   availability    Availability[]
+  blockedDates    BlockedDate[]
   sessions        Session[]           @relation("ProfessionalSessions")
   certifications  Certification[]
   redemptions     RewardRedemption[]
@@ -167,10 +169,12 @@ model Session {
   professional        ProfessionalProfile @relation("ProfessionalSessions", fields: [professionalId], references: [id])
   review              Review?
   rescheduleRequests  RescheduleRequest[]
+  messages            Message[]
 
   @@index([clientId])
   @@index([professionalId])
   @@index([status])
+  @@index([scheduledAt])
   @@map("sessions")
 }
 
@@ -221,7 +225,21 @@ model Availability {
 
   professional ProfessionalProfile @relation(fields: [professionalId], references: [id], onDelete: Cascade)
 
+  @@index([professionalId, dayOfWeek])
   @@map("availability")
+}
+
+model BlockedDate {
+  id              String   @id @default(cuid())
+  professionalId  String
+  date            DateTime @db.Date
+  reason          String?
+
+  professional ProfessionalProfile @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+
+  @@unique([professionalId, date])
+  @@index([professionalId])
+  @@map("blocked_dates")
 }
 
 model Notification {
@@ -255,6 +273,27 @@ model RescheduleRequest {
 
   @@index([sessionId])
   @@map("reschedule_requests")
+}
+
+// ── Chat Messages ─────────────────────────────────────────────────────────
+
+model Message {
+  id        String   @id @default(cuid())
+  sessionId String
+  userId    String
+  content   String
+  type      String   @default("text") // "text" | "file"
+  fileUrl   String?
+  fileName  String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@index([sessionId, createdAt])
+  @@index([userId])
+  @@map("messages")
 }
 
 // ── Beta Feedback ──────────────────────────────────────────────────────────

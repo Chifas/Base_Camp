@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
 import { createIntentSchema } from "@/lib/validations";
-import { log } from "@/lib/logger";
+import { logger } from "@/lib/logger";
 
 // POST /api/payments/create-intent
 // Creates a DB Session + Stripe PaymentIntent and returns the client secret
@@ -116,7 +116,7 @@ export async function POST(req: Request) {
       amount: profile.hourlyRate,
     });
   } catch (err) {
-    log.error("Error al crear PaymentIntent", { error: String(err) });
+    logger.error("Error al crear PaymentIntent", { error: String(err) });
     return NextResponse.json(
       { error: "Error al crear el pago" },
       { status: 500 }

@@ -140,3 +140,18 @@ export const waitlistSchema = z.object({
   name: z.string().optional(),
   source: z.string().optional(),
 });
+
+// POST /api/messages
+export const sendMessageSchema = z.object({
+  sessionId: z.string().min(1, "sessionId es obligatorio"),
+  content: z.string().min(1, "El mensaje no puede estar vacío").max(2000, "Máximo 2000 caracteres"),
+  type: z.enum(["text", "file"]).default("text"),
+  fileUrl: z.string().url("URL inválida").optional(),
+  fileName: z.string().max(255).optional(),
+});
+
+// POST /api/blocked-dates
+export const blockedDateSchema = z.object({
+  date: z.string().min(1, "La fecha es obligatoria"),
+  reason: z.string().max(200).optional(),
+});

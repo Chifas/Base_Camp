@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { log } from "@/lib/logger";
+import { logger } from "@/lib/logger";
 
 const DAILY_API = "https://api.daily.co/v1";
 
@@ -81,7 +81,7 @@ export async function POST(req: Request) {
           exp,
           max_participants:    2,
           enable_chat:         true,
-          enable_screenshare:  false,
+          enable_screenshare:  true,
           start_video_off:     false,
           start_audio_off:     false,
           lang:                "es",
@@ -110,7 +110,7 @@ export async function POST(req: Request) {
         const existing = await getRes.json();
         roomUrl = existing.url as string;
       } else {
-        log.error("Daily API error al crear sala", { error: errBody });
+        logger.error("Daily API error al crear sala", { error: errBody });
         return NextResponse.json(
           { error: "Error al crear la sala de videollamada" },
           { status: 502 }
@@ -126,7 +126,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ roomUrl });
   } catch (err) {
-    log.error("Error interno al preparar sala Daily", { error: String(err) });
+    logger.error("Error interno al preparar sala Daily", { error: String(err) });
     return NextResponse.json(
       { error: "Error interno al preparar la sala" },
       { status: 500 }

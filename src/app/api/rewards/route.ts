@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { CREDITS_CONFIG } from "@/lib/credits-config";
-import { log } from "@/lib/logger";
+import { logger } from "@/lib/logger";
 
 /**
  * GET /api/rewards — returns the professional's impact points and redemption history.
@@ -106,7 +106,7 @@ export async function POST(req: Request) {
       }),
     ]);
 
-    log.info("Reward redeemed", {
+    logger.info("Reward redeemed", {
       professionalId: profile.id,
       type,
       pointsSpent: pointsCost,
@@ -118,7 +118,7 @@ export async function POST(req: Request) {
       impactPointsRemaining: updatedProfile.impactPoints,
     });
   } catch (error) {
-    log.error("Error redeeming reward", { error: String(error) });
+    logger.error("Error redeeming reward", { error: String(error) });
     return NextResponse.json({ error: "Error al canjear recompensa" }, { status: 500 });
   }
 }

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendSessionReminderEmails } from "@/lib/emails";
 import { createNotifications } from "@/lib/notifications";
-import { log } from "@/lib/logger";
+import { logger } from "@/lib/logger";
 
 /**
  * GET /api/cron/session-reminders
@@ -45,7 +45,7 @@ export async function GET(req: Request) {
       },
     });
 
-    log.info("Cron: session reminders", { found: sessions.length });
+    logger.info("Cron: session reminders", { found: sessions.length });
 
     for (const s of sessions) {
       // Send emails
@@ -87,7 +87,7 @@ export async function GET(req: Request) {
       reminders: sessions.length,
     });
   } catch (error) {
-    log.error("Cron: error en session reminders", { error: String(error) });
+    logger.error("Cron: error en session reminders", { error: String(error) });
     return NextResponse.json(
       { error: "Error procesando recordatorios" },
       { status: 500 }
