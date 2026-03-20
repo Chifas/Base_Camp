@@ -1,184 +1,197 @@
 # GuidePath — Roadmap de Mejoras
 
-## Fase 0: Lanzamiento y Adquisición Inicial
-
-### 0.1 Validación y Beta
-- [ ] **Lista de espera / waitlist**: Captura de emails de profesionales interesados antes del lanzamiento oficial
-- [ ] **Programa beta cerrado**: Invitar 10-20 profesionales reales para validar el flujo completo end-to-end
-- [ ] **Métricas de validación**: Definir KPIs de product-market fit (ej: X sesiones completadas, Y% retención mensual, Z NPS)
-- [ ] **Formulario de feedback estructurado**: Encuesta post-sesión para clientes y profesionales en beta
-
-### 0.2 Onboarding guiado para profesionales
-- [ ] **Wizard de setup paso a paso**: Flujo guiado (perfil → disponibilidad → precio → primera sesión) para reducir abandono en activación
-- [ ] **Barra de completitud de perfil**: Indicador % con sugerencias accionables (tipo LinkedIn) para maximizar visibilidad
-- [ ] **Email de activación progresiva**: Secuencia de emails Day 1/3/7 para que el profesional complete su perfil
-
-### 0.3 Sistema de referidos
-- [ ] **Referidos profesional → profesional**: Código de invitación con beneficio (ej: reducción de comisión primer mes)
-- [ ] **Referidos cliente → cliente**: Crédito en próxima sesión por cada amigo registrado que complete una sesión
-- [ ] **Dashboard de referidos**: Panel donde cada usuario ve sus referidos y beneficios acumulados
+> Actualizado: Marzo 2026
+> Modelo: Freemium (3 sesiones gratis/mes, impact points para profesionales)
 
 ---
 
-## Fase 1: Estabilidad y Calidad (Bugs + UX inmediata)
+## Estado actual — Lo que ya funciona
 
-### 1.1 Correcciones pendientes
-- [x] **Permisos de cámara en videollamada**: Headers `Permissions-Policy` añadidos en `next.config.mjs` para Daily.co iframe
-- [x] **Botones Aceptar/Rechazar sesiones**: Conectados al endpoint `PATCH /api/sessions/[id]`
-- [x] **Botón Iniciar sesión (videollamada)**: Conectado a la ruta `/session/[id]`
-- [x] **Botones CTA visibles en ambos modos**: Corregido contraste en hero y CTA para light/dark mode
-- [x] **Validación de disponibilidad**: Permitir strings vacíos en slots deshabilitados
-- [x] **Protección de rutas completa**: Validación de roles en PATCH sessions (solo profesional confirma/completa) + transiciones de estado válidas (PENDING→CONFIRMED→COMPLETED, no reversibles)
-- [x] **Manejo de errores global**: `error.tsx` específicos para dashboard, booking, session y explore con mensajes descriptivos
-- [x] **Loading states**: `loading.tsx` con skeletons en dashboard, explore, booking, session, perfil profesional, login y registro
-
-### 1.2 Validaciones de formulario
-- [x] **Zod en formularios cliente**: Validación con schemas Zod en registro y onboarding profesional
-- [x] **Feedback de errores inline**: Errores por campo con borde rojo y mensaje debajo, se limpian al editar
-- [x] **Validación de horarios**: Impide guardar disponibilidad si `endTime` <= `startTime`, con mensaje de error indicando el día
-
-### 1.3 Tests
-- [x] **Ampliar cobertura de tests unitarios**: 75 tests pasando — availability, sessions PATCH, reviews, register, professionals, validations, utils, env, components
-- [x] **Tests de integración**: create-intent (auth, validation, conflict, self-booking, success) + webhook (signature, completed, expired, unknown events)
-- [x] **Tests de componentes**: EmptyState component + comprehensive Zod validation schemas tests
-- [x] **E2E con Playwright**: Configurado con tests para registro, login, validación de formularios, explorar profesionales, landing page navigation
+| Funcionalidad | Estado |
+|---------------|--------|
+| Auth (NextAuth + Prisma + JWT + RBAC middleware) | ✅ |
+| API routes completas (sessions, professionals, credits, rewards, reviews, availability) | ✅ |
+| Sistema de créditos freemium (3/mes) + impact points | ✅ |
+| Daily.co videollamadas | ✅ |
+| Resend emails transaccionales + cron reminders | ✅ |
+| Reviews con categorías + respuesta del profesional | ✅ |
+| Filtros avanzados, paginación, ordenación por relevancia | ✅ |
+| Foto de perfil (Cloudinary) + certificaciones + idiomas | ✅ |
+| Rate limiting (register, reviews, professionals) | ✅ |
+| Cron jobs protegidos (reminders + onboarding emails) | ✅ |
+| Validación Zod server-side (14+ schemas) | ✅ |
+| Error handling estandarizado + logger estructurado | ✅ |
+| SEO dinámico (generateMetadata, JSON-LD, OG, sitemap) | ✅ |
+| CI/CD GitHub Actions (lint, build, types, tests) | ✅ |
+| Tests unitarios + integración (Vitest) + E2E (Playwright) | ✅ |
+| PWA (manifest + service worker) | ✅ |
 
 ---
 
-## Fase 2: Funcionalidades Core Pendientes
+## Fase 1 — Crítico (Pre-lanzamiento)
 
-### 2.1 Stripe Connect (pagos a profesionales)
-- [x] **Flujo completo de onboarding Stripe Connect**: Botón en dashboard profesional, `POST /api/stripe/connect` → redirect a Stripe, webhook `account.updated` marca `stripeConnected`
-- [x] **Transferencias automáticas**: Al completar sesión, `stripe.transfers.create()` transfiere 85% al profesional, guarda `stripeTransferId`
-- [x] **Comisión de plataforma**: 15% de comisión aplicada en cada transferencia
-- [x] **Panel de pagos**: `GET /api/stripe/transfers` con historial, ingresos brutos/comisión/neto en tab de earnings del dashboard
+> Sin esto no se puede lanzar. Bugs de seguridad, flujos rotos, y validación real.
 
-### 2.2 Sistema de notificaciones
-- [x] **Emails transaccionales mejorados**: Templates HTML con branding GuidePath para confirmación, recordatorio y nueva review
-- [x] **Recordatorio pre-sesión**: Cron cada 15min (`/api/cron/session-reminders`) envía email + notificación in-app 1h antes
-- [x] **Notificación de nueva review**: Email + notificación in-app al profesional al recibir valoración
-- [x] **Notificaciones in-app**: `NotificationBell` en navbar con badge, dropdown últimas 5, polling 30s, marcar leídas (`/api/notifications`)
+### 1.1 Onboarding profesional completo
+- [ ] **Página `/onboarding/professional`**: Wizard paso a paso (perfil → categoría → disponibilidad → foto)
+- [ ] **Barra de completitud de perfil**: Indicador % con acciones sugeridas para maximizar visibilidad
+- [ ] **Bloqueo de visibilidad**: Profesional no aparece en `/explore` hasta completar onboarding mínimo (nombre, categoría, 1 slot de disponibilidad)
 
-### 2.3 Gestión de sesiones avanzada
-- [x] **Reprogramar sesión**: `POST/PATCH /api/sessions/[id]/reschedule` con propuestas, aceptar/rechazar por la otra parte
-- [x] **Política de cancelación**: Gratis >24h, 50% cargo <24h (cliente), refund completo si profesional cancela. `src/lib/cancellation.ts`
-- [x] **Notas de sesión**: Profesional puede guardar notas post-sesión en sesiones COMPLETED via `PATCH /api/sessions/[id]`
-- [x] **Historial de sesiones completo**: Filtros `?status=X&from=Y&to=Z&page=N&limit=M` en `GET /api/sessions`
+### 1.2 Seguridad pre-producción
+- [ ] **JWT callback optimizado**: Eliminar `prisma.user.findUnique()` en cada request — guardar rol en token solo al login
+- [ ] **Rate limiting en login**: Máx 10 intentos por IP por 15min para prevenir fuerza bruta
+- [ ] **Sanitización de HTML**: Aplicar `sanitize-html` o DOMPurify en campos de texto libre (bio, notas, feedback) para prevenir XSS
+- [ ] **CSRF en formularios**: Validar origin/referer en formularios fuera del flujo NextAuth (booking, reviews, perfil)
+- [ ] **Protección de endpoints cron redundante**: Verificar que TODOS los cron handlers validan `CRON_SECRET` consistentemente
 
----
+### 1.3 Validación con usuarios reales
+- [ ] **Programa beta cerrado**: Invitar 10-20 profesionales reales para validar flujo end-to-end
+- [ ] **Formulario de feedback estructurado**: Encuesta post-sesión para clientes y profesionales
+- [ ] **KPIs de validación**: Definir métricas de product-market fit (sesiones completadas, retención mensual, NPS)
+- [ ] **Lista de espera / waitlist**: Captura de emails pre-lanzamiento (modelo `WaitlistEntry` ya existe en schema)
 
-## Fase 3: Experiencia de Usuario
+### 1.4 Validación client-side en formularios
+- [ ] **react-hook-form + Zod**: Integrar validación client-side reutilizando los schemas Zod existentes
+- [ ] **Feedback inline en tiempo real**: Errores por campo al escribir, no solo al enviar
+- [ ] **Formularios afectados**: Registro, booking, reviews, perfil profesional, disponibilidad
 
-### 3.1 Perfil de usuario
-- [x] **Foto de perfil**: Upload de imagen con Cloudinary (crop face 400×400, validación tipo/tamaño 5MB), preview local, componente `PhotoUpload` reutilizable
-- [x] **Perfil público del profesional**: Página server component con `generateMetadata()` dinámico + JSON-LD schema.org (Person, Service, AggregateRating)
-- [x] **Verificación de profesionales**: Badge de verificado con tooltip en perfil y listados, campo `verifiedAt` en schema
-- [x] **Certificaciones y experiencia**: CRUD de certificaciones, idiomas (tag input), años de experiencia en dashboard profesional + API endpoints
-
-### 3.2 Búsqueda y descubrimiento
-- [x] **Filtros avanzados en Explorar**: Rango de precio, idioma, disponibilidad inmediata, rating mínimo — panel colapsable con badge de filtros activos
-- [x] **Ordenación por relevancia**: Algoritmo scoring `rating*0.4 + log(reviewCount+1)*0.3 + hasAvailability*0.2 + normalized_price*0.1`
-- [x] **Profesionales destacados**: Sección rotativa en landing con seed diario (day-of-year modulo), top 4 de 8 candidatos con ≥1 review
-- [x] **Búsqueda por texto**: Server-side search en nombre, headline y bio con `contains` + `mode: insensitive`
-- [x] **Paginación**: Server-side con `?page=&limit=`, componente `Pagination` reutilizable con ellipsis, URL-based state con `useSearchParams`
-
-### 3.3 Sistema de reviews mejorado
-- [x] **Respuesta del profesional**: `POST /api/reviews/[id]/respond` — una respuesta por review, visible en perfil y dashboard
-- [x] **Reviews con categorías**: Puntualidad, conocimiento, comunicación, valor por dinero — modal con 5 star pickers en dashboard cliente
-- [x] **Reportar review**: `POST /api/reviews/[id]/report` — formulario inline con motivo, validación Zod
-
-### 3.4 UI/UX
-- [x] **Animaciones de transición entre páginas**: `template.tsx` con Framer Motion fade + y-translate (200ms, easeOut)
-- [x] **Skeleton loaders personalizados**: Skeletons actualizados para nuevo layout 3-columnas del perfil profesional
-- [x] **Toast notifications**: Sonner `<Toaster>` global — reemplazados todos los mensajes inline en dashboards
-- [x] **Modo offline**: PWA con `manifest.json` + service worker `sw.js` (network-first, cache estáticos, skip API routes)
-- [x] **Responsive refinado**: Filtros colapsables mobile, TabsList overflow-x-auto, booking card no-sticky mobile, category ratings stack vertical mobile
+### 1.5 Env y documentación de deploy
+- [ ] **`.env.example` completo**: Añadir todas las variables opcionales (Cloudinary, Upstash Redis, CRON_SECRET)
+- [ ] **Health check mejorado**: Incluir check de conexión a DB y servicios externos (Daily, Resend)
 
 ---
 
-## Fase 4: Funcionalidades Avanzadas
+## Fase 2 — Alta prioridad (Primeras semanas post-lanzamiento)
 
-### 4.1 Chat y mensajería
-- [ ] **Chat en tiempo real**: Mensajería entre cliente y profesional pre/post sesión
+> Retención de usuarios, confianza, y los flujos que convierten visitantes en usuarios recurrentes.
+
+### 2.1 Notificaciones in-app completas
+- [ ] **UI de notificaciones en dashboard**: `NotificationBell` con badge, dropdown de últimas notificaciones, marcar como leídas
+- [ ] **Página de historial de notificaciones**: Lista completa paginada con filtros por tipo
+- [ ] **Notificaciones push (opcional)**: Web Push API para notificar fuera del navegador
+
+### 2.2 Sistema de referidos
+- [ ] **Referidos profesional → profesional**: Código de invitación con bonus de impact points
+- [ ] **Referidos cliente → cliente**: Crédito extra por cada amigo que complete una sesión
+- [ ] **Dashboard de referidos**: Panel con referidos enviados, convertidos y beneficios acumulados
+- [ ] **Modelo `Referral`**: Ya existe en schema, falta implementar API + UI
+
+### 2.3 SEO y adquisición orgánica
+- [ ] **Landing pages por categoría**: `/coach`, `/psicologo`, `/mentor`, `/nutricionista` con contenido SEO específico
+- [ ] **Sitemap dinámico mejorado**: Incluir perfiles verificados + landing pages de categoría
+- [ ] **Open Graph dinámico**: Imágenes generadas (og:image) con datos del profesional para compartir en redes
+- [ ] **Blog integrado**: CMS simple (MDX o similar) para artículos sobre desarrollo profesional
+
+### 2.4 Confianza y seguridad (Trust & Safety)
+- [ ] **Verificación de identidad profesional**: Integración con servicio de verificación de documentos (DNI/pasaporte)
+- [ ] **2FA para profesionales**: TOTP o passkeys para cuentas con acceso a datos sensibles
+- [ ] **Política de disputas**: Flujo para que un cliente abra una disputa post-sesión con mediación
+- [ ] **Límites anti-abuso**: 1 sesión gratuita por combinación cliente-profesional (evitar farming de créditos)
+
+---
+
+## Fase 3 — Prioridad media (Meses 2-3)
+
+> Funcionalidades que mejoran la experiencia y diferencian la plataforma.
+
+### 3.1 Chat y mensajería
+- [ ] **Chat pre/post sesión**: Mensajería entre cliente y profesional vinculada a la sesión
 - [ ] **WebSockets o Supabase Realtime**: Para mensajes instantáneos
-- [ ] **Archivos adjuntos**: Compartir documentos/CV en el chat
-- [ ] **Historial de conversaciones**: Persistencia y búsqueda de mensajes
+- [ ] **Archivos adjuntos**: Compartir documentos/CV en el chat (Cloudinary o S3)
+- [ ] **Historial de conversaciones**: Persistencia con búsqueda
 
-### 4.2 Calendario y disponibilidad avanzada
-- [ ] **Integración con Google Calendar**: Sincronizar disponibilidad automáticamente
-- [ ] **Bloqueo de fechas específicas**: Vacaciones, días festivos, ausencias puntuales
-- [ ] **Zonas horarias**: Soporte multi-timezone para clientes internacionales
-- [ ] **Slots de duración variable**: Sesiones de 30, 45, 60, 90 min con precios diferentes
-- [ ] **Vista calendario visual**: Calendario interactivo tipo Google Calendar en el dashboard
+### 3.2 Calendario y disponibilidad avanzada
+- [ ] **Integración Google Calendar**: Sincronizar disponibilidad automáticamente (OAuth + Calendar API)
+- [ ] **Bloqueo de fechas específicas**: Vacaciones, festivos, ausencias puntuales
+- [ ] **Soporte multi-timezone**: Detección automática + selector para clientes internacionales
+- [ ] **Slots de duración variable**: Sesiones de 30, 45, 60, 90 min
+- [ ] **Vista calendario visual**: Calendario interactivo tipo Google Calendar en dashboard
 
-### 4.3 Paquetes y suscripciones
-- [ ] **Paquetes de sesiones**: Ej: "5 sesiones por 200€" con descuento
-- [ ] **Suscripción mensual**: Plan recurrente con X sesiones/mes
-- [ ] **Cupones y descuentos**: Sistema de códigos promocionales
-- [ ] **Primera sesión gratuita**: Opción para profesionales de ofrecer sesión de prueba
-
-### 4.4 Videollamada mejorada
-- [ ] **Grabación de sesiones**: Opción de grabar (con consentimiento) para revisión posterior
-- [ ] **Pizarra compartida**: Herramienta de dibujo/notas en tiempo real
+### 3.3 Videollamada mejorada
 - [ ] **Compartir pantalla**: Habilitar screen sharing en Daily.co
-- [ ] **Chat en videollamada**: Mensajes durante la sesión
+- [ ] **Chat en videollamada**: Mensajes de texto durante la sesión
+- [ ] **Grabación de sesiones**: Con consentimiento mutuo, para revisión posterior
+- [ ] **Error boundaries para Daily iframe**: Fallback UI si la conexión falla
+
+### 3.4 Deuda técnica
+- [ ] **Índice `@@index([professionalId, dayOfWeek])` en Availability**: Eliminar full scan en consultas de disponibilidad
+- [ ] **Índice en `Session.scheduledAt`**: Optimizar queries de cron por rango de tiempo
+- [ ] **Refactor `GET /api/sessions`**: Extraer `formatSessionForResponse()` y `buildSessionWhereClause()` para eliminar duplicación
+- [ ] **`select` explícito en queries Prisma**: Reducir payload en queries que hacen `include` completo
+- [ ] **Limpieza de sesiones expiradas**: Cron job para archivar/eliminar sesiones > 90 días
+- [ ] **Estandarizar `logger` vs `log`**: Eliminar alias deprecado `log`, usar `logger` en todo el codebase
 
 ---
 
-## Fase 5: Crecimiento y Escalabilidad
+## Fase 4 — Prioridad baja (Meses 3-6)
 
-### 5.1 SEO y Marketing
-- [ ] **Blog integrado**: CMS simple para artículos sobre desarrollo profesional
-- [ ] **Landing pages por categoría**: `/coach`, `/psicologo`, `/mentor` con SEO específico — *alta prioridad para tráfico orgánico*
-- [x] **Schema.org markup**: Structured data para profesionales (Person, Service, AggregateRating) — implementado en Fase 3.1
-- [ ] **Sitemap dinámico**: Incluir perfiles de profesionales verificados — *alta prioridad para indexación Google*
-- [ ] **Open Graph mejorado**: Imágenes dinámicas para compartir en redes sociales
+> Crecimiento, monetización premium, y escalabilidad.
 
-### 5.2 Panel de administración
-- [ ] **Dashboard admin**: Métricas de plataforma (usuarios, sesiones, ingresos, reviews)
-- [ ] **Gestión de usuarios**: Buscar, suspender, verificar profesionales
-- [ ] **Moderación de reviews**: Aprobar/rechazar reviews reportadas
-- [ ] **Configuración de plataforma**: Comisiones, categorías, emails
+### 4.1 Panel de administración
+- [ ] **Dashboard admin**: Métricas de plataforma (usuarios activos, sesiones/día, distribución por categoría, puntos de impacto)
+- [ ] **Gestión de usuarios**: Buscar, suspender, verificar profesionales, cambiar roles
+- [ ] **Moderación de reviews**: Cola de reviews reportadas con aprobar/rechazar/escalar
+- [ ] **Configuración de plataforma**: Gestionar categorías, comisiones, límites de créditos desde UI
+- [ ] **Categorías como tabla**: Migrar `ProfessionalCategory` enum a modelo `Category` gestionable desde admin
 
-### 5.3 Analytics y métricas
-- [ ] **Dashboard de métricas para profesionales**: Tasa de conversión, rating evolution, earnings chart
-- [ ] **Tracking de eventos**: Funnel de conversión (visita → perfil → booking → completada)
-- [ ] **A/B testing**: Framework para probar cambios en UI
+### 4.2 Monetización premium (Stripe reactivado)
+- [ ] **Tier premium para clientes**: Suscripción mensual con sesiones ilimitadas o paquetes (5, 10, 20)
+- [ ] **Stripe Connect para profesionales**: Onboarding + transferencias automáticas por sesiones premium
+- [ ] **Cupones y descuentos**: Sistema de códigos promocionales
+- [ ] **Facturación**: Generación automática de facturas PDF para clientes y profesionales
 
-### 5.4 Internacionalización
-- [ ] **i18n con next-intl**: Soporte multi-idioma (ES, EN, PT)
-- [ ] **Moneda local**: Precios en EUR, USD, GBP según ubicación
-- [ ] **Contenido localizado**: Categorías y UI traducidas
+### 4.3 Analytics y métricas
+- [ ] **Dashboard de métricas para profesionales**: Tasa de conversión visitas→booking, evolución de rating, sesiones por mes
+- [ ] **Funnel de conversión**: Tracking visita → perfil → booking → completada (Vercel Analytics events)
+- [ ] **A/B testing framework**: Para probar cambios en landing, CTAs, flujo de booking
 
-### 5.5 Infraestructura
-- [ ] **Rate limiting**: Proteger APIs de abuso (ej: upstash/ratelimit)
-- [ ] **Caché con Redis**: Cachear listados de profesionales, categorías
-- [ ] **CDN para imágenes**: Optimización automática con next/image + Cloudinary
-- [ ] **Monitoring**: Sentry para error tracking, Vercel Analytics para performance
-- [ ] **CI/CD mejorado**: Tests obligatorios en PR, deploy preview por branch
-- [ ] **Base de datos**: Índices optimizados, queries N+1 audit, connection pooling
-
-### 5.6 Confianza y Seguridad (Trust & Safety)
-- [ ] **Verificación de identidad**: Integración con Stripe Identity o similar para verificar DNI/pasaporte de profesionales
-- [ ] **Política de disputas**: Flujo para que un cliente abra una disputa post-sesión (reembolso parcial, mediación)
-- [ ] **Límites anti-abuso**: Evitar abuso del sistema de primera sesión gratuita (1 por usuario/profesional)
-- [ ] **2FA para profesionales**: Doble factor de autenticación en cuentas con acceso a pagos
+### 4.4 Internacionalización
+- [ ] **next-intl**: Soporte multi-idioma (ES, EN, PT) con detección automática
+- [ ] **Moneda local**: Precios en EUR, USD, GBP según ubicación (para tier premium)
+- [ ] **Contenido localizado**: Categorías, emails, mensajes de error traducidos
 
 ---
 
-## Prioridad Recomendada
+## Fase 5 — Largo plazo (6+ meses)
 
-| Prioridad | Fase | Razón |
-|-----------|------|-------|
-| Inmediata | Fase 0 | Sin validación real no hay producto viable a largo plazo |
-| Alta | Fase 1 | Sin estabilidad no hay producto viable |
-| Alta | Fase 2.1 | Sin pagos a profesionales no hay marketplace |
-| Alta | Fase 5.1 (SEO) | Landing pages y sitemap son críticos para tráfico orgánico temprano |
-| Media | Fase 2.2-2.3 | Mejoran retención de usuarios |
-| Media | Fase 3 | Diferenciación y experiencia premium |
-| Media | Fase 5.6 | Confianza es diferenciador clave en marketplaces de servicios |
-| Baja | Fase 4 | Features avanzados para escalar |
-| Baja | Fase 5 (resto) | Crecimiento a largo plazo |
+> Infraestructura de escala y features diferenciadoras.
+
+### 5.1 Infraestructura
+- [ ] **Caché con Redis**: Cachear listados de profesionales, categorías, perfiles populares
+- [ ] **CDN para imágenes**: Optimización automática con next/image + Cloudinary transforms
+- [ ] **Monitoring y alertas**: Sentry para error tracking + alertas en Slack/email por errores críticos
+- [ ] **`revalidatePath`/`revalidateTag`**: Invalidación de caché ISR en mutaciones de sesiones, perfil, reviews
+- [ ] **Migrar a Auth.js v5**: Mejor integración con App Router y Server Components
+- [ ] **Base de datos**: Audit de queries N+1, optimización de connection pooling, read replicas
+
+### 5.2 Features avanzadas
+- [ ] **Matching inteligente**: Algoritmo que sugiere profesionales basándose en historial, preferencias y disponibilidad
+- [ ] **Programa de fidelización**: Niveles de cliente (bronce, plata, oro) con beneficios incrementales
+- [ ] **API pública**: REST/GraphQL para integraciones con plataformas de RRHH
+- [ ] **App nativa**: React Native o Capacitor para iOS/Android
+- [ ] **Pizarra compartida en videollamada**: Herramienta de dibujo/notas en tiempo real
+
+---
+
+## Resumen de prioridades
+
+| Prioridad | Fase | Por qué |
+|-----------|------|---------|
+| **Crítica** | Fase 1 | Sin onboarding, seguridad y validación real no se puede lanzar |
+| **Alta** | Fase 2 | Retención, confianza y adquisición orgánica — lo que hace crecer la base de usuarios |
+| **Media** | Fase 3 | Diferenciación y experiencia premium — lo que retiene a largo plazo |
+| **Baja** | Fase 4 | Monetización y escala — necesario cuando hay tracción |
+| **Futura** | Fase 5 | Infraestructura de escala — cuando el volumen lo justifique |
+
+---
+
+## Criterio de trabajo
+
+1. **Primero lo que desbloquea lanzamiento** — onboarding profesional y seguridad son bloqueantes
+2. **No mezclar refactor con features** — separar cambios de schema/DB en ramas dedicadas
+3. **Validar con usuarios antes de construir** — la beta de Fase 1.3 informa qué priorizar en Fase 2+
+4. **Iterar rápido en fases tempranas** — PRs pequeños, deploy continuo, feedback loop corto
+5. **Medir antes de optimizar** — no cachear ni escalar hasta tener datos reales de uso
 
 ---
 
