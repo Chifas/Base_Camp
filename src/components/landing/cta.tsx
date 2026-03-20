@@ -68,8 +68,7 @@ export function CTA() {
               <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
                 <Button
                   size="lg"
-                  variant="secondary"
-                  className="w-full sm:w-auto group shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:shadow-[0_0_30px_rgba(255,255,255,0.25)] transition-all h-12 px-8 text-base"
+                  className="w-full sm:w-auto group !bg-white !text-indigo-700 hover:!bg-white/90 shadow-[0_0_25px_rgba(255,255,255,0.25)] hover:shadow-[0_0_35px_rgba(255,255,255,0.4)] transition-all h-12 px-8 text-base font-semibold"
                   asChild
                 >
                   <Link href="/auth/register">
@@ -80,7 +79,7 @@ export function CTA() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="w-full sm:w-auto !border-white/30 !text-white !bg-white/10 hover:!bg-white/20 h-12 px-8 text-base"
+                  className="w-full sm:w-auto !border-white/40 !text-white !bg-white/10 hover:!bg-white/20 hover:!border-white/60 h-12 px-8 text-base font-medium backdrop-blur-sm"
                   asChild
                 >
                   <Link href="/explore">Explorar profesionales</Link>

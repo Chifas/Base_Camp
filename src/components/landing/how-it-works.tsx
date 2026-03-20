@@ -14,7 +14,7 @@ const steps = [
     step: "01",
     title: "Encuentra a tu profesional",
     description:
-      "Explora nuestro directorio de profesionales verificados. Filtra por especialidad, precio, disponibilidad y valoraciones.",
+      "Explora nuestro directorio de profesionales verificados. Filtra por especialidad, disponibilidad y valoraciones.",
     accent: "from-blue-500 to-cyan-500",
     bg: "bg-blue-500/10",
     text: "text-blue-500",
@@ -24,7 +24,7 @@ const steps = [
     step: "02",
     title: "Reserva tu sesión",
     description:
-      "Elige el horario que mejor te venga y realiza el pago de forma segura. Recibirás la confirmación al instante.",
+      "Elige el horario que mejor te venga y confirma tu reserva gratuita al instante. Sin pagos, sin compromisos.",
     accent: "from-violet-500 to-purple-500",
     bg: "bg-violet-500/10",
     text: "text-violet-500",

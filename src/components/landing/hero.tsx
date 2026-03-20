@@ -113,7 +113,7 @@ export function Hero() {
             ].map((stat, i) => (
               <motion.div
                 key={stat.label}
-                className="group relative rounded-2xl border bg-background/60 backdrop-blur-sm p-4 sm:p-6 transition-all duration-300 hover:bg-background/80 hover:shadow-md"
+                className="group relative rounded-2xl border bg-background/70 backdrop-blur-md p-4 sm:p-6 transition-all duration-300 hover:bg-background/90 shadow-sm hover:shadow-lg dark:bg-background/60 dark:hover:bg-background/80 dark:hover:shadow-md"
                 whileHover={{ y: -2 }}
               >
                 <div className="flex flex-col items-center gap-2">

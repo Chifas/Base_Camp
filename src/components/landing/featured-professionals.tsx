@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Star, ArrowRight, CheckCircle2 } from "lucide-react";
+import { useRef, useState, useEffect } from "react";
+import { Star, ArrowRight, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
-import { FadeIn, StaggerContainer, StaggerItem } from "@/components/shared/motion-wrapper";
+import { FadeIn } from "@/components/shared/motion-wrapper";
 import type { Professional } from "@/types";
 
 interface FeaturedProfessionalsProps {
@@ -14,7 +15,35 @@ interface FeaturedProfessionalsProps {
 }
 
 export function FeaturedProfessionals({ professionals }: FeaturedProfessionalsProps) {
-  const featured = professionals;
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  const checkScroll = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 10);
+    setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 10);
+  };
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    checkScroll();
+    el.addEventListener("scroll", checkScroll, { passive: true });
+    window.addEventListener("resize", checkScroll);
+    return () => {
+      el.removeEventListener("scroll", checkScroll);
+      window.removeEventListener("resize", checkScroll);
+    };
+  }, []);
+
+  const scroll = (direction: "left" | "right") => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const cardWidth = el.querySelector("a")?.offsetWidth ?? 300;
+    el.scrollBy({ left: direction === "left" ? -cardWidth - 24 : cardWidth + 24, behavior: "smooth" });
+  };
 
   return (
     <section className="py-20 sm:py-28">
@@ -28,17 +57,57 @@ export function FeaturedProfessionals({ professionals }: FeaturedProfessionalsPr
               Los mejores profesionales te esperan
             </h2>
           </div>
-          <Button variant="ghost" className="hidden md:flex group" asChild>
-            <Link href="/explore">
-              Ver todos
-              <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-            </Link>
-          </Button>
+          <div className="hidden md:flex items-center gap-2">
+            {/* Navigation arrows */}
+            <button
+              onClick={() => scroll("left")}
+              disabled={!canScrollLeft}
+              className="flex h-10 w-10 items-center justify-center rounded-full border bg-background/80 backdrop-blur-sm transition-all hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed"
+              aria-label="Anterior"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+            <button
+              onClick={() => scroll("right")}
+              disabled={!canScrollRight}
+              className="flex h-10 w-10 items-center justify-center rounded-full border bg-background/80 backdrop-blur-sm transition-all hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed"
+              aria-label="Siguiente"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+            <Button variant="ghost" className="group ml-2" asChild>
+              <Link href="/explore">
+                Ver todos
+                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </Link>
+            </Button>
+          </div>
         </FadeIn>
+      </div>
 
-        <StaggerContainer className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {featured.map((pro) => (
-            <StaggerItem key={pro.id}>
+      {/* Horizontal scroll carousel */}
+      <div className="relative mt-12">
+        {/* Fade edges */}
+        {canScrollLeft && (
+          <div className="pointer-events-none absolute left-0 top-0 bottom-0 z-10 w-8 sm:w-20 bg-gradient-to-r from-background to-transparent" />
+        )}
+        {canScrollRight && (
+          <div className="pointer-events-none absolute right-0 top-0 bottom-0 z-10 w-8 sm:w-20 bg-gradient-to-l from-background to-transparent" />
+        )}
+
+        <div
+          ref={scrollRef}
+          className="flex gap-6 overflow-x-auto scroll-smooth px-4 sm:px-6 lg:px-[max(1.5rem,calc((100vw-80rem)/2+1.5rem))] pb-4 no-scrollbar"
+        >
+          {professionals.map((pro, index) => (
+            <motion.div
+              key={pro.id}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+              className="w-[280px] sm:w-[300px] shrink-0"
+            >
               <Link
                 href={`/professional/${pro.id}`}
                 className="group block"
@@ -55,7 +124,7 @@ export function FeaturedProfessionals({ professionals }: FeaturedProfessionalsPr
                       alt={pro.name}
                       fill
                       className="object-cover transition-transform duration-700 group-hover:scale-110"
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                      sizes="300px"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/5 to-transparent transition-all duration-500 group-hover:from-black/80" />
 
@@ -101,19 +170,19 @@ export function FeaturedProfessionals({ professionals }: FeaturedProfessionalsPr
                   </div>
                 </div>
               </Link>
-            </StaggerItem>
+            </motion.div>
           ))}
-        </StaggerContainer>
-
-        {/* Mobile view all button */}
-        <div className="mt-8 text-center md:hidden">
-          <Button variant="outline" asChild>
-            <Link href="/explore">
-              Ver todos los profesionales
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
-          </Button>
         </div>
+      </div>
+
+      {/* Mobile view all button */}
+      <div className="mt-8 text-center md:hidden px-4">
+        <Button variant="outline" asChild>
+          <Link href="/explore">
+            Ver todos los profesionales
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Link>
+        </Button>
       </div>
     </section>
   );
