@@ -196,7 +196,7 @@ async function main() {
   for (const { user, profile, availability } of profData) {
     const createdUser = await prisma.user.create({ data: user });
     const createdProfile = await prisma.professionalProfile.create({
-      data: { ...profile, userId: createdUser.id },
+      data: { ...profile, userId: createdUser.id, onboardingDone: true },
     });
     await prisma.availability.createMany({
       data: availability.map((a) => ({ ...a, professionalId: createdProfile.id })),
