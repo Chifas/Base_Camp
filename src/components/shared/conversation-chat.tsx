@@ -11,11 +11,9 @@ interface ChatMessage {
   id: string;
   content: string;
   createdAt: string;
-  user: {
-    id: string;
-    name: string | null;
-    image: string | null;
-  };
+  senderId: string;
+  senderName: string | null;
+  senderImage: string | null;
 }
 
 interface ConversationChatProps {
@@ -164,7 +162,7 @@ export function ConversationChat({
           </div>
         ) : (
           messages.map((msg) => {
-            const isOwn = msg.user.id === currentUserId;
+            const isOwn = msg.senderId === currentUserId;
             return (
               <div
                 key={msg.id}
@@ -172,10 +170,10 @@ export function ConversationChat({
               >
                 {/* Avatar */}
                 <div className="flex-shrink-0">
-                  {msg.user.image ? (
+                  {msg.senderImage ? (
                     <Image
-                      src={msg.user.image}
-                      alt={msg.user.name ?? "Usuario"}
+                      src={msg.senderImage}
+                      alt={msg.senderName ?? "Usuario"}
                       width={32}
                       height={32}
                       className="rounded-full object-cover"
@@ -183,7 +181,7 @@ export function ConversationChat({
                   ) : (
                     <div className="h-8 w-8 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
                       <span className="text-xs font-medium text-indigo-600 dark:text-indigo-400">
-                        {(msg.user.name ?? "U").charAt(0).toUpperCase()}
+                        {(msg.senderName ?? "U").charAt(0).toUpperCase()}
                       </span>
                     </div>
                   )}
@@ -196,7 +194,7 @@ export function ConversationChat({
                   }`}
                 >
                   <span className="text-[11px] text-muted-foreground mb-0.5 px-1">
-                    {msg.user.name ?? "Usuario"}
+                    {msg.senderName ?? "Usuario"}
                   </span>
                   <div
                     className={`rounded-2xl px-3 py-2 text-sm leading-relaxed ${
