@@ -78,6 +78,32 @@ export async function POST(req: Request) {
       );
     }
 
+    // Anti-abuse: max 1 free session per client-professional pair per month
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+
+    const existingWithProfessional = await prisma.session.findFirst({
+      where: {
+        clientId: session.user.id,
+        professionalId,
+        isFreeSession: true,
+        status: { in: ["CONFIRMED", "COMPLETED"] },
+        scheduledAt: {
+          gte: startOfMonth,
+          lte: endOfMonth,
+        },
+      },
+    });
+
+    if (existingWithProfessional) {
+      return NextResponse.json(
+        {
+          error: "Solo puedes reservar una sesión gratuita al mes con el mismo profesional",
+        },
+        { status: 429 }
+      );
+    }
+
     // Check scheduling conflicts
     const conflict = await prisma.session.findFirst({
       where: {

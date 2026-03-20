@@ -32,6 +32,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
+  // Category landing pages
+  const categoryPages: MetadataRoute.Sitemap = [
+    "mentor-de-carrera",
+    "coach",
+    "psicologo-laboral",
+    "nutricionista",
+  ].map((slug) => ({
+    url: `${siteUrl}/categoria/${slug}`,
+    lastModified: new Date(),
+    changeFrequency: "weekly" as const,
+    priority: 0.85,
+  }));
+
   // Dynamic professional profiles
   let professionalPages: MetadataRoute.Sitemap = [];
   try {
@@ -48,5 +61,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // If DB is unavailable, return static pages only
   }
 
-  return [...staticPages, ...professionalPages];
+  return [...staticPages, ...categoryPages, ...professionalPages];
 }

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -155,6 +156,14 @@ export function NotificationBell() {
               ))}
             </div>
           )}
+
+          <Link
+            href="/notifications"
+            onClick={() => setOpen(false)}
+            className="block border-t px-4 py-2.5 text-center text-xs font-medium text-primary hover:bg-muted/50 transition-colors"
+          >
+            Ver todas las notificaciones
+          </Link>
         </div>
       )}
     </div>

@@ -15,4 +15,7 @@ export const CREDITS_CONFIG = {
 
   /** Points required to redeem a philanthropic donation. */
   IMPACT_POINTS_DONATION: 50,
+
+  /** Max free sessions per client-professional pair per month. */
+  MAX_FREE_SESSIONS_PER_PROFESSIONAL: 1,
 } as const;
