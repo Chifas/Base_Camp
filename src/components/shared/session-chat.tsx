@@ -25,9 +25,11 @@ interface ChatMessage {
 interface SessionChatProps {
   sessionId: string;
   compact?: boolean;
+  /** When true the user can only respond to existing messages, not initiate */
+  viewOnly?: boolean;
 }
 
-export function SessionChat({ sessionId, compact = false }: SessionChatProps) {
+export function SessionChat({ sessionId, compact = false, viewOnly = false }: SessionChatProps) {
   const { data: session } = useSession();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
@@ -150,7 +152,9 @@ export function SessionChat({ sessionId, compact = false }: SessionChatProps) {
           <div className="flex flex-col items-center justify-center h-full text-center gap-2">
             <MessageSquare className="h-10 w-10 text-muted-foreground/30" />
             <p className="text-sm text-muted-foreground">
-              No hay mensajes todavia. Envia el primero.
+              {viewOnly
+                ? "El cliente aún no ha iniciado una conversación."
+                : "No hay mensajes todavía. Envía el primero."}
             </p>
           </div>
         ) : (

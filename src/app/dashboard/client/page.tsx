@@ -25,6 +25,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { PhotoUpload } from "@/components/shared/photo-upload";
 import { BetaFeedbackModal } from "@/components/shared/beta-feedback-modal";
 import { ReferralPanel } from "@/components/shared/referral-panel";
+import { SessionChat } from "@/components/shared/session-chat";
 import { STATUS_LABELS, type Session } from "@/types";
 import { formatDate, formatTime } from "@/lib/utils";
 import { CREDITS_CONFIG } from "@/lib/credits-config";
@@ -79,6 +80,7 @@ export default function ClientDashboard() {
   const [submittingReview, setSubmittingReview] = useState(false);
   const [reviewedSessionIds, setReviewedSessionIds] = useState<Set<string>>(new Set());
   const [feedbackSessionId, setFeedbackSessionId] = useState<string | null>(null);
+  const [chatSessionId, setChatSessionId] = useState<string | null>(null);
 
   // Credits state
   const [credits, setCredits] = useState<{ used: number; limit: number; remaining: number } | null>(null);
@@ -287,6 +289,12 @@ export default function ClientDashboard() {
                       >
                         {STATUS_LABELS[session.status]}
                       </Badge>
+                      {["PENDING", "CONFIRMED"].includes(session.status) && (
+                        <Button size="sm" variant="outline" onClick={() => setChatSessionId(session.id)}>
+                          <MessageSquare className="mr-2 h-4 w-4" />
+                          Chat
+                        </Button>
+                      )}
                       {session.status === "CONFIRMED" && (() => {
                         void now; // re-render on tick
                         const canJoin = isJoinEnabled(session.scheduledAt, session.duration);
@@ -371,6 +379,16 @@ export default function ClientDashboard() {
                       >
                         <Star className="mr-2 h-4 w-4" />
                         Dejar reseña
+                      </Button>
+                    )}
+                    {session.status === "COMPLETED" && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setChatSessionId(session.id)}
+                      >
+                        <MessageSquare className="mr-2 h-4 w-4" />
+                        Chat
                       </Button>
                     )}
                     {session.status === "COMPLETED" && (
@@ -515,6 +533,26 @@ export default function ClientDashboard() {
                 {submittingReview && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Enviar reseña
               </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Chat modal */}
+      {chatSessionId && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center bg-black/50">
+          <div className="mx-0 sm:mx-4 w-full max-w-lg rounded-t-xl sm:rounded-xl border bg-card shadow-xl flex flex-col" style={{ height: "min(600px, 80vh)" }}>
+            <div className="flex items-center justify-between border-b px-4 py-3">
+              <h3 className="font-heading text-base font-semibold">Chat de sesión</h3>
+              <button
+                onClick={() => setChatSessionId(null)}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <SessionChat sessionId={chatSessionId} />
             </div>
           </div>
         </div>
