@@ -30,9 +30,12 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
   themeColor: "#4f46e5",
   icons: {
-    icon: "/favicon.svg",
-    shortcut: "/favicon.svg",
-    apple: "/favicon.svg",
+    icon: [
+      { url: "/logo.svg", type: "image/svg+xml" },
+      { url: "/logo.png", type: "image/png" },
+    ],
+    shortcut: "/logo.png",
+    apple: "/logo.png",
   },
   title: {
     default: "GuidePath — Encuentra tu camino con profesionales que te guían",
