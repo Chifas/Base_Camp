@@ -19,11 +19,14 @@ interface ChatMessage {
 interface ConversationChatProps {
   conversationId: string;
   canSendFirst?: boolean;
+  /** When true, removes outer wrapper/header — designed to fill parent */
+  embedded?: boolean;
 }
 
 export function ConversationChat({
   conversationId,
   canSendFirst = true,
+  embedded = false,
 }: ConversationChatProps) {
   const { data: session } = useSession();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -128,9 +131,13 @@ export function ConversationChat({
     return "El cliente a\u00fan no ha iniciado la conversaci\u00f3n.";
   };
 
+  const wrapperClass = embedded
+    ? "flex flex-col h-full"
+    : "glass rounded-2xl flex flex-col h-[600px]";
+
   if (loading) {
     return (
-      <div className="glass rounded-2xl flex flex-col items-center justify-center gap-3 h-[600px]">
+      <div className={`${wrapperClass} items-center justify-center gap-3`}>
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         <p className="text-sm text-muted-foreground">Cargando mensajes...</p>
       </div>
@@ -138,15 +145,17 @@ export function ConversationChat({
   }
 
   return (
-    <div className="glass rounded-2xl flex flex-col h-[600px]">
-      {/* Header */}
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-border/50">
-        <MessageSquare className="h-4 w-4 text-indigo-500" />
-        <h3 className="text-sm font-semibold">Conversaci&oacute;n</h3>
-        <span className="text-xs text-muted-foreground ml-auto">
-          {messages.length} mensaje{messages.length !== 1 ? "s" : ""}
-        </span>
-      </div>
+    <div className={wrapperClass}>
+      {/* Header — hidden when embedded (parent provides its own) */}
+      {!embedded && (
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-border/50">
+          <MessageSquare className="h-4 w-4 text-indigo-500" />
+          <h3 className="text-sm font-semibold">Conversación</h3>
+          <span className="text-xs text-muted-foreground ml-auto">
+            {messages.length} mensaje{messages.length !== 1 ? "s" : ""}
+          </span>
+        </div>
+      )}
 
       {/* Messages container */}
       <div

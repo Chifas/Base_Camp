@@ -26,8 +26,6 @@ import { PhotoUpload } from "@/components/shared/photo-upload";
 import { BetaFeedbackModal } from "@/components/shared/beta-feedback-modal";
 import { ReferralPanel } from "@/components/shared/referral-panel";
 import { SessionChat } from "@/components/shared/session-chat";
-import { ConversationList } from "@/components/shared/conversation-list";
-import { ConversationChat } from "@/components/shared/conversation-chat";
 import { STATUS_LABELS, type Session } from "@/types";
 import { formatDate, formatTime } from "@/lib/utils";
 import { CREDITS_CONFIG } from "@/lib/credits-config";
@@ -83,7 +81,6 @@ export default function ClientDashboard() {
   const [reviewedSessionIds, setReviewedSessionIds] = useState<Set<string>>(new Set());
   const [feedbackSessionId, setFeedbackSessionId] = useState<string | null>(null);
   const [chatSessionId, setChatSessionId] = useState<string | null>(null);
-  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
 
   // Credits state
   const [credits, setCredits] = useState<{ used: number; limit: number; remaining: number } | null>(null);
@@ -229,10 +226,6 @@ export default function ClientDashboard() {
             </TabsTrigger>
             <TabsTrigger value="past">
               Historial ({pastSessions.length})
-            </TabsTrigger>
-            <TabsTrigger value="messages">
-              <MessageSquare className="mr-1.5 h-4 w-4" />
-              Mensajes
             </TabsTrigger>
             <TabsTrigger value="referrals">Referidos</TabsTrigger>
             <TabsTrigger value="profile">Mi perfil</TabsTrigger>
@@ -414,29 +407,6 @@ export default function ClientDashboard() {
             </div>
             )}
           </TabsContent>
-          {/* ===== Messages (Direct) ===== */}
-          <TabsContent value="messages" className="mt-6">
-            <div className="grid gap-4 md:grid-cols-[320px_1fr]">
-              <ConversationList
-                onSelectConversation={setSelectedConversationId}
-                selectedId={selectedConversationId}
-              />
-              {selectedConversationId ? (
-                <ConversationChat
-                  conversationId={selectedConversationId}
-                  canSendFirst
-                />
-              ) : (
-                <div className="hidden md:flex flex-col items-center justify-center rounded-2xl border bg-card p-12 text-center">
-                  <MessageSquare className="h-12 w-12 text-muted-foreground/30" />
-                  <p className="mt-4 text-sm text-muted-foreground">
-                    Selecciona una conversación o envía un mensaje desde el perfil de un profesional.
-                  </p>
-                </div>
-              )}
-            </div>
-          </TabsContent>
-
           {/* ===== Referrals ===== */}
           <TabsContent value="referrals" className="mt-6">
             <ReferralPanel

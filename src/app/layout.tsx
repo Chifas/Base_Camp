@@ -7,6 +7,7 @@ import { Footer } from "@/components/layout/footer";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Toaster } from "sonner";
+import { ChatWidget } from "@/components/shared/chat-widget";
 import "./globals.css";
 
 const inter = localFont({
@@ -122,6 +123,7 @@ export default function RootLayout({
               <main className="flex-1">{children}</main>
               <Footer />
             </div>
+            <ChatWidget />
           </AuthSessionProvider>
           <Toaster richColors position="top-right" />
         </ThemeProvider>

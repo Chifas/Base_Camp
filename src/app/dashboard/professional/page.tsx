@@ -44,8 +44,6 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { PhotoUpload } from "@/components/shared/photo-upload";
 import { ReferralPanel } from "@/components/shared/referral-panel";
 import { SessionChat } from "@/components/shared/session-chat";
-import { ConversationList } from "@/components/shared/conversation-list";
-import { ConversationChat } from "@/components/shared/conversation-chat";
 import ProfileCompleteness from "@/components/shared/ProfileCompleteness";
 import { formatDate, formatTime } from "@/lib/utils";
 import { CREDITS_CONFIG } from "@/lib/credits-config";
@@ -179,7 +177,6 @@ export default function ProfessionalDashboard() {
 
   // Chat state
   const [chatSessionId, setChatSessionId] = useState<string | null>(null);
-  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
 
   // Referrals
   const [referrals, setReferrals] = useState<{ referrals: never[]; stats: { total: 0; completed: 0; pending: 0; totalCredits: 0 } }>({ referrals: [], stats: { total: 0, completed: 0, pending: 0, totalCredits: 0 } });
@@ -492,10 +489,6 @@ export default function ProfessionalDashboard() {
             <TabsTrigger value="sessions">
               Sesiones ({confirmedSessions.length + pendingSessions.length})
             </TabsTrigger>
-            <TabsTrigger value="messages">
-              <MessageSquare className="mr-1.5 h-4 w-4" />
-              Mensajes
-            </TabsTrigger>
             <TabsTrigger value="availability">Disponibilidad</TabsTrigger>
             <TabsTrigger value="profile">Perfil</TabsTrigger>
             <TabsTrigger value="reviews">Reseñas ({reviews.length})</TabsTrigger>
@@ -615,29 +608,6 @@ export default function ProfessionalDashboard() {
                       </div>
                     </motion.div>
                   ))}
-                </div>
-              )}
-            </div>
-          </TabsContent>
-
-          {/* ===== Messages (Direct) ===== */}
-          <TabsContent value="messages" className="mt-6">
-            <div className="grid gap-4 md:grid-cols-[320px_1fr]">
-              <ConversationList
-                onSelectConversation={setSelectedConversationId}
-                selectedId={selectedConversationId}
-              />
-              {selectedConversationId ? (
-                <ConversationChat
-                  conversationId={selectedConversationId}
-                  canSendFirst={false}
-                />
-              ) : (
-                <div className="hidden md:flex flex-col items-center justify-center rounded-2xl border bg-card p-12 text-center">
-                  <MessageSquare className="h-12 w-12 text-muted-foreground/30" />
-                  <p className="mt-4 text-sm text-muted-foreground">
-                    Selecciona una conversación para ver los mensajes de tus clientes.
-                  </p>
                 </div>
               )}
             </div>
