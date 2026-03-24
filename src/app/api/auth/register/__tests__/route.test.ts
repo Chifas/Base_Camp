@@ -47,13 +47,13 @@ describe("POST /api/auth/register", () => {
     expect(res.status).toBe(400);
   });
 
-  it("returns 409 when email already exists", async () => {
+  it("returns generic 400 when email already exists (prevents user enumeration)", async () => {
     mockFindUnique.mockResolvedValue({ id: "existing" } as never);
 
     const res = await POST(makeRequest({ name: "Test", email: "a@b.com", password: "12345678" }));
-    expect(res.status).toBe(409);
+    expect(res.status).toBe(400);
     const data = await res.json();
-    expect(data.error).toContain("ya está registrado");
+    expect(data.error).toBeDefined();
   });
 
   it("creates user successfully", async () => {
