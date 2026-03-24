@@ -13,13 +13,16 @@ import { logger } from "@/lib/logger";
  * Protected by CRON_SECRET header (set in Vercel Cron or external cron).
  */
 export async function GET(req: Request) {
-  // Verify cron secret
+  // Verify cron secret — fail-closed if not configured
   const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret) {
-    const authHeader = req.headers.get("authorization");
-    if (authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-    }
+  if (!cronSecret) {
+    logger.error("CRON_SECRET not configured — rejecting request");
+    return NextResponse.json({ error: "Configuración de seguridad faltante" }, { status: 500 });
+  }
+
+  const authHeader = req.headers.get("authorization");
+  if (authHeader !== `Bearer ${cronSecret}`) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
   try {

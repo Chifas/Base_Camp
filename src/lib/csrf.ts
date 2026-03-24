@@ -9,11 +9,11 @@ export function validateOrigin(req: NextRequest): boolean {
   const origin = req.headers.get("origin");
   const referer = req.headers.get("referer");
 
-  // Allow requests with no origin (same-origin non-CORS requests from some browsers)
-  // but require at least one header to be present for POST/PUT/PATCH/DELETE
+  // Fail-closed: require at least one header for mutation requests.
+  // Requests with neither Origin nor Referer are rejected to prevent CSRF
+  // from tools/browsers that strip these headers.
   if (!origin && !referer) {
-    // Server-to-server or same-origin — safe in most cases
-    return true;
+    return false;
   }
 
   const allowedHost = process.env.NEXTAUTH_URL

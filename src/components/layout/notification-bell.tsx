@@ -79,7 +79,10 @@ export function NotificationBell() {
       setUnreadCount((c) => Math.max(0, c - 1));
     }
     setOpen(false);
-    if (n.link) router.push(n.link);
+    // Only allow internal paths to prevent open redirect attacks
+    if (n.link && n.link.startsWith("/") && !n.link.startsWith("//")) {
+      router.push(n.link);
+    }
   };
 
   const formatTimeAgo = (dateStr: string) => {

@@ -4,9 +4,19 @@ import bcrypt from "bcryptjs";
 import { registerSchema } from "@/lib/validations";
 import { stripHtml } from "@/lib/sanitize";
 import { logger } from "@/lib/logger";
+import { registerLimiter, getClientIp, checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
   try {
+    // Rate limit: max 5 registrations per hour per IP
+    const rl = await checkRateLimit(registerLimiter(), getClientIp(req));
+    if (!rl.success) {
+      return NextResponse.json(
+        { error: "Demasiados intentos. Inténtalo más tarde." },
+        { status: 429 }
+      );
+    }
+
     const body = await req.json();
     const parsed = registerSchema.safeParse(body);
     if (!parsed.success) {
@@ -21,13 +31,14 @@ export async function POST(req: Request) {
 
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
+      // Generic error to prevent user enumeration
       return NextResponse.json(
-        { error: "Este email ya está registrado" },
-        { status: 409 }
+        { error: "No se pudo crear la cuenta. Inténtalo de nuevo." },
+        { status: 400 }
       );
     }
 
-    const hashed = await bcrypt.hash(password, 10);
+    const hashed = await bcrypt.hash(password, 12);
     await prisma.user.create({
       data: {
         name,

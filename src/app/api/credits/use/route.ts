@@ -7,6 +7,17 @@ import { sendBookingEmails, type EmailSessionData } from "@/lib/emails";
 import { createNotifications } from "@/lib/notifications";
 import { stripHtml } from "@/lib/sanitize";
 import { logger } from "@/lib/logger";
+import { z } from "zod";
+
+const bookSessionSchema = z.object({
+  professionalId: z.string().min(1, "professionalId es obligatorio"),
+  scheduledAt: z.string().min(1, "scheduledAt es obligatorio").refine(
+    (val) => !isNaN(new Date(val).getTime()),
+    "scheduledAt debe ser una fecha válida"
+  ),
+  duration: z.number().int().min(15).max(180).default(60),
+  notes: z.string().max(5000).optional(),
+});
 
 /**
  * POST /api/credits/use — book a free session using credits.
@@ -20,49 +31,21 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { professionalId, scheduledAt, duration = 60, notes } = body;
 
-    if (!professionalId || !scheduledAt) {
+    // Validate input with Zod
+    const parsed = bookSessionSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: "professionalId y scheduledAt son obligatorios" },
+        { error: parsed.error.errors[0].message },
         { status: 400 }
       );
     }
 
-    // Fetch user to check credits
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { freeCreditsUsed: true, creditsResetAt: true, name: true, email: true },
-    });
+    const { professionalId: validProfId, scheduledAt: validScheduledAt, duration: validDuration, notes: validNotes } = parsed.data;
 
-    if (!user) {
-      return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
-    }
-
-    // Auto-reset credits if month changed
-    const now = new Date();
-    const resetAt = user.creditsResetAt ? new Date(user.creditsResetAt) : null;
-    let currentUsed = user.freeCreditsUsed;
-
-    if (!resetAt || resetAt.getMonth() !== now.getMonth() || resetAt.getFullYear() !== now.getFullYear()) {
-      currentUsed = 0;
-      await prisma.user.update({
-        where: { id: session.user.id },
-        data: { freeCreditsUsed: 0, creditsResetAt: now },
-      });
-    }
-
-    // Check credits available
-    if (currentUsed >= CREDITS_CONFIG.FREE_SESSIONS_PER_MONTH) {
-      return NextResponse.json(
-        { error: "Has agotado tus sesiones gratuitas este mes", creditsRemaining: 0 },
-        { status: 403 }
-      );
-    }
-
-    // Fetch professional
+    // Fetch professional (outside transaction — read-only)
     const profile = await prisma.professionalProfile.findUnique({
-      where: { id: professionalId },
+      where: { id: validProfId },
       include: { user: { select: { id: true, name: true, email: true } } },
     });
 
@@ -70,7 +53,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Profesional no encontrado" }, { status: 404 });
     }
 
-    // Prevent booking yourself
     if (profile.userId === session.user.id) {
       return NextResponse.json(
         { error: "No puedes reservar una sesión contigo mismo" },
@@ -78,87 +60,106 @@ export async function POST(req: Request) {
       );
     }
 
-    // Anti-abuse: max 1 free session per client-professional pair per month
+    // === Atomic transaction: credit check + deduction + session creation ===
+    const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
-
-    const existingWithProfessional = await prisma.session.findFirst({
-      where: {
-        clientId: session.user.id,
-        professionalId,
-        isFreeSession: true,
-        status: { in: ["CONFIRMED", "COMPLETED"] },
-        scheduledAt: {
-          gte: startOfMonth,
-          lte: endOfMonth,
-        },
-      },
-    });
-
-    if (existingWithProfessional) {
-      return NextResponse.json(
-        {
-          error: "Solo puedes reservar una sesión gratuita al mes con el mismo profesional",
-        },
-        { status: 429 }
-      );
-    }
-
-    // Check if professional has blocked this date
-    const requestedDate = new Date(scheduledAt);
+    const requestedDate = new Date(validScheduledAt);
     const dateOnly = new Date(requestedDate.getFullYear(), requestedDate.getMonth(), requestedDate.getDate());
+    const sessionEnd = new Date(requestedDate.getTime() + validDuration * 60 * 1000);
 
-    const isBlocked = await prisma.blockedDate.findFirst({
-      where: {
-        professionalId,
-        date: dateOnly,
-      },
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. Fetch user and check credits (inside transaction for consistency)
+      const user = await tx.user.findUnique({
+        where: { id: session.user.id },
+        select: { freeCreditsUsed: true, creditsResetAt: true, name: true, email: true },
+      });
+
+      if (!user) throw new Error("USER_NOT_FOUND");
+
+      // Auto-reset credits if month changed
+      const resetAt = user.creditsResetAt ? new Date(user.creditsResetAt) : null;
+      let currentUsed = user.freeCreditsUsed;
+
+      if (!resetAt || resetAt.getMonth() !== now.getMonth() || resetAt.getFullYear() !== now.getFullYear()) {
+        currentUsed = 0;
+      }
+
+      // Check credits available
+      if (currentUsed >= CREDITS_CONFIG.FREE_SESSIONS_PER_MONTH) {
+        throw new Error("CREDITS_EXHAUSTED");
+      }
+
+      // 2. Anti-abuse: max 1 free session per client-professional pair per month
+      const existingWithProfessional = await tx.session.findFirst({
+        where: {
+          clientId: session.user.id,
+          professionalId: validProfId,
+          isFreeSession: true,
+          status: { in: ["CONFIRMED", "COMPLETED"] },
+          scheduledAt: { gte: startOfMonth, lte: endOfMonth },
+        },
+      });
+
+      if (existingWithProfessional) throw new Error("DUPLICATE_BOOKING");
+
+      // 3. Check blocked date
+      const isBlocked = await tx.blockedDate.findFirst({
+        where: { professionalId: validProfId, date: dateOnly },
+      });
+
+      if (isBlocked) throw new Error("DATE_BLOCKED");
+
+      // 4. Duration-aware scheduling conflict check
+      const conflict = await tx.session.findFirst({
+        where: {
+          professionalId: validProfId,
+          status: { in: ["PENDING", "CONFIRMED"] },
+          AND: [
+            { scheduledAt: { lt: sessionEnd } },
+            {
+              scheduledAt: {
+                gte: new Date(requestedDate.getTime() - validDuration * 60 * 1000),
+              },
+            },
+          ],
+        },
+      });
+
+      if (conflict) throw new Error("SCHEDULE_CONFLICT");
+
+      // 5. Create session + deduct credit atomically
+      const dbSession = await tx.session.create({
+        data: {
+          clientId: session.user.id,
+          professionalId: validProfId,
+          scheduledAt: requestedDate,
+          duration: validDuration,
+          price: 0,
+          isFreeSession: true,
+          status: "CONFIRMED",
+          notes: validNotes ? stripHtml(validNotes) : null,
+        },
+      });
+
+      await tx.user.update({
+        where: { id: session.user.id },
+        data: {
+          freeCreditsUsed: currentUsed + 1,
+          creditsResetAt: currentUsed === 0 && (!resetAt || resetAt.getMonth() !== now.getMonth())
+            ? now
+            : undefined,
+        },
+      });
+
+      return {
+        dbSession,
+        user,
+        creditsRemaining: CREDITS_CONFIG.FREE_SESSIONS_PER_MONTH - (currentUsed + 1),
+      };
     });
 
-    if (isBlocked) {
-      return NextResponse.json(
-        { error: "El profesional no está disponible en esta fecha" },
-        { status: 409 }
-      );
-    }
-
-    // Check scheduling conflicts
-    const conflict = await prisma.session.findFirst({
-      where: {
-        professionalId,
-        scheduledAt: new Date(scheduledAt),
-        status: { in: ["PENDING", "CONFIRMED"] },
-      },
-    });
-
-    if (conflict) {
-      return NextResponse.json(
-        { error: "Este horario ya no está disponible" },
-        { status: 409 }
-      );
-    }
-
-    // Create session (CONFIRMED directly — no payment needed)
-    const dbSession = await prisma.session.create({
-      data: {
-        clientId: session.user.id,
-        professionalId,
-        scheduledAt: new Date(scheduledAt),
-        duration,
-        price: 0,
-        isFreeSession: true,
-        status: "CONFIRMED",
-        notes: notes ? stripHtml(notes) : null,
-      },
-    });
-
-    // Deduct credit
-    await prisma.user.update({
-      where: { id: session.user.id },
-      data: { freeCreditsUsed: currentUsed + 1 },
-    });
-
-    const creditsRemaining = CREDITS_CONFIG.FREE_SESSIONS_PER_MONTH - (currentUsed + 1);
+    const { dbSession, user, creditsRemaining } = result;
 
     logger.info("Free session booked", {
       sessionId: dbSession.id,
@@ -200,7 +201,22 @@ export async function POST(req: Request) {
       status: "CONFIRMED",
     });
   } catch (error) {
-    logger.error("Error booking free session", { error: String(error) });
+    const msg = error instanceof Error ? error.message : String(error);
+
+    // Map transaction errors to user-facing responses
+    const txErrors: Record<string, { error: string; status: number }> = {
+      USER_NOT_FOUND: { error: "Usuario no encontrado", status: 404 },
+      CREDITS_EXHAUSTED: { error: "Has agotado tus sesiones gratuitas este mes", status: 403 },
+      DUPLICATE_BOOKING: { error: "Solo puedes reservar una sesión gratuita al mes con el mismo profesional", status: 429 },
+      DATE_BLOCKED: { error: "El profesional no está disponible en esta fecha", status: 409 },
+      SCHEDULE_CONFLICT: { error: "Este horario ya no está disponible", status: 409 },
+    };
+
+    if (txErrors[msg]) {
+      return NextResponse.json({ error: txErrors[msg].error }, { status: txErrors[msg].status });
+    }
+
+    logger.error("Error booking free session", { error: msg });
     return NextResponse.json(
       { error: "Error al reservar la sesión" },
       { status: 500 }

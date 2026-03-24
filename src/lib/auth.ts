@@ -8,7 +8,7 @@ import { env } from "@/lib/env";
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma) as NextAuthOptions["adapter"],
-  session: { strategy: "jwt" },
+  session: { strategy: "jwt", maxAge: 24 * 60 * 60 /* 24 hours */ },
   secret: env.NEXTAUTH_SECRET,
   pages: {
     signIn: "/auth/login",
@@ -36,14 +36,16 @@ export const authOptions: NextAuthOptions = {
           where: { email: credentials.email },
         });
 
-        if (!user || !user.password) return null;
-
+        // Always run bcrypt.compare to prevent timing-based user enumeration.
+        // If user doesn't exist, compare against a dummy hash so the response
+        // time is indistinguishable from a real comparison.
+        const DUMMY_HASH = "$2a$12$000000000000000000000uGByljMPHflRJyIQFa4jGOVnPg1qjgcW";
         const passwordMatch = await bcrypt.compare(
           credentials.password,
-          user.password
+          user?.password || DUMMY_HASH
         );
 
-        if (!passwordMatch) return null;
+        if (!user || !user.password || !passwordMatch) return null;
 
         return {
           id: user.id,
