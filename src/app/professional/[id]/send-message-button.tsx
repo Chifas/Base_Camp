@@ -69,8 +69,12 @@ export function SendMessageButton({ professionalId, professionalName }: SendMess
 
       {/* Chat modal */}
       {conversationId && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center bg-black/50">
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center sm:items-center bg-black/50"
+          onClick={() => setConversationId(null)}
+        >
           <div
+            onClick={(e) => e.stopPropagation()}
             className="mx-0 sm:mx-4 w-full max-w-lg rounded-t-xl sm:rounded-xl border bg-card shadow-xl flex flex-col"
             style={{ height: "min(600px, 80vh)" }}
           >
