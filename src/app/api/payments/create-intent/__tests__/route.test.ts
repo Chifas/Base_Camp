@@ -9,7 +9,7 @@ vi.mock("@/lib/auth", () => ({
 }));
 
 vi.mock("@/lib/logger", () => ({
-  log: { info: vi.fn(), error: vi.fn() },
+  logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() },
 }));
 
 const mockPaymentIntentsCreate = vi.fn();

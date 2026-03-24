@@ -43,6 +43,7 @@ import { DashboardSkeleton } from "@/components/shared/dashboard-skeleton";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PhotoUpload } from "@/components/shared/photo-upload";
 import { ReferralPanel } from "@/components/shared/referral-panel";
+import { SessionChat } from "@/components/shared/session-chat";
 import ProfileCompleteness from "@/components/shared/ProfileCompleteness";
 import { formatDate, formatTime } from "@/lib/utils";
 import { CREDITS_CONFIG } from "@/lib/credits-config";
@@ -82,6 +83,7 @@ interface SessionItem {
   status: string;
   price: number;
   dailyRoomUrl?: string | null;
+  messageCount?: number;
 }
 
 interface ProfileData {
@@ -172,6 +174,9 @@ export default function ProfessionalDashboard() {
   // Impact / Rewards state
   const [redemptions, setRedemptions] = useState<RedemptionItem[]>([]);
   const [redeemingType, setRedeemingType] = useState<string | null>(null);
+
+  // Chat state
+  const [chatSessionId, setChatSessionId] = useState<string | null>(null);
 
   // Referrals
   const [referrals, setReferrals] = useState<{ referrals: never[]; stats: { total: 0; completed: 0; pending: 0; totalCredits: 0 } }>({ referrals: [], stats: { total: 0, completed: 0, pending: 0, totalCredits: 0 } });
@@ -514,6 +519,16 @@ export default function ProfessionalDashboard() {
                         </div>
                       </div>
                       <div className="flex gap-2">
+                        {(session.messageCount ?? 0) > 0 && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setChatSessionId(session.id)}
+                          >
+                            <MessageSquare className="mr-1 h-4 w-4" />
+                            Mensajes ({session.messageCount})
+                          </Button>
+                        )}
                         <Button
                           size="sm"
                           variant="outline"
@@ -576,6 +591,16 @@ export default function ProfessionalDashboard() {
                         <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-400">
                           Gratuita
                         </span>
+                        {(session.messageCount ?? 0) > 0 && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setChatSessionId(session.id)}
+                          >
+                            <MessageSquare className="mr-2 h-4 w-4" />
+                            Mensajes ({session.messageCount})
+                          </Button>
+                        )}
                         <Button size="sm" onClick={() => router.push(`/session/${session.id}`)}>
                           <Video className="mr-2 h-4 w-4" />
                           Iniciar sesión
@@ -1186,6 +1211,29 @@ export default function ProfessionalDashboard() {
           </TabsContent>
         </Tabs>
       </FadeIn>
+
+      {/* Chat modal — professionals can only view/respond, never initiate */}
+      {chatSessionId && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center bg-black/50">
+          <div
+            className="mx-0 sm:mx-4 w-full max-w-lg rounded-t-xl sm:rounded-xl border bg-card shadow-xl flex flex-col"
+            style={{ height: "min(600px, 80vh)" }}
+          >
+            <div className="flex items-center justify-between border-b px-4 py-3">
+              <h3 className="font-heading text-base font-semibold">Mensajes del cliente</h3>
+              <button
+                onClick={() => setChatSessionId(null)}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <SessionChat sessionId={chatSessionId} viewOnly />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

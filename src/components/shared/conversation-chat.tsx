@@ -10,32 +10,29 @@ import { Input } from "@/components/ui/input";
 interface ChatMessage {
   id: string;
   content: string;
-  type: string;
-  fileUrl?: string | null;
-  fileName?: string | null;
-  read: boolean;
   createdAt: string;
-  user: {
-    id: string;
-    name: string | null;
-    image: string | null;
-  };
+  senderId: string;
+  senderName: string | null;
+  senderImage: string | null;
 }
 
-interface SessionChatProps {
-  sessionId: string;
-  compact?: boolean;
-  /** When true the user can only respond to existing messages, not initiate */
-  viewOnly?: boolean;
+interface ConversationChatProps {
+  conversationId: string;
+  canSendFirst?: boolean;
+  /** When true, removes outer wrapper/header — designed to fill parent */
+  embedded?: boolean;
 }
 
-export function SessionChat({ sessionId, compact = false, viewOnly = false }: SessionChatProps) {
+export function ConversationChat({
+  conversationId,
+  canSendFirst = true,
+  embedded = false,
+}: ConversationChatProps) {
   const { data: session } = useSession();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const [_hasMore, setHasMore] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const currentUserId = session?.user?.id;
@@ -46,20 +43,22 @@ export function SessionChat({ sessionId, compact = false, viewOnly = false }: Se
 
   const fetchMessages = useCallback(async () => {
     try {
-      const res = await fetch(`/api/messages?sessionId=${sessionId}&limit=50`);
+      const res = await fetch(
+        `/api/conversations/${conversationId}/messages?limit=50`
+      );
       if (!res.ok) return;
       const data = await res.json();
-      setMessages(data.messages);
-      setHasMore(data.hasMore);
+      setMessages(data.messages ?? data);
     } catch {
       // silently fail polling
     } finally {
       setLoading(false);
     }
-  }, [sessionId]);
+  }, [conversationId]);
 
   // Initial fetch
   useEffect(() => {
+    setLoading(true);
     fetchMessages();
   }, [fetchMessages]);
 
@@ -80,15 +79,18 @@ export function SessionChat({ sessionId, compact = false, viewOnly = false }: Se
 
     setSending(true);
     try {
-      const res = await fetch("/api/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId, content: newMessage.trim() }),
-      });
+      const res = await fetch(
+        `/api/conversations/${conversationId}/messages`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ content: newMessage.trim() }),
+        }
+      );
 
       if (res.ok) {
         const data = await res.json();
-        setMessages((prev) => [...prev, data.message]);
+        setMessages((prev) => [...prev, data.message ?? data]);
         setNewMessage("");
       }
     } catch {
@@ -104,7 +106,10 @@ export function SessionChat({ sessionId, compact = false, viewOnly = false }: Se
     const isToday = date.toDateString() === now.toDateString();
 
     if (isToday) {
-      return date.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
+      return date.toLocaleTimeString("es-ES", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
     }
 
     return date.toLocaleDateString("es-ES", {
@@ -115,13 +120,24 @@ export function SessionChat({ sessionId, compact = false, viewOnly = false }: Se
     });
   };
 
+  // Determine whether the input should be visible
+  const showInput = canSendFirst || messages.length > 0;
+
+  // Determine the empty-state message
+  const getEmptyStateText = () => {
+    if (canSendFirst) {
+      return "Env\u00eda el primer mensaje";
+    }
+    return "El cliente a\u00fan no ha iniciado la conversaci\u00f3n.";
+  };
+
+  const wrapperClass = embedded
+    ? "flex flex-col h-full"
+    : "glass rounded-2xl flex flex-col h-[600px]";
+
   if (loading) {
     return (
-      <div
-        className={`glass rounded-2xl flex flex-col items-center justify-center gap-3 ${
-          compact ? "h-[400px]" : "h-[600px]"
-        }`}
-      >
+      <div className={`${wrapperClass} items-center justify-center gap-3`}>
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         <p className="text-sm text-muted-foreground">Cargando mensajes...</p>
       </div>
@@ -129,19 +145,17 @@ export function SessionChat({ sessionId, compact = false, viewOnly = false }: Se
   }
 
   return (
-    <div
-      className={`glass rounded-2xl flex flex-col ${
-        compact ? "h-[400px]" : "h-[600px]"
-      }`}
-    >
-      {/* Header */}
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-border/50">
-        <MessageSquare className="h-4 w-4 text-indigo-500" />
-        <h3 className="text-sm font-semibold">Chat de la sesion</h3>
-        <span className="text-xs text-muted-foreground ml-auto">
-          {messages.length} mensaje{messages.length !== 1 ? "s" : ""}
-        </span>
-      </div>
+    <div className={wrapperClass}>
+      {/* Header — hidden when embedded (parent provides its own) */}
+      {!embedded && (
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-border/50">
+          <MessageSquare className="h-4 w-4 text-indigo-500" />
+          <h3 className="text-sm font-semibold">Conversación</h3>
+          <span className="text-xs text-muted-foreground ml-auto">
+            {messages.length} mensaje{messages.length !== 1 ? "s" : ""}
+          </span>
+        </div>
+      )}
 
       {/* Messages container */}
       <div
@@ -152,14 +166,12 @@ export function SessionChat({ sessionId, compact = false, viewOnly = false }: Se
           <div className="flex flex-col items-center justify-center h-full text-center gap-2">
             <MessageSquare className="h-10 w-10 text-muted-foreground/30" />
             <p className="text-sm text-muted-foreground">
-              {viewOnly
-                ? "El cliente aún no ha iniciado una conversación."
-                : "No hay mensajes todavía. Envía el primero."}
+              {getEmptyStateText()}
             </p>
           </div>
         ) : (
           messages.map((msg) => {
-            const isOwn = msg.user.id === currentUserId;
+            const isOwn = msg.senderId === currentUserId;
             return (
               <div
                 key={msg.id}
@@ -167,10 +179,10 @@ export function SessionChat({ sessionId, compact = false, viewOnly = false }: Se
               >
                 {/* Avatar */}
                 <div className="flex-shrink-0">
-                  {msg.user.image ? (
+                  {msg.senderImage ? (
                     <Image
-                      src={msg.user.image}
-                      alt={msg.user.name ?? "Usuario"}
+                      src={msg.senderImage}
+                      alt={msg.senderName ?? "Usuario"}
                       width={32}
                       height={32}
                       className="rounded-full object-cover"
@@ -178,7 +190,7 @@ export function SessionChat({ sessionId, compact = false, viewOnly = false }: Se
                   ) : (
                     <div className="h-8 w-8 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
                       <span className="text-xs font-medium text-indigo-600 dark:text-indigo-400">
-                        {(msg.user.name ?? "U").charAt(0).toUpperCase()}
+                        {(msg.senderName ?? "U").charAt(0).toUpperCase()}
                       </span>
                     </div>
                   )}
@@ -191,7 +203,7 @@ export function SessionChat({ sessionId, compact = false, viewOnly = false }: Se
                   }`}
                 >
                   <span className="text-[11px] text-muted-foreground mb-0.5 px-1">
-                    {msg.user.name ?? "Usuario"}
+                    {msg.senderName ?? "Usuario"}
                   </span>
                   <div
                     className={`rounded-2xl px-3 py-2 text-sm leading-relaxed ${
@@ -200,18 +212,7 @@ export function SessionChat({ sessionId, compact = false, viewOnly = false }: Se
                         : "bg-muted/60 text-foreground rounded-tl-sm"
                     }`}
                   >
-                    {msg.type === "file" && msg.fileUrl ? (
-                      <a
-                        href={msg.fileUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="underline"
-                      >
-                        {msg.fileName ?? msg.content}
-                      </a>
-                    ) : (
-                      msg.content
-                    )}
+                    {msg.content}
                   </div>
                   <span className="text-[10px] text-muted-foreground mt-0.5 px-1">
                     {formatTime(msg.createdAt)}
@@ -224,32 +225,40 @@ export function SessionChat({ sessionId, compact = false, viewOnly = false }: Se
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input area */}
-      <form
-        onSubmit={handleSend}
-        className="flex items-center gap-2 px-4 py-3 border-t border-border/50"
-      >
-        <Input
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-          placeholder="Escribe un mensaje..."
-          className="flex-1 bg-muted/30 border-0 focus-visible:ring-1 focus-visible:ring-indigo-500/50"
-          disabled={sending}
-          maxLength={2000}
-        />
-        <Button
-          type="submit"
-          size="icon"
-          disabled={!newMessage.trim() || sending}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl h-10 w-10 flex-shrink-0"
+      {/* Input area — conditionally rendered */}
+      {showInput ? (
+        <form
+          onSubmit={handleSend}
+          className="flex items-center gap-2 px-4 py-3 border-t border-border/50"
         >
-          {sending ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Send className="h-4 w-4" />
-          )}
-        </Button>
-      </form>
+          <Input
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            placeholder="Escribe un mensaje..."
+            className="flex-1 bg-muted/30 border-0 focus-visible:ring-1 focus-visible:ring-indigo-500/50"
+            disabled={sending}
+            maxLength={2000}
+          />
+          <Button
+            type="submit"
+            size="icon"
+            disabled={!newMessage.trim() || sending}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl h-10 w-10 flex-shrink-0"
+          >
+            {sending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Send className="h-4 w-4" />
+            )}
+          </Button>
+        </form>
+      ) : (
+        <div className="px-4 py-3 border-t border-border/50 text-center">
+          <p className="text-xs text-muted-foreground">
+            El cliente a&uacute;n no ha iniciado la conversaci&oacute;n.
+          </p>
+        </div>
+      )}
     </div>
   );
 }

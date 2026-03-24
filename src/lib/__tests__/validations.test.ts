@@ -131,11 +131,20 @@ describe("createProfessionalProfileSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  it("rejects hourlyRate below 1", () => {
+  it("accepts hourlyRate of 0 (freemium)", () => {
     const result = createProfessionalProfileSchema.safeParse({
       category: "COACH",
       headline: "Expert coach",
       hourlyRate: 0,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects negative hourlyRate", () => {
+    const result = createProfessionalProfileSchema.safeParse({
+      category: "COACH",
+      headline: "Expert coach",
+      hourlyRate: -1,
     });
     expect(result.success).toBe(false);
   });

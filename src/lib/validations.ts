@@ -59,7 +59,7 @@ const professionalCategoryEnum = z.enum([
 export const createProfessionalProfileSchema = z.object({
   category: professionalCategoryEnum,
   headline: z.string().min(5, "El titular debe tener al menos 5 caracteres").max(120),
-  hourlyRate: z.number().min(1, "La tarifa debe ser al menos 1€"),
+  hourlyRate: z.number().min(0).default(0),
   bio: z.string().max(1000).optional(),
 });
 
@@ -67,7 +67,7 @@ export const createProfessionalProfileSchema = z.object({
 export const updateProfessionalProfileSchema = z.object({
   category: professionalCategoryEnum.optional(),
   headline: z.string().min(5).max(120).optional(),
-  hourlyRate: z.number().min(1).optional(),
+  hourlyRate: z.number().min(0).optional(),
   bio: z.string().max(1000).optional(),
   languages: z.array(z.string().min(1)).optional(),
   yearsExperience: z.number().int().min(0).optional(),

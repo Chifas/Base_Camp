@@ -75,6 +75,7 @@ export async function GET(req: Request) {
           where,
           include: {
             client: { select: { id: true, name: true, image: true } },
+            _count: { select: { messages: true } },
           },
           orderBy: { scheduledAt: "desc" },
           skip,
@@ -96,6 +97,7 @@ export async function GET(req: Request) {
         dailyRoomUrl: s.dailyRoomUrl,
         notes: s.notes,
         cancellationFee: s.cancellationFee,
+        messageCount: s._count.messages,
       }));
 
       if (usePagination) {

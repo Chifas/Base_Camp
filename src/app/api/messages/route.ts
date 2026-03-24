@@ -116,10 +116,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "No tienes acceso a esta conversación" }, { status: 403 });
     }
 
-    // Only allow messaging for confirmed or completed sessions
-    if (!["CONFIRMED", "COMPLETED"].includes(dbSession.status)) {
+    // Block messaging only for cancelled sessions
+    if (dbSession.status === "CANCELLED") {
       return NextResponse.json(
-        { error: "Solo puedes enviar mensajes en sesiones confirmadas o completadas" },
+        { error: "No puedes enviar mensajes en sesiones canceladas" },
         { status: 400 }
       );
     }
