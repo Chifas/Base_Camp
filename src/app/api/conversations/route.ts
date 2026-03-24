@@ -3,6 +3,21 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { logger } from "@/lib/logger";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
+
+// Rate limiter for conversation creation: max 10 per hour per user
+function conversationLimiter() {
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  if (!url || !token) return null;
+  return new Ratelimit({
+    redis: new Redis({ url, token }),
+    limiter: Ratelimit.slidingWindow(10, "1 h"),
+    prefix: "rl:conversation",
+  });
+}
 
 // ────────────────────────────────────────────────────────────────────────────
 // GET /api/conversations — list conversations for the authenticated user
@@ -169,6 +184,15 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { error: "Solo los clientes pueden iniciar conversaciones" },
         { status: 403 }
+      );
+    }
+
+    // Rate limit conversation creation
+    const rl = await checkRateLimit(conversationLimiter(), session.user.id);
+    if (!rl.success) {
+      return NextResponse.json(
+        { error: "Demasiadas conversaciones. Inténtalo más tarde." },
+        { status: 429 }
       );
     }
 

@@ -4,6 +4,11 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { logger } from "@/lib/logger";
 import { stripHtml } from "@/lib/sanitize";
+import { z } from "zod";
+
+const sendMessageSchema = z.object({
+  content: z.string().min(1, "El mensaje no puede estar vacío").max(2000, "Máximo 2000 caracteres"),
+});
 
 // ────────────────────────────────────────────────────────────────────────────
 // GET /api/conversations/[id]/messages — paginated messages for a conversation
@@ -56,8 +61,21 @@ export async function GET(
     const limit = Math.min(Math.max(limitParam, 1), 100);
     const before = url.searchParams.get("before");
 
-    // Build cursor-based pagination
-    const cursor = before ? { id: before } : undefined;
+    // Build cursor-based pagination — validate cursor belongs to this conversation
+    let cursor: { id: string } | undefined;
+    if (before) {
+      const cursorMsg = await prisma.directMessage.findFirst({
+        where: { id: before, conversationId },
+        select: { id: true },
+      });
+      if (!cursorMsg) {
+        return NextResponse.json(
+          { error: "Cursor inválido" },
+          { status: 400 }
+        );
+      }
+      cursor = { id: before };
+    }
 
     const messages = await prisma.directMessage.findMany({
       where: { conversationId },
@@ -169,18 +187,17 @@ export async function POST(
       );
     }
 
-    // Parse and validate body
+    // Parse and validate body with Zod
     const body = await req.json();
-    const { content } = body as { content?: string };
-
-    if (!content || typeof content !== "string" || content.trim().length === 0) {
+    const parsed = sendMessageSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: "El contenido del mensaje es requerido" },
+        { error: parsed.error.errors[0].message },
         { status: 400 }
       );
     }
 
-    const sanitizedContent = stripHtml(content);
+    const sanitizedContent = stripHtml(parsed.data.content);
 
     if (sanitizedContent.length === 0) {
       return NextResponse.json(
@@ -232,7 +249,7 @@ export async function POST(
     const { createNotification } = await import("@/lib/notifications");
     void createNotification({
       userId: recipientId,
-      type: "SESSION_CONFIRMED" as const,
+      type: "SESSION_CONFIRMED" as const, // TODO: add NEW_MESSAGE to NotificationType enum
       title: "Nuevo mensaje",
       message: `${senderName ?? "Alguien"} te ha enviado un mensaje`,
       link: `/dashboard/${isClient ? "professional" : "client"}?tab=messages`,
