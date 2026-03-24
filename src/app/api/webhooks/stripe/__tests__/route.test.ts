@@ -23,7 +23,7 @@ vi.mock("@/lib/env", () => ({
 }));
 
 vi.mock("@/lib/logger", () => ({
-  log: { info: vi.fn(), error: vi.fn() },
+  logger: { info: vi.fn(), error: vi.fn(), warn: vi.fn() },
 }));
 
 vi.mock("@/lib/email", () => ({

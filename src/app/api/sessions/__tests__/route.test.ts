@@ -106,6 +106,7 @@ describe("GET /api/sessions", () => {
         notes: null,
         cancellationFee: null,
         client: { id: "client-1", name: "Juan García", image: "" },
+        _count: { messages: 0 },
       },
     ] as never);
 
@@ -116,6 +117,7 @@ describe("GET /api/sessions", () => {
     expect(data).toHaveLength(1);
     expect(data[0].clientName).toBe("Juan García");
     expect(data[0].status).toBe("PENDING");
+    expect(data[0].messageCount).toBe(0);
   });
 
   it("returns 500 on database error", async () => {

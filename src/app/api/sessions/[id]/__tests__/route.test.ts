@@ -8,10 +8,9 @@ vi.mock("@/lib/auth", () => ({
   authOptions: {},
 }));
 
-vi.mock("@/lib/logger", () => {
-  const fns = { info: vi.fn(), warn: vi.fn(), error: vi.fn() };
-  return { logger: fns, log: fns };
-});
+vi.mock("@/lib/logger", () => ({
+  logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+}));
 
 vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
