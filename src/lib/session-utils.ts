@@ -77,7 +77,7 @@ export function formatSessionForResponse(
     duration: session.duration,
     status: session.status,
     price: session.price,
-    dailyRoomUrl: session.dailyRoomUrl,
+    dailyRoomUrl: session.status === "CONFIRMED" ? session.dailyRoomUrl : null,
   };
 
   if (perspective === "professional") {

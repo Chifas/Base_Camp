@@ -32,6 +32,17 @@ export async function POST(req: Request) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
+    // Validate real file type via magic bytes (client-supplied MIME is not trusted)
+    const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+    const { fileTypeFromBuffer } = await import("file-type");
+    const detected = await fileTypeFromBuffer(buffer);
+    if (!detected || !ALLOWED_MIME_TYPES.includes(detected.mime)) {
+      return NextResponse.json(
+        { error: "Tipo de archivo no permitido" },
+        { status: 400 }
+      );
+    }
+
     // Upload to Cloudinary
     const result = await new Promise<{ secure_url: string }>((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
