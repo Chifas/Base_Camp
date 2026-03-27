@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
+import type { SessionWithProfessional } from "@/types/sessions";
 
 /**
  * GET /api/sessions — list sessions for the authenticated user.
@@ -94,7 +95,7 @@ export async function GET(req: Request) {
         duration: s.duration,
         status: s.status,
         price: s.price,
-        dailyRoomUrl: s.dailyRoomUrl,
+        dailyRoomUrl: s.status === "CONFIRMED" ? s.dailyRoomUrl : null,
         notes: s.notes,
         cancellationFee: s.cancellationFee,
         messageCount: s._count.messages,
@@ -135,10 +136,6 @@ export async function GET(req: Request) {
       usePagination ? prisma.session.count({ where }) : Promise.resolve(0),
     ]);
 
-    type SessionWithProfessional = (typeof sessions)[number] & {
-      professional: { user: { id: string; name: string | null; image: string | null } };
-    };
-
     const data = (sessions as SessionWithProfessional[]).map((s) => ({
       id: s.id,
       clientId: s.clientId,
@@ -149,7 +146,7 @@ export async function GET(req: Request) {
       duration: s.duration,
       status: s.status,
       price: s.price,
-      dailyRoomUrl: s.dailyRoomUrl,
+      dailyRoomUrl: s.status === "CONFIRMED" ? s.dailyRoomUrl : null,
       cancellationFee: s.cancellationFee,
     }));
 

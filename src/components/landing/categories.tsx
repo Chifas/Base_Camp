@@ -80,51 +80,54 @@ export function Categories() {
         </FadeIn>
 
         <StaggerContainer className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-4" delay={0.15}>
-          {categories.map((cat) => (
-            <StaggerItem key={cat.slug}>
-              <Link
-                href={`/explore?category=${cat.slug}`}
-                className="group block h-full"
-              >
-                <div
-                  className={`relative h-full overflow-hidden rounded-2xl border bg-card p-6 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 ${cat.borderHover}`}
+          {categories.map((cat, index) => {
+            const isFeatured = index === 2; // Mentoría de Carrera (52+ pros)
+            return (
+              <StaggerItem key={cat.slug} className={isFeatured ? "sm:col-span-2 lg:col-span-2" : ""}>
+                <Link
+                  href={`/explore?category=${cat.slug}`}
+                  className="group block h-full"
                 >
-                  {/* Gradient background on hover */}
                   <div
-                    className={`absolute inset-0 bg-gradient-to-br ${cat.color} opacity-0 transition-opacity duration-300 group-hover:opacity-100`}
-                  />
+                    className={`relative h-full overflow-hidden rounded-2xl border bg-card p-6 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 ${cat.borderHover}`}
+                  >
+                    {/* Gradient background — always visible for featured, hover for others */}
+                    <div
+                      className={`absolute inset-0 bg-gradient-to-br ${cat.color} transition-opacity duration-300 ${isFeatured ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}
+                    />
 
-                  <div className="relative">
-                    {/* Icon */}
-                    <motion.div
-                      whileHover={{ rotate: 5, scale: 1.05 }}
-                      className={`flex h-12 w-12 items-center justify-center rounded-xl bg-muted/80 ${cat.iconColor} transition-colors duration-300`}
-                    >
-                      <cat.icon className="h-6 w-6" />
-                    </motion.div>
+                    <div className="relative">
+                      {/* Icon — larger for featured */}
+                      <motion.div
+                        whileHover={{ rotate: 5, scale: 1.05 }}
+                        className={`flex items-center justify-center rounded-xl bg-muted/80 ${cat.iconColor} transition-colors duration-300 ${isFeatured ? "h-16 w-16" : "h-12 w-12"}`}
+                      >
+                        <cat.icon className={isFeatured ? "h-8 w-8" : "h-6 w-6"} />
+                      </motion.div>
 
-                    {/* Count badge */}
-                    <span className="absolute right-0 top-0 rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
-                      {cat.count} profesionales
-                    </span>
+                      {/* Count badge */}
+                      <span className="absolute right-0 top-0 rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+                        {cat.count} profesionales
+                      </span>
 
-                    <h3 className="mt-5 font-heading text-lg font-semibold">
-                      {cat.title}
-                    </h3>
-                    <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                      {cat.description}
-                    </p>
+                      <h3 className={`font-heading font-semibold ${isFeatured ? "mt-6 text-xl" : "mt-5 text-lg"}`}>
+                        {cat.title}
+                      </h3>
+                      <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                        {cat.description}
+                      </p>
 
-                    {/* Arrow link */}
-                    <div className="mt-4 flex items-center text-sm font-medium text-primary opacity-0 transition-all duration-300 group-hover:opacity-100 translate-x-[-4px] group-hover:translate-x-0">
-                      Explorar
-                      <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                      {/* Arrow link */}
+                      <div className="mt-4 flex items-center text-sm font-medium text-primary opacity-0 transition-all duration-300 group-hover:opacity-100 translate-x-[-4px] group-hover:translate-x-0">
+                        Explorar
+                        <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                      </div>
                     </div>
                   </div>
-                </div>
-              </Link>
-            </StaggerItem>
-          ))}
+                </Link>
+              </StaggerItem>
+            );
+          })}
         </StaggerContainer>
       </div>
     </section>
