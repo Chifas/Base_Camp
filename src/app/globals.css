@@ -149,3 +149,34 @@ html {
   0%, 100% { opacity: 0.2; }
   50% { opacity: 0.4; }
 }
+
+/* Smooth gradient blend at edges of tinted sections */
+.section-tinted {
+  position: relative;
+}
+.section-tinted::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4rem;
+  background: linear-gradient(to bottom, hsl(var(--background)), transparent);
+  pointer-events: none;
+}
+.section-tinted::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4rem;
+  background: linear-gradient(to top, hsl(var(--background)), transparent);
+  pointer-events: none;
+}
+
+/* Trust bar marquee */
+@keyframes marquee-trust {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}

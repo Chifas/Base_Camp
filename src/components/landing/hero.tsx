@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowRight, Play, Shield, Star, Users, Sparkles, Video } from "lucide-react";
+import { ArrowRight, Play, Shield, Star, Users, Sparkles, Video, Clock, Mic, PhoneOff, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AnimatedGradientBg } from "@/components/shared/animated-gradient-bg";
 import { AnimatedCounter } from "@/components/shared/animated-counter";
@@ -21,11 +21,11 @@ function SessionMockup() {
 
       {/* Card principal */}
       <div className="relative rounded-2xl border border-border/60 bg-background/80 p-6 shadow-2xl backdrop-blur-md">
-        {/* Header de sesión */}
+        {/* Header */}
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-3">
-            <div className="relative h-10 w-10 rounded-full overflow-hidden bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm">
-              AG
+            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center">
+              <User className="h-5 w-5 text-white" />
             </div>
             <div>
               <p className="font-semibold text-sm leading-tight">Ana García</p>
@@ -42,48 +42,76 @@ function SessionMockup() {
           </div>
         </div>
 
-        {/* Preview de video simulado */}
-        <div className="relative rounded-xl overflow-hidden bg-gradient-to-br from-indigo-950 to-purple-950 h-32 mb-5 flex items-center justify-center">
+        {/* Video area — two participants */}
+        <div className="relative rounded-xl overflow-hidden bg-gradient-to-br from-indigo-950 to-purple-950 py-6 px-4">
           <div className="absolute inset-0 opacity-20"
             style={{
               backgroundImage: "radial-gradient(circle at 30% 40%, #6366f1 0%, transparent 60%), radial-gradient(circle at 70% 60%, #8b5cf6 0%, transparent 60%)",
             }}
           />
-          <div className="flex flex-col items-center gap-2 relative">
-            <div className="h-14 w-14 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-sm border border-white/20">
-              <span className="text-xl font-bold text-white">AG</span>
+
+          {/* Timer pill */}
+          <div className="relative flex justify-center mb-5">
+            <div className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 backdrop-blur-sm border border-white/10">
+              <Clock className="h-3 w-3 text-white/70" />
+              <span className="text-xs font-medium text-white/80 tabular-nums">34:12</span>
             </div>
-            <p className="text-xs text-white/70">Sesión en progreso · 34:12</p>
           </div>
-        </div>
 
-        {/* Botón unirse */}
-        <button className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground h-10 text-sm font-semibold transition-all hover:bg-primary/90">
-          <Video className="h-4 w-4" />
-          Unirse a la sesión
-        </button>
+          {/* Participants */}
+          <div className="relative flex items-center justify-center gap-6">
+            {/* Professional */}
+            <div className="flex flex-col items-center gap-2">
+              <motion.div
+                animate={{ scale: [1, 1.03, 1] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                className="h-16 w-16 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center border-2 border-white/20"
+              >
+                <span className="text-lg font-bold text-white">AG</span>
+              </motion.div>
+              <div className="flex items-center gap-1.5">
+                <Mic className="h-3 w-3 text-white/50" />
+                <span className="text-xs text-white/70">Ana G.</span>
+              </div>
+            </div>
 
-        {/* Info inferior */}
-        <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
-          <span>Sesión gratuita · 60 min</span>
-          <div className="flex items-center gap-1">
-            <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-            <span className="font-medium text-foreground">4.9</span>
+            {/* Separator */}
+            <div className="w-px h-8 bg-white/20" />
+
+            {/* You */}
+            <div className="flex flex-col items-center gap-2">
+              <motion.div
+                animate={{ scale: [1, 1.03, 1] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 1.5 }}
+                className="h-16 w-16 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center border-2 border-white/20"
+              >
+                <User className="h-7 w-7 text-white" />
+              </motion.div>
+              <div className="flex items-center gap-1.5">
+                <Mic className="h-3 w-3 text-white/50" />
+                <span className="text-xs text-white/70">Tú</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Call controls */}
+          <div className="relative flex items-center justify-center gap-3 mt-5">
+            {[
+              { icon: Mic, bg: "bg-white/10 hover:bg-white/20", color: "text-white/80" },
+              { icon: Video, bg: "bg-white/10 hover:bg-white/20", color: "text-white/80" },
+              { icon: PhoneOff, bg: "bg-red-500/20 hover:bg-red-500/30", color: "text-red-400" },
+            ].map((ctrl, i) => (
+              <motion.div
+                key={i}
+                whileHover={{ scale: 1.1 }}
+                className={`flex h-8 w-8 items-center justify-center rounded-full ${ctrl.bg} backdrop-blur-sm cursor-default transition-colors`}
+              >
+                <ctrl.icon className={`h-3.5 w-3.5 ${ctrl.color}`} />
+              </motion.div>
+            ))}
           </div>
         </div>
       </div>
-
-      {/* Badge flotante */}
-      <motion.div
-        animate={{ y: [0, -6, 0] }}
-        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute -bottom-4 -left-4 rounded-xl border border-border bg-background/90 px-3 py-2 shadow-lg backdrop-blur-sm"
-      >
-        <p className="text-xs font-medium">
-          <span className="text-green-500">✓</span> Próxima sesión disponible
-        </p>
-        <p className="text-[10px] text-muted-foreground">Hoy, 18:00 · Sin coste</p>
-      </motion.div>
     </motion.div>
   );
 }
