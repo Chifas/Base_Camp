@@ -10,7 +10,6 @@ import {
 import { Testimonials } from "@/components/landing/testimonials";
 import { CTA } from "@/components/landing/cta";
 import { TrustBar } from "@/components/landing/trust-bar";
-import { WaveDivider } from "@/components/shared/wave-divider";
 import { getFeaturedProfessionals } from "@/lib/professionals";
 
 export const metadata: Metadata = {
@@ -39,11 +38,9 @@ export default function HomePage() {
       <TrustBar />
       <Categories />
       <HowItWorks />
-      <WaveDivider />
       <Suspense fallback={<FeaturedProfessionalsSkeleton />}>
         <AsyncFeaturedProfessionals />
       </Suspense>
-      <WaveDivider inverted />
       <Testimonials />
       <CTA />
     </>

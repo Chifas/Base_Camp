@@ -65,7 +65,7 @@ function TestimonialCard({
 
 export function Testimonials() {
   return (
-    <section className="border-t bg-muted/30 py-20 sm:py-28 overflow-hidden">
+    <section className="bg-muted/30 py-20 sm:py-28 overflow-hidden">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <FadeIn className="mx-auto max-w-2xl text-center">
           <p className="text-sm font-semibold uppercase tracking-wider text-primary">
