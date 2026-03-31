@@ -13,13 +13,13 @@ import { TrustBar } from "@/components/landing/trust-bar";
 import { getFeaturedProfessionals } from "@/lib/professionals";
 
 export const metadata: Metadata = {
-  title: "GuidePath — Encuentra tu camino con profesionales que te guían",
+  title: "GuidePath — Orientación profesional con expertos verificados",
   description:
-    "Marketplace que conecta personas que buscan orientación con psicólogos, coaches, mentores de carrera y nutricionistas certificados. Sesiones por videollamada, fácil y seguro.",
+    "Conecta con coaches, mentores y psicólogos laborales certificados. Sesiones por videollamada, gratis, sin compromiso.",
   openGraph: {
-    title: "GuidePath — Encuentra tu camino con profesionales que te guían",
+    title: "GuidePath — Orientación profesional con expertos verificados",
     description:
-      "Conectamos personas con psicólogos, coaches, mentores y nutricionistas certificados.",
+      "Conectamos profesionales con coaches, mentores y psicólogos laborales certificados.",
     siteName: "GuidePath",
     type: "website",
     locale: "es_ES",
