@@ -113,17 +113,6 @@ html {
   box-shadow: 0 0 30px hsl(var(--primary) / 0.5), 0 0 80px hsl(var(--primary) / 0.2);
 }
 
-/* Card glow on hover */
-.card-glow {
-  transition: box-shadow 0.3s ease;
-}
-.card-glow:hover {
-  box-shadow: 0 0 30px hsl(var(--primary) / 0.12), 0 8px 32px hsl(0 0% 0% / 0.08);
-}
-.dark .card-glow:hover {
-  box-shadow: 0 0 30px hsl(var(--primary) / 0.2), 0 8px 32px hsl(0 0% 0% / 0.3);
-}
-
 /* Hide scrollbar for carousel */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
@@ -133,50 +122,7 @@ html {
   scrollbar-width: none;
 }
 
-/* CTA animated gradient */
-.cta-gradient {
-  background: linear-gradient(135deg, hsl(238 73% 45%), hsl(258 80% 55%), hsl(238 73% 50%));
-  background-size: 200% 200%;
-  animation: gradient-shift 8s ease infinite;
-}
-
 @keyframes gradient-shift {
   0%, 100% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
-}
-
-@keyframes animate-pulse-glow {
-  0%, 100% { opacity: 0.2; }
-  50% { opacity: 0.4; }
-}
-
-/* Smooth gradient blend at edges of tinted sections */
-.section-tinted {
-  position: relative;
-}
-.section-tinted::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4rem;
-  background: linear-gradient(to bottom, hsl(var(--background)), transparent);
-  pointer-events: none;
-}
-.section-tinted::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 4rem;
-  background: linear-gradient(to top, hsl(var(--background)), transparent);
-  pointer-events: none;
-}
-
-/* Trust bar marquee */
-@keyframes marquee-trust {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
 }

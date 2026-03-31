@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FadeIn } from "@/components/shared/motion-wrapper";
 
@@ -11,80 +10,33 @@ export function CTA() {
     <section className="py-20 sm:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <FadeIn>
-          <div className="relative overflow-hidden rounded-3xl cta-gradient px-8 py-16 text-center sm:px-16 sm:py-24">
-            {/* Pulsating glow border */}
-            <div className="pointer-events-none absolute -inset-[1px] rounded-3xl bg-gradient-to-r from-primary via-violet-500 to-primary opacity-20 blur-sm animate-pulse-glow" />
-
-            {/* Animated background decorations */}
-            <div className="pointer-events-none absolute inset-0">
-              <motion.div
-                className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/10 blur-3xl"
-                animate={{ x: [0, 30, 0], y: [0, -20, 0] }}
-                transition={{
-                  duration: 15,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              />
-              <motion.div
-                className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-white/10 blur-3xl"
-                animate={{ x: [0, -25, 0], y: [0, 25, 0] }}
-                transition={{
-                  duration: 18,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              />
-              <motion.div
-                className="absolute left-1/2 top-1/2 h-48 w-48 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/5 blur-2xl"
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{
-                  duration: 10,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              />
-            </div>
-
-            <div className="relative">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5 }}
-                className="mx-auto mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm"
+          <div className="rounded-3xl bg-primary px-8 py-16 text-center sm:px-16 sm:py-20">
+            <h2 className="font-heading text-3xl font-bold tracking-tight text-primary-foreground sm:text-4xl">
+              ¿Listo para dar el siguiente paso?
+            </h2>
+            <p className="mx-auto mt-4 max-w-xl text-lg text-primary-foreground/80">
+              Reserva tu primera sesión gratuita y empieza a construir la
+              carrera que mereces.
+            </p>
+            <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
+              <Button
+                size="lg"
+                className="w-full sm:w-auto group !bg-white !text-primary hover:!bg-white/90 h-12 px-8 text-base font-semibold"
+                asChild
               >
-                <Sparkles className="h-6 w-6 text-white" />
-              </motion.div>
-
-              <h2 className="font-heading text-3xl font-bold tracking-tight text-primary-foreground sm:text-4xl lg:text-5xl">
-                ¿Listo para dar el siguiente
-                <br className="hidden sm:block" /> paso en tu carrera?
-              </h2>
-              <p className="mx-auto mt-4 max-w-xl text-lg text-primary-foreground/80 leading-relaxed">
-                Conecta con el mentor o coach que necesitas. Reserva tu primera
-                sesión hoy y empieza a construir la carrera que mereces.
-              </p>
-              <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-                <Button
-                  size="lg"
-                  className="w-full sm:w-auto group !bg-white !text-indigo-700 hover:!bg-white/90 shadow-[0_0_25px_rgba(255,255,255,0.25)] hover:shadow-[0_0_35px_rgba(255,255,255,0.4)] transition-all h-12 px-8 text-base font-semibold"
-                  asChild
-                >
-                  <Link href="/auth/register">
-                    Empezar gratis
-                    <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                  </Link>
-                </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="w-full sm:w-auto !border-white/40 !text-white !bg-white/10 hover:!bg-white/20 hover:!border-white/60 h-12 px-8 text-base font-medium backdrop-blur-sm"
-                  asChild
-                >
-                  <Link href="/explore">Explorar profesionales</Link>
-                </Button>
-              </div>
+                <Link href="/auth/register">
+                  Empezar gratis
+                  <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </Link>
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                className="w-full sm:w-auto !border-white/30 !text-white !bg-white/10 hover:!bg-white/20 h-12 px-8 text-base"
+                asChild
+              >
+                <Link href="/explore">Explorar profesionales</Link>
+              </Button>
             </div>
           </div>
         </FadeIn>
