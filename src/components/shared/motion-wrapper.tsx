@@ -1,7 +1,9 @@
 "use client";
 
-import { motion } from "framer-motion";
-import type { ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
+import { gsap, ScrollTrigger, useGSAP } from "@/lib/gsap-config";
+
+// ─── FadeIn ──────────────────────────────────────────────────────────────────
 
 interface FadeInProps {
   children: ReactNode;
@@ -12,10 +14,10 @@ interface FadeInProps {
 }
 
 const directionMap = {
-  up: { y: 24, x: 0 },
-  down: { y: -24, x: 0 },
-  left: { x: 24, y: 0 },
-  right: { x: -24, y: 0 },
+  up: { y: 48, x: 0 },
+  down: { y: -48, x: 0 },
+  left: { x: 48, y: 0 },
+  right: { x: -48, y: 0 },
 };
 
 export function FadeIn({
@@ -23,22 +25,37 @@ export function FadeIn({
   className,
   delay = 0,
   direction = "up",
-  duration = 0.5,
+  duration = 0.8,
 }: FadeInProps) {
-  const offset = directionMap[direction];
+  const ref = useRef<HTMLDivElement>(null);
+
+  useGSAP(() => {
+    const el = ref.current;
+    if (!el) return;
+    const offset = directionMap[direction];
+    gsap.fromTo(
+      el,
+      { opacity: 0, ...offset },
+      {
+        opacity: 1,
+        x: 0,
+        y: 0,
+        duration,
+        delay,
+        ease: "expo.out",
+        scrollTrigger: { trigger: el, start: "top 88%", once: true },
+      }
+    );
+  }, { scope: ref });
 
   return (
-    <motion.div
-      initial={{ opacity: 0, ...offset }}
-      whileInView={{ opacity: 1, x: 0, y: 0 }}
-      viewport={{ once: true, margin: "-80px" }}
-      transition={{ duration, delay, ease: [0.21, 0.47, 0.32, 0.98] }}
-      className={className}
-    >
+    <div ref={ref} className={className} style={{ opacity: 0 }}>
       {children}
-    </motion.div>
+    </div>
   );
 }
+
+// ─── StaggerContainer + StaggerItem ──────────────────────────────────────────
 
 export function StaggerContainer({
   children,
@@ -49,16 +66,37 @@ export function StaggerContainer({
   className?: string;
   delay?: number;
 }) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useGSAP(() => {
+    const items = gsap.utils.toArray<HTMLElement>("[data-stagger-item]", ref.current!);
+    if (!items.length) return;
+
+    ScrollTrigger.batch(items, {
+      start: "top 86%",
+      once: true,
+      onEnter: (els) => {
+        gsap.fromTo(
+          els,
+          { opacity: 0, y: 36, scale: 0.96 },
+          {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            duration: 0.7,
+            ease: "expo.out",
+            stagger: 0.1,
+            delay,
+          }
+        );
+      },
+    });
+  }, { scope: ref });
+
   return (
-    <motion.div
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, margin: "-80px" }}
-      transition={{ staggerChildren: 0.1, delayChildren: delay }}
-      className={className}
-    >
+    <div ref={ref} className={className}>
       {children}
-    </motion.div>
+    </div>
   );
 }
 
@@ -70,17 +108,13 @@ export function StaggerItem({
   className?: string;
 }) {
   return (
-    <motion.div
-      variants={{
-        hidden: { opacity: 0, y: 20 },
-        visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.21, 0.47, 0.32, 0.98] } },
-      }}
-      className={className}
-    >
+    <div data-stagger-item className={className} style={{ opacity: 0 }}>
       {children}
-    </motion.div>
+    </div>
   );
 }
+
+// ─── ScaleIn ─────────────────────────────────────────────────────────────────
 
 export function ScaleIn({
   children,
@@ -91,15 +125,26 @@ export function ScaleIn({
   className?: string;
   delay?: number;
 }) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useGSAP(() => {
+    gsap.fromTo(
+      ref.current,
+      { opacity: 0, scale: 0.9 },
+      {
+        opacity: 1,
+        scale: 1,
+        duration: 0.8,
+        delay,
+        ease: "back.out(1.7)",
+        scrollTrigger: { trigger: ref.current, start: "top 88%", once: true },
+      }
+    );
+  }, { scope: ref });
+
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      whileInView={{ opacity: 1, scale: 1 }}
-      viewport={{ once: true, margin: "-80px" }}
-      transition={{ duration: 0.5, delay, ease: [0.21, 0.47, 0.32, 0.98] }}
-      className={className}
-    >
+    <div ref={ref} className={className} style={{ opacity: 0 }}>
       {children}
-    </motion.div>
+    </div>
   );
 }
