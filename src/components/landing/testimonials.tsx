@@ -170,6 +170,7 @@ export function Testimonials() {
         {/* Row 2 — right (offset) */}
         <MarqueeRow items={row2} direction="right" trackRef={track2Ref} />
       </div>
+      </div>
     </section>
   );
 }
