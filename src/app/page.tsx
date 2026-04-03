@@ -1,86 +1,46 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
-import { prisma } from "@/lib/prisma";
 import { Hero } from "@/components/landing/hero";
 import { Categories } from "@/components/landing/categories";
 import { HowItWorks } from "@/components/landing/how-it-works";
-import { FeaturedProfessionals } from "@/components/landing/featured-professionals";
+import {
+  FeaturedProfessionals,
+  FeaturedProfessionalsSkeleton,
+} from "@/components/landing/featured-professionals";
 import { Testimonials } from "@/components/landing/testimonials";
 import { CTA } from "@/components/landing/cta";
-import type { Professional } from "@/types";
-import { CATEGORY_LABELS } from "@/types";
+import { TrustBar } from "@/components/landing/trust-bar";
+import { getFeaturedProfessionals } from "@/lib/professionals";
 
 export const metadata: Metadata = {
-  title: "GuidePath — Encuentra tu camino con profesionales que te guían",
+  title: "GuidePath — Orientación profesional con expertos verificados",
   description:
-    "Marketplace que conecta personas que buscan orientación con psicólogos, coaches, mentores de carrera y nutricionistas certificados. Sesiones por videollamada, fácil y seguro.",
+    "Conecta con coaches, mentores y psicólogos laborales certificados. Sesiones por videollamada, gratis, sin compromiso.",
   openGraph: {
-    title: "GuidePath — Encuentra tu camino con profesionales que te guían",
+    title: "GuidePath — Orientación profesional con expertos verificados",
     description:
-      "Conectamos personas con psicólogos, coaches, mentores y nutricionistas certificados.",
+      "Conectamos profesionales con coaches, mentores y psicólogos laborales certificados.",
     siteName: "GuidePath",
     type: "website",
     locale: "es_ES",
   },
 };
 
-async function getFeaturedProfessionals(): Promise<Professional[]> {
-  try {
-    const professionals = await prisma.professionalProfile.findMany({
-      include: {
-        user: { select: { id: true, name: true, image: true, bio: true } },
-        availability: true,
-      },
-      orderBy: [{ rating: "desc" }, { reviewCount: "desc" }],
-      take: 8,
-    });
-
-    // Score-based sort with daily rotation
-    const dayOfYear = Math.floor(Date.now() / 86400000);
-    const scored = professionals.map((p, idx) => ({
-      p,
-      score:
-        p.rating * 0.4 +
-        Math.log(p.reviewCount + 1) * 0.3 +
-        (p.availability.length > 0 ? 0.2 : 0) +
-        ((idx + dayOfYear) % professionals.length) * 0.05,
-    }));
-    scored.sort((a, b) => b.score - a.score);
-    const top = scored.slice(0, 4);
-
-    return top.map(({ p }) => ({
-      id: p.id,
-      userId: p.userId,
-      name: p.user.name ?? "",
-      image: p.user.image ?? "",
-      bio: p.user.bio ?? "",
-      headline: p.headline ?? "",
-      category: p.category as Professional["category"],
-      categoryName: CATEGORY_LABELS[p.category as Professional["category"]] ?? p.category,
-      hourlyRate: p.hourlyRate,
-      rating: p.rating,
-      reviewCount: p.reviewCount,
-      verified: p.verified,
-      availability: p.availability.map((a) => ({
-        id: a.id,
-        dayOfWeek: a.dayOfWeek,
-        startTime: a.startTime,
-        endTime: a.endTime,
-      })),
-    }));
-  } catch {
-    return [];
-  }
+async function AsyncFeaturedProfessionals() {
+  const professionals = await getFeaturedProfessionals();
+  return <FeaturedProfessionals professionals={professionals} />;
 }
 
-export default async function HomePage() {
-  const professionals = await getFeaturedProfessionals();
-
+export default function HomePage() {
   return (
     <>
       <Hero />
+      <TrustBar />
       <Categories />
       <HowItWorks />
-      <FeaturedProfessionals professionals={professionals} />
+      <Suspense fallback={<FeaturedProfessionalsSkeleton />}>
+        <AsyncFeaturedProfessionals />
+      </Suspense>
       <Testimonials />
       <CTA />
     </>
