@@ -8,7 +8,7 @@ import { FadeIn } from "@/components/shared/motion-wrapper";
 const steps = [
   {
     icon: Search,
-    step: "01",
+    step: "1",
     title: "Encuentra a tu profesional",
     description: "Explora nuestro directorio de profesionales verificados. Filtra por especialidad, disponibilidad y valoraciones.",
     accent: "from-blue-500 to-cyan-500",
@@ -19,7 +19,7 @@ const steps = [
   },
   {
     icon: CalendarCheck,
-    step: "02",
+    step: "2",
     title: "Reserva tu sesión",
     description: "Elige el horario que mejor te venga y confirma tu reserva gratuita al instante. Sin pagos, sin compromisos.",
     accent: "from-violet-500 to-purple-500",
@@ -30,7 +30,7 @@ const steps = [
   },
   {
     icon: Video,
-    step: "03",
+    step: "3",
     title: "Conecta por videollamada",
     description: "Únete a tu sesión desde cualquier dispositivo. Sin descargas, sin salir de la plataforma. Tu espacio seguro.",
     accent: "from-emerald-500 to-teal-500",

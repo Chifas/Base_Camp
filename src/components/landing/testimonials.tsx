@@ -143,7 +143,7 @@ export function Testimonials() {
   );
 
   return (
-    <section className="border-t bg-muted/30 py-20 sm:py-28 overflow-hidden">
+    <section className="bg-muted/30 py-20 sm:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <FadeIn className="mx-auto max-w-2xl text-center">
           <p className="text-sm font-semibold uppercase tracking-widest text-primary mb-2">
@@ -153,10 +153,10 @@ export function Testimonials() {
             Lo que dicen nuestros usuarios
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            Miles de personas ya han encontrado la orientación que necesitaban.
+            Miles de profesionales ya han encontrado la orientación que
+            necesitaban.
           </p>
         </FadeIn>
-      </div>
 
       {/* Dual-row marquee */}
       <div ref={wrapperRef} className="relative mt-14 space-y-4">
