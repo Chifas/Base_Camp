@@ -45,8 +45,42 @@ import { PhotoUpload } from "@/components/shared/photo-upload";
 import { ReferralPanel } from "@/components/shared/referral-panel";
 import { SessionChat } from "@/components/shared/session-chat";
 import ProfileCompleteness from "@/components/shared/ProfileCompleteness";
+import { OnboardingTour, type TourStep } from "@/components/shared/onboarding-tour";
 import { formatDate, formatTime } from "@/lib/utils";
 import { CREDITS_CONFIG } from "@/lib/credits-config";
+
+const PROFESSIONAL_TOUR_STEPS: TourStep[] = [
+  {
+    target: null,
+    title: "¡Bienvenido/a a tu panel de profesional!",
+    description:
+      "Te guiamos por los 5 puntos clave de tu espacio. Puedes omitir la guía cuando quieras.",
+  },
+  {
+    target: '[data-tour="prof-completeness"]',
+    title: "Completa tu perfil",
+    description:
+      "Cuanto más completo esté tu perfil, más alto aparecerás en los resultados. Añade bio, foto, idiomas y experiencia.",
+  },
+  {
+    target: '[data-tour="prof-sessions"]',
+    title: "Gestiona tus sesiones",
+    description:
+      "Aquí recibirás las solicitudes de clientes. Acéptalas o recházalas, y únete a la videollamada cuando llegue el momento.",
+  },
+  {
+    target: '[data-tour="prof-availability"]',
+    title: "Configura tu disponibilidad",
+    description:
+      "Define qué días y horarios estás disponible. Sin disponibilidad configurada no apareces en los resultados de búsqueda.",
+  },
+  {
+    target: '[data-tour="prof-impact"]',
+    title: "Tu impacto social",
+    description:
+      "Ganas +10 puntos por cada sesión completada. Con 100 puntos obtienes una certificación; con 50, haces una donación solidaria.",
+  },
+];
 interface CategoryOption {
   id: string;
   name: string;
@@ -436,6 +470,8 @@ export default function ProfessionalDashboard() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+      <OnboardingTour storageKey="guidepath_tour_professional_v1" steps={PROFESSIONAL_TOUR_STEPS} />
+
       <FadeIn>
         <h1 className="font-heading text-2xl font-bold sm:text-3xl">
           Panel Profesional
@@ -466,7 +502,7 @@ export default function ProfessionalDashboard() {
       {/* Profile completeness */}
       {profile && (
         <FadeIn delay={0.15}>
-          <div className="mt-6">
+          <div className="mt-6" data-tour="prof-completeness">
             <ProfileCompleteness
               profile={{
                 headline: profile.headline,
@@ -486,14 +522,14 @@ export default function ProfessionalDashboard() {
       <FadeIn delay={0.2}>
         <Tabs defaultValue="sessions" className="mt-8">
           <TabsList className="overflow-x-auto">
-            <TabsTrigger value="sessions">
+            <TabsTrigger value="sessions" data-tour="prof-sessions">
               Sesiones ({confirmedSessions.length + pendingSessions.length})
             </TabsTrigger>
-            <TabsTrigger value="availability">Disponibilidad</TabsTrigger>
+            <TabsTrigger value="availability" data-tour="prof-availability">Disponibilidad</TabsTrigger>
             <TabsTrigger value="profile">Perfil</TabsTrigger>
             <TabsTrigger value="reviews">Reseñas ({reviews.length})</TabsTrigger>
             <TabsTrigger value="referrals">Referidos</TabsTrigger>
-            <TabsTrigger value="impact">Impacto Social</TabsTrigger>
+            <TabsTrigger value="impact" data-tour="prof-impact">Impacto Social</TabsTrigger>
           </TabsList>
 
           {/* ===== Sessions ===== */}

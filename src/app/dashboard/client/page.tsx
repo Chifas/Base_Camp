@@ -26,9 +26,37 @@ import { PhotoUpload } from "@/components/shared/photo-upload";
 import { BetaFeedbackModal } from "@/components/shared/beta-feedback-modal";
 import { ReferralPanel } from "@/components/shared/referral-panel";
 import { SessionChat } from "@/components/shared/session-chat";
+import { OnboardingTour, type TourStep } from "@/components/shared/onboarding-tour";
 import { STATUS_LABELS, type Session } from "@/types";
 import { formatDate, formatTime } from "@/lib/utils";
 import { CREDITS_CONFIG } from "@/lib/credits-config";
+
+const CLIENT_TOUR_STEPS: TourStep[] = [
+  {
+    target: null,
+    title: "¡Bienvenido/a a GuidePath!",
+    description:
+      "Te mostramos en 4 pasos cómo funciona tu panel. Puedes saltar la guía en cualquier momento.",
+  },
+  {
+    target: '[data-tour="credits-stat"]',
+    title: "Tus sesiones gratuitas",
+    description:
+      "Tienes 3 sesiones gratuitas al mes. El contador se reinicia el 1 de cada mes automáticamente.",
+  },
+  {
+    target: '[data-tour="new-session-btn"]',
+    title: "Reserva una sesión",
+    description:
+      "Pulsa aquí para explorar mentores, coaches y psicólogos. Elige el que mejor se adapte a lo que necesitas.",
+  },
+  {
+    target: '[data-tour="dashboard-tabs"]',
+    title: "Navega por tu panel",
+    description:
+      "En Próximas verás tus sesiones activas. En Historial las pasadas. En Referidos invita amigos y gana créditos extra.",
+  },
+];
 
 const statusColors: Record<string, string> = {
   PENDING: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400",
@@ -175,6 +203,8 @@ export default function ClientDashboard() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+      <OnboardingTour storageKey="guidepath_tour_client_v1" steps={CLIENT_TOUR_STEPS} />
+
       <FadeIn>
         <div className="flex items-center justify-between">
           <div>
@@ -185,7 +215,7 @@ export default function ClientDashboard() {
               Gestiona tus sesiones y revisa tu historial.
             </p>
           </div>
-          <Button asChild>
+          <Button asChild data-tour="new-session-btn">
             <Link href="/explore">
               Nueva sesión
               <ArrowRight className="ml-2 h-4 w-4" />
@@ -198,14 +228,15 @@ export default function ClientDashboard() {
       <FadeIn delay={0.1}>
         <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
           {[
-            { label: "Sesiones disponibles", value: credits ? `${credits.remaining}/${credits.limit}` : `—/${CREDITS_CONFIG.FREE_SESSIONS_PER_MONTH}`, icon: Calendar },
-            { label: "Sesiones completadas", value: pastSessions.filter((s) => s.status === "COMPLETED").length.toString(), icon: Clock },
-            { label: "Próximas sesiones", value: upcomingSessions.length.toString(), icon: Star },
-            { label: "Reseñas dejadas", value: "2", icon: MessageSquare },
+            { label: "Sesiones disponibles", value: credits ? `${credits.remaining}/${credits.limit}` : `—/${CREDITS_CONFIG.FREE_SESSIONS_PER_MONTH}`, icon: Calendar, tourAttr: "credits-stat" },
+            { label: "Sesiones completadas", value: pastSessions.filter((s) => s.status === "COMPLETED").length.toString(), icon: Clock, tourAttr: undefined },
+            { label: "Próximas sesiones", value: upcomingSessions.length.toString(), icon: Star, tourAttr: undefined },
+            { label: "Reseñas dejadas", value: "2", icon: MessageSquare, tourAttr: undefined },
           ].map((stat) => (
             <div
               key={stat.label}
               className="rounded-xl border bg-card p-4"
+              {...(stat.tourAttr ? { "data-tour": stat.tourAttr } : {})}
             >
               <stat.icon className="h-5 w-5 text-muted-foreground" />
               <p className="mt-2 font-heading text-2xl font-bold">
@@ -220,6 +251,7 @@ export default function ClientDashboard() {
       {/* Sessions tabs */}
       <FadeIn delay={0.2}>
         <Tabs defaultValue="upcoming" className="mt-8">
+          <div data-tour="dashboard-tabs">
           <TabsList className="overflow-x-auto">
             <TabsTrigger value="upcoming">
               Próximas ({upcomingSessions.length})
@@ -230,6 +262,7 @@ export default function ClientDashboard() {
             <TabsTrigger value="referrals">Referidos</TabsTrigger>
             <TabsTrigger value="profile">Mi perfil</TabsTrigger>
           </TabsList>
+          </div>
 
           <TabsContent value="upcoming" className="mt-6">
             {upcomingSessions.length === 0 ? (
