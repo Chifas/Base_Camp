@@ -1,6 +1,6 @@
 # GuidePath — Roadmap de Mejoras
 
-> Actualizado: Marzo 2026
+> Actualizado: Abril 2026
 > Modelo: Freemium (3 sesiones gratis/mes, impact points para profesionales)
 
 ---
@@ -12,19 +12,25 @@
 | Auth (NextAuth + Prisma + JWT + RBAC middleware) | ✅ |
 | API routes completas (sessions, professionals, credits, rewards, reviews, availability) | ✅ |
 | Sistema de créditos freemium (3/mes) + impact points | ✅ |
-| Daily.co videollamadas | ✅ |
+| Daily.co videollamadas + compartir pantalla + chat en sala | ✅ |
 | Resend emails transaccionales + cron reminders | ✅ |
 | Reviews con categorías + respuesta del profesional | ✅ |
 | Filtros avanzados, paginación, ordenación por relevancia | ✅ |
 | Foto de perfil (Cloudinary) + certificaciones + idiomas | ✅ |
 | Rate limiting (register, reviews, professionals) | ✅ |
-| Cron jobs protegidos (reminders + onboarding emails) | ✅ |
+| Cron jobs protegidos (reminders + onboarding emails + session cleanup) | ✅ |
 | Validación Zod server-side (14+ schemas) | ✅ |
 | Error handling estandarizado + logger estructurado | ✅ |
-| SEO dinámico (generateMetadata, JSON-LD, OG, sitemap) | ✅ |
+| SEO dinámico (generateMetadata, JSON-LD, OG, sitemap, landing pages por categoría) | ✅ |
 | CI/CD GitHub Actions (lint, build, types, tests) | ✅ |
 | Tests unitarios + integración (Vitest) + E2E (Playwright) | ✅ |
 | PWA (manifest + service worker) | ✅ |
+| Chat directo entre usuarios (conversaciones + mensajes) | ✅ |
+| Sistema de referidos (generación de código, canje, estadísticas) | ✅ |
+| Notificaciones in-app (bell, historial, marcar como leídas) | ✅ |
+| Onboarding profesional (wizard + barra de completitud) | ✅ |
+| Landing page Apple-style (hero aurora, trust bar, testimonials, waitlist) | ✅ |
+| Páginas legales (privacidad, términos) | ✅ |
 
 ---
 
@@ -196,4 +202,4 @@
 
 ---
 
-*Última actualización: Marzo 2026*
+*Última actualización: Abril 2026*

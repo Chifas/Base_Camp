@@ -1,97 +1,85 @@
-# GuidePath 🧭
+# GuidePath
 
-> Plataforma freemium que conecta a profesionales en búsqueda de orientación laboral y de carrera con expertos certificados: mentores de carrera, coaches ejecutivos, psicólogos laborales y especialistas sectoriales.
+> Plataforma freemium que conecta a profesionales en busqueda de orientacion laboral con expertos certificados: mentores de carrera, coaches ejecutivos, psicologos laborales y especialistas sectoriales.
 
-## 💡 Modelo de negocio
+## Modelo de negocio
 
-| Rol | Cómo funciona |
+| Rol | Como funciona |
 |-----|---------------|
-| **Cliente** | Obtiene **3 sesiones gratuitas al mes** (se reinician el 1 de cada mes). Sin pagos, sin tarjeta. |
-| **Profesional** | Gana **puntos de impacto** por cada sesión completada (+10 pts/sesión). Los puntos se canjean por certificaciones (100 pts) o donaciones solidarias (50 pts). |
+| **Cliente** | 3 sesiones gratuitas al mes (se reinician el 1 de cada mes). Sin pagos, sin tarjeta. |
+| **Profesional** | Gana puntos de impacto por cada sesion completada (+10 pts/sesion). Canjeables por certificaciones (100 pts) o donaciones solidarias (50 pts). |
 
-Toda la configuración de límites y puntos está centralizada en `src/lib/credits-config.ts`.
+Toda la configuracion de limites y puntos esta centralizada en `src/lib/credits-config.ts`.
 
-## 🚀 Tech Stack
+## Tech Stack
 
-| Capa | Tecnología |
+| Capa | Tecnologia |
 |------|------------|
 | Frontend | Next.js 14 (App Router) + TypeScript + Tailwind CSS |
 | Animaciones | Framer Motion |
 | UI Components | shadcn/ui (Radix primitives) |
 | Base de datos | PostgreSQL (Supabase) + Prisma ORM |
-| Autenticación | NextAuth.js v4 (email/password + Google OAuth) |
-| Sistema de créditos | Custom (`src/lib/credits-config.ts`) |
+| Autenticacion | NextAuth.js v4 (email/password + Google OAuth) |
+| Sistema de creditos | Custom (`src/lib/credits-config.ts`) |
 | Videollamadas | Daily.co SDK (`@daily-co/daily-js`) |
 | Email | Resend |
+| Imagenes | Cloudinary |
+| Rate limiting | Upstash Redis |
 | Pagos (legacy) | Stripe — pausado, reservado para futuro tier premium |
 
-## 📁 Estructura del proyecto
+## Estructura del proyecto
 
 ```
 src/
-├── app/                         # Páginas (Next.js App Router)
-│   ├── layout.tsx               # Layout raíz (fuentes, tema, providers)
+├── app/                         # Paginas (Next.js App Router)
+│   ├── layout.tsx               # Layout raiz (fuentes, tema, providers)
 │   ├── page.tsx                 # Landing page
-│   ├── explore/                 # Búsqueda y descubrimiento de profesionales
-│   ├── professional/[id]/       # Perfil público de profesional + booking card
-│   ├── book/[sessionId]/        # Flujo de reserva (basado en créditos)
-│   ├── onboarding/
-│   │   └── professional/        # Onboarding del profesional tras registro
-│   ├── dashboard/
-│   │   ├── client/              # Dashboard del cliente (sesiones + créditos + reseñas)
-│   │   └── professional/        # Dashboard del profesional (sesiones + impacto + disponibilidad)
+│   ├── explore/                 # Busqueda y descubrimiento de profesionales
+│   ├── professional/[id]/       # Perfil publico + booking card
+│   ├── book/[sessionId]/        # Flujo de reserva (basado en creditos)
 │   ├── session/[id]/            # Sala de videollamada (Daily.co)
+│   ├── dashboard/
+│   │   ├── client/              # Dashboard del cliente (sesiones + creditos + resenas)
+│   │   └── professional/        # Dashboard del profesional (sesiones + impacto + disponibilidad)
+│   ├── categoria/[slug]/        # Landing pages por categoria (SEO)
+│   ├── notifications/           # Historial de notificaciones
+│   ├── onboarding/
+│   │   └── professional/        # Wizard de onboarding para profesionales
 │   ├── auth/
 │   │   ├── login/
-│   │   └── register/
+│   │   ├── register/
+│   │   ├── complete-profile/
+│   │   └── forgot-password/
 │   ├── legal/
-│   │   ├── privacidad/          # Política de privacidad
-│   │   └── terminos/            # Términos y condiciones
-│   └── api/
-│       ├── register/            # POST — registro de usuario
-│       ├── professionals/       # GET lista + GET [id] + POST/PUT /me
-│       ├── sessions/            # GET lista + GET/PATCH [id]
-│       ├── credits/             # GET — estado de créditos del cliente
-│       │   └── use/             # POST — reservar sesión gratuita con créditos
-│       ├── rewards/             # GET puntos de impacto + POST canjear recompensa
-│       ├── categories/          # GET — categorías profesionales
-│       ├── availability/        # GET + PUT — disponibilidad semanal
-│       ├── reviews/             # POST — crear reseña + actualizar rating
-│       ├── certifications/      # GET + POST + DELETE — certificaciones
-│       ├── referrals/           # GET + POST — sistema de referidos
-│       ├── notifications/       # GET + PATCH — notificaciones in-app
-│       ├── upload/              # POST — subida de imágenes (Cloudinary)
-│       ├── daily/
-│       │   └── create-room/     # POST — crear sala Daily.co
-│       ├── payments/            # (Legacy) Stripe PaymentIntent
-│       ├── webhooks/stripe/     # (Legacy) Stripe webhook
-│       └── stripe/              # (Legacy) Stripe Connect
+│   │   ├── privacidad/
+│   │   └── terminos/
+│   └── api/                     # (ver seccion API Routes)
 ├── components/
 │   ├── ui/                      # Componentes base shadcn/ui
-│   ├── layout/                  # Navbar, Footer, ThemeToggle
+│   ├── layout/                  # Navbar, Footer, ThemeToggle, NotificationBell
 │   ├── landing/                 # Secciones de la landing page
 │   └── shared/                  # Componentes reutilizables compuestos
 ├── lib/
-│   ├── auth.ts                  # Configuración NextAuth
+│   ├── auth.ts                  # Configuracion NextAuth
 │   ├── prisma.ts                # Singleton del cliente Prisma
-│   ├── credits-config.ts        # Configuración del sistema freemium
-│   ├── validations.ts           # Esquemas Zod para validación
-│   ├── emails.ts                # Plantillas de email + helpers de envío
+│   ├── credits-config.ts        # Configuracion del sistema freemium
+│   ├── validations.ts           # Esquemas Zod para validacion
+│   ├── emails/                  # Plantillas de email y helpers de envio
 │   ├── notifications.ts         # Sistema de notificaciones in-app
-│   ├── resend.ts                # Singleton del cliente Resend
-│   ├── cloudinary.ts            # Integración con Cloudinary
-│   ├── stripe.ts                # Singleton de Stripe (legacy)
+│   ├── rate-limit.ts            # Rate limiting con Upstash Redis
+│   ├── cloudinary.ts            # Integracion con Cloudinary
+│   ├── logger.ts                # Logger estructurado JSON
 │   └── utils.ts                 # cn, formatDate, formatTime, etc.
 ├── data/
 │   └── mock.ts                  # Datos mock para desarrollo
 └── types/
     └── index.ts                 # Tipos TypeScript compartidos
 prisma/
-├── schema.prisma                # Esquema de la base de datos
+├── schema.prisma                # Esquema de la base de datos (19 modelos)
 └── seed.ts                      # Seed con usuarios de prueba
 ```
 
-## ⚙️ Instalación y puesta en marcha
+## Instalacion y puesta en marcha
 
 ```bash
 # 1. Instalar dependencias
@@ -107,7 +95,7 @@ npm run db:generate
 # 4. Aplicar el esquema a la base de datos (desarrollo)
 npm run db:push
 
-# 5. (Opcional) Insertar usuarios de prueba
+# 5. Insertar usuarios de prueba
 npm run db:seed
 
 # 6. Arrancar el servidor de desarrollo
@@ -116,132 +104,183 @@ npm run dev
 
 Abre [http://localhost:3000](http://localhost:3000) en tu navegador.
 
-## 🔑 Variables de entorno
+Para levantar PostgreSQL en local:
+
+```bash
+docker-compose up -d
+```
+
+## Variables de entorno
 
 Consulta `.env.example` para ver todas las variables. Las principales:
 
-| Variable | Descripción |
+| Variable | Descripcion |
 |----------|-------------|
-| `DATABASE_URL` | URL del pooler de Supabase (puerto 6543, `?pgbouncer=true`) |
-| `DIRECT_URL` | URL directa de Supabase (puerto 5432) — necesaria para migraciones Prisma |
+| `DATABASE_URL` | URL pooler Supabase (puerto 6543, `?pgbouncer=true`) |
+| `DIRECT_URL` | URL directa Supabase (puerto 5432) — para migraciones Prisma |
 | `NEXTAUTH_SECRET` | Genera con `openssl rand -base64 32` |
 | `NEXTAUTH_URL` | `http://localhost:3000` en local |
+| `NEXT_PUBLIC_SITE_URL` | URL publica para OG, sitemap y emails |
 | `DAILY_API_KEY` | Desde el dashboard de daily.co |
 | `RESEND_API_KEY` | Desde resend.com |
-| `RESEND_FROM_EMAIL` | `GuidePath <onboarding@resend.dev>` para tier gratuito en desarrollo |
-| `STRIPE_SECRET_KEY` | (Opcional) Solo para futuro tier premium |
+| `CLOUDINARY_CLOUD_NAME` | Nombre del cloud en Cloudinary |
+| `CLOUDINARY_API_KEY` | API key de Cloudinary |
+| `CLOUDINARY_API_SECRET` | API secret de Cloudinary |
+| `UPSTASH_REDIS_REST_URL` | URL REST de Upstash Redis (rate limiting) |
+| `UPSTASH_REDIS_REST_TOKEN` | Token de Upstash Redis |
+| `CRON_SECRET` | Secreto para proteger endpoints cron |
 | `GOOGLE_CLIENT_ID` | (Opcional) Para login con Google OAuth |
+| `STRIPE_SECRET_KEY` | (Opcional) Solo para futuro tier premium |
 
-## 👤 Usuarios de prueba
+## Usuarios de prueba
 
 Disponibles tras ejecutar `npm run db:seed`:
 
-| Email | Contraseña | Rol |
+| Email | Contrasena | Rol |
 |-------|------------|-----|
 | `cliente@guidepath.dev` | `password123` | CLIENT |
 | `profesional@guidepath.dev` | `password123` | PROFESSIONAL |
 
-## 🔄 Flujo de reserva (end-to-end)
+## Flujo de reserva (end-to-end)
 
 1. El cliente visita `/explore` y descubre profesionales → entra en `/professional/[id]`
 2. Selecciona fecha y hora → navega a `/book/new?professional=...&date=...&time=...`
-3. La página de reserva consulta `/api/credits` → muestra créditos restantes
+3. La pagina de reserva consulta `/api/credits` → muestra creditos restantes
 4. El cliente pulsa **"Confirmar reserva gratuita"** → `POST /api/credits/use`
-5. La API valida créditos → crea Sesión (CONFIRMED) → incrementa `freeCreditsUsed` → envía emails
-6. Cliente y profesional reciben confirmación por email
+5. La API valida creditos → crea Sesion (CONFIRMED) → incrementa `freeCreditsUsed` → envia emails
+6. Cliente y profesional reciben confirmacion por email
 7. El cliente entra en `/session/[id]` → `POST /api/daily/create-room` → aparece la videollamada
-8. Tras la sesión: el profesional marca COMPLETED → se otorgan puntos de impacto → el cliente puede dejar reseña
+8. Tras la sesion: el profesional marca COMPLETED → se otorgan puntos de impacto → el cliente puede dejar resena
 
-## 🏆 Sistema de créditos y recompensas
+## Sistema de creditos y recompensas
 
 | Concepto | Valor |
 |----------|-------|
 | Sesiones gratuitas / mes (cliente) | 3 |
-| Puntos de impacto por sesión completada | +10 |
-| Puntos para certificación profesional | 100 |
-| Puntos para donación solidaria | 50 |
+| Puntos de impacto por sesion completada | +10 |
+| Puntos para certificacion profesional | 100 |
+| Puntos para donacion solidaria | 50 |
 
-Configuración en `src/lib/credits-config.ts`:
+Configuracion en `src/lib/credits-config.ts`.
 
-```typescript
-export const CREDITS_CONFIG = {
-  FREE_SESSIONS_PER_MONTH: 3,
-  IMPACT_POINTS_PER_SESSION: 10,
-  IMPACT_POINTS_CERTIFICATION: 100,
-  IMPACT_POINTS_DONATION: 50,
-} as const;
-```
+## API Routes
 
-## 🛣️ API Routes
+### Autenticacion y usuarios
 
-| Método | Ruta | Auth | Descripción |
+| Metodo | Ruta | Auth | Descripcion |
 |--------|------|------|-------------|
-| POST | `/api/register` | No | Crear cuenta de usuario |
-| GET | `/api/professionals` | No | Listar profesionales (filtros: categoría, búsqueda) |
-| GET | `/api/professionals/[id]` | No | Perfil + disponibilidad + reseñas |
-| GET | `/api/professionals/me` | Sí | Perfil del profesional autenticado |
-| POST | `/api/professionals/me` | Sí | Crear perfil profesional (onboarding) |
-| PUT | `/api/professionals/me` | Sí | Actualizar perfil profesional |
-| GET | `/api/sessions` | Sí | Sesiones del usuario (próximas + pasadas) |
-| GET | `/api/sessions/[id]` | Sí | Detalle de sesión |
-| PATCH | `/api/sessions/[id]` | Sí | Actualizar estado (CANCELLED, COMPLETED + otorgar puntos) |
-| GET | `/api/credits` | Sí | Estado de créditos del cliente |
-| POST | `/api/credits/use` | Sí (cliente) | Reservar sesión gratuita |
-| GET | `/api/rewards` | Sí (profesional) | Puntos de impacto + historial de canjes |
-| POST | `/api/rewards` | Sí (profesional) | Canjear puntos por recompensa |
-| GET | `/api/categories` | No | Categorías profesionales disponibles |
-| GET | `/api/availability` | Sí (profesional) | Disponibilidad semanal |
-| PUT | `/api/availability` | Sí (profesional) | Reemplazar disponibilidad (atómico) |
-| POST | `/api/reviews` | Sí (cliente) | Crear reseña + actualizar rating agregado |
-| POST | `/api/daily/create-room` | Sí | Crear sala de videollamada Daily.co |
-| GET | `/api/notifications` | Sí | Notificaciones del usuario |
-| POST | `/api/upload` | Sí | Subir imagen de perfil |
+| POST | `/api/auth/register` | No | Crear cuenta de usuario |
+| GET/PUT | `/api/professionals/me` | Si | Perfil del profesional autenticado |
+| POST | `/api/auth/update-role` | Si | Actualizar rol de usuario |
 
-## 🎨 Sistema de diseño
+### Profesionales y categorias
 
-- **Colores**: Base neutral (white ↔ zinc-950) + acento indigo-600
-- **Tipografía**: Inter (cuerpo) + Geist (títulos) — cargadas localmente
+| Metodo | Ruta | Auth | Descripcion |
+|--------|------|------|-------------|
+| GET | `/api/professionals` | No | Listar profesionales (filtros: categoria, busqueda, paginacion) |
+| GET | `/api/professionals/[id]` | No | Perfil + disponibilidad + resenas |
+| GET | `/api/categories` | No | Categorias profesionales disponibles |
+
+### Sesiones
+
+| Metodo | Ruta | Auth | Descripcion |
+|--------|------|------|-------------|
+| GET | `/api/sessions` | Si | Sesiones del usuario (proximas + pasadas) |
+| GET | `/api/sessions/[id]` | Si | Detalle de sesion con rol (client/professional) |
+| PATCH | `/api/sessions/[id]` | Si | Actualizar estado (CANCELLED, COMPLETED + puntos) |
+| POST | `/api/sessions/[id]/reschedule` | Si | Solicitar reprogramacion |
+| GET | `/api/sessions/[id]/room` | Si | Info de sala Daily.co |
+
+### Creditos y recompensas
+
+| Metodo | Ruta | Auth | Descripcion |
+|--------|------|------|-------------|
+| GET | `/api/credits` | Si (cliente) | Estado de creditos del cliente |
+| POST | `/api/credits/use` | Si (cliente) | Reservar sesion gratuita |
+| GET | `/api/rewards` | Si (profesional) | Puntos de impacto + historial de canjes |
+| POST | `/api/rewards` | Si (profesional) | Canjear puntos por recompensa |
+
+### Resenas y disponibilidad
+
+| Metodo | Ruta | Auth | Descripcion |
+|--------|------|------|-------------|
+| GET/POST | `/api/reviews` | Si | Crear resena + actualizar rating agregado |
+| GET | `/api/reviews/received` | Si (prof.) | Resenas recibidas del profesional |
+| POST | `/api/reviews/[id]/respond` | Si (prof.) | Responder a una resena |
+| POST | `/api/reviews/[id]/report` | Si | Reportar una resena |
+| GET/PUT | `/api/availability` | Si (prof.) | Disponibilidad semanal (reemplazo atomico) |
+| POST | `/api/blocked-dates` | Si (prof.) | Bloquear fechas especificas |
+
+### Comunicacion
+
+| Metodo | Ruta | Auth | Descripcion |
+|--------|------|------|-------------|
+| GET/POST | `/api/conversations` | Si | Lista + crear conversacion |
+| GET/POST | `/api/conversations/[id]/messages` | Si | Mensajes de una conversacion |
+| GET | `/api/messages/unread` | Si | Conteo de mensajes no leidos |
+| GET/PATCH | `/api/notifications` | Si | Notificaciones in-app |
+
+### Herramientas y utilidades
+
+| Metodo | Ruta | Auth | Descripcion |
+|--------|------|------|-------------|
+| POST | `/api/daily/create-room` | Si | Crear sala de videollamada Daily.co |
+| POST | `/api/upload` | Si | Subir imagen de perfil (Cloudinary) |
+| GET/POST | `/api/certifications` | Si (prof.) | Gestionar certificaciones |
+| GET/POST | `/api/referrals` | Si | Sistema de referidos |
+| POST | `/api/referrals/redeem` | Si | Canjear codigo de referido |
+| POST | `/api/feedback` | Si | Enviar feedback de beta |
+| POST | `/api/waitlist` | No | Unirse a la lista de espera |
+| GET | `/api/health` | No | Health check del sistema |
+
+### Cron jobs (protegidos con CRON_SECRET)
+
+| Metodo | Ruta | Descripcion |
+|--------|------|-------------|
+| POST | `/api/cron/session-reminders` | Envia recordatorios de sesiones proximas |
+| POST | `/api/cron/session-cleanup` | Cancela sesiones expiradas sin confirmar |
+| POST | `/api/cron/onboarding-emails` | Emails de onboarding para nuevos profesionales |
+
+## Sistema de diseno
+
+- **Colores**: Base neutral (white <-> zinc-950) + acento indigo-600
+- **Tipografia**: Inter (cuerpo) + Geist (titulos) — cargadas localmente
 - **Componentes**: shadcn/ui con tarjetas glassmorphism personalizadas (`.glass`)
 - **Animaciones**: Framer Motion con triggers de scroll + micro-interacciones
 - **Responsive**: Mobile-first con breakpoints en sm/md/lg/xl
 - **Tema**: Dark/light mode con `next-themes` (estrategia por clase CSS)
-- **Logo**: SVG personalizado "GP" con flecha ascendente en azul
 
-## 🧪 Testing
+## Testing
 
 ```bash
-# Tests unitarios (Vitest)
-npm test
-
-# Tests e2e (Playwright)
-npm run test:e2e
+npm test               # Tests unitarios e integracion (Vitest)
+npm run test:watch     # Modo watch
+npm run test:e2e       # Tests E2E (Playwright)
 ```
 
-## 🌐 Idioma
+## Idioma
 
-- **UI**: Español (España) — todo el texto visible para el usuario
-- **Código**: Inglés — variables, comentarios y documentación técnica
+- **UI**: Espanol (Espana) — todo el texto visible para el usuario
+- **Codigo**: Ingles — variables, comentarios y documentacion tecnica
 
-## 📌 Ramas
+## Ramas
 
-| Rama | Propósito |
+| Rama | Proposito |
 |------|-----------|
-| `main` | Código estable / baseline |
+| `main` | Codigo estable / baseline |
 | `develop` | Rama principal de desarrollo activo |
 
-La rama `develop` contiene todo el trabajo de features (auth, créditos, impacto social, Daily.co, Resend, reseñas, disponibilidad). Usa esta rama para testing y desarrollo.
-
-## 📐 Decisiones de arquitectura
+## Decisiones de arquitectura
 
 1. **App Router** — Next.js 14 con layouts, server components y streaming
 2. **Schema-first DB** — Prisma define todos los modelos; `db:push` para dev, `db:migrate` para prod
 3. **Supabase PostgreSQL** — URL pooler (puerto 6543) para queries; URL directa (puerto 5432) para migraciones
-4. **Flujo freemium** — `POST /api/credits/use` crea sesión CONFIRMED directamente, sin pago
-5. **Puntos de impacto** — Los profesionales acumulan puntos por sesión completada, canjeables vía `POST /api/rewards`
-6. **Configuración centralizada** — `credits-config.ts` como source of truth para todos los límites
-7. **Daily.co con import dinámico** — `@daily-co/daily-js` se importa en `useEffect` para evitar crash en SSR
-8. **Emails fire-and-forget** — Los envíos usan `Promise.allSettled` para que los fallos no rompan las respuestas de la API
-9. **Rating incremental** — Las reseñas actualizan el rating como `(oldRating * oldCount + newRating) / newCount`
-10. **Disponibilidad atómica** — `PUT /api/availability` usa `prisma.$transaction([deleteMany, createMany])`
+4. **Flujo freemium** — `POST /api/credits/use` crea sesion CONFIRMED directamente, sin pago
+5. **Puntos de impacto** — Los profesionales acumulan puntos por sesion completada, canjeables via `POST /api/rewards`
+6. **Configuracion centralizada** — `credits-config.ts` como source of truth para todos los limites
+7. **Daily.co con import dinamico** — `@daily-co/daily-js` se importa en `useEffect` para evitar crash en SSR
+8. **Emails fire-and-forget** — Los envios usan `Promise.allSettled` para que los fallos no rompan las respuestas de la API
+9. **Rating incremental** — Las resenas actualizan el rating como `(oldRating * oldCount + newRating) / newCount`
+10. **Disponibilidad atomica** — `PUT /api/availability` usa `prisma.$transaction([deleteMany, createMany])`
 11. **Dark/light mode** — `next-themes` con estrategia de clase y variables CSS
-12. **Stripe como legacy** — Flujo de pago preservado pero pausado; para futuro tier premium de suscripción
+12. **Stripe como legacy** — Flujo de pago preservado pero pausado; para futuro tier premium
