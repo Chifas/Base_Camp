@@ -7,6 +7,7 @@ import {
   FeaturedProfessionals,
   FeaturedProfessionalsSkeleton,
 } from "@/components/landing/featured-professionals";
+import { BentoShowcase } from "@/components/landing/bento-showcase";
 import { Testimonials } from "@/components/landing/testimonials";
 import { CTA } from "@/components/landing/cta";
 import { TrustBar } from "@/components/landing/trust-bar";
@@ -41,6 +42,7 @@ export default function HomePage() {
       <Suspense fallback={<FeaturedProfessionalsSkeleton />}>
         <AsyncFeaturedProfessionals />
       </Suspense>
+      <BentoShowcase />
       <Testimonials />
       <CTA />
     </>

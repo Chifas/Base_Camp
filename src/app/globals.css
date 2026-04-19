@@ -104,6 +104,22 @@ html {
   background-clip: text;
 }
 
+/* Gradient text for dark backgrounds (more luminous palette) */
+.text-gradient-on-dark {
+  background: linear-gradient(135deg, #a5b4fc 0%, #f0abfc 45%, #93c5fd 100%);
+  background-size: 200% 200%;
+  animation: gradient-shift 6s ease infinite;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
 /* Button glow effect */
 .btn-glow {
   box-shadow: 0 0 20px hsl(var(--primary) / 0.3), 0 0 60px hsl(var(--primary) / 0.1);
@@ -122,13 +138,15 @@ html {
   scrollbar-width: none;
 }
 
-/* Navbar scroll state */
-.navbar-scrolled {
-  background-color: hsl(var(--background) / 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+/* Navbar pill — default (at top) already has light glass from Tailwind.
+   Scrolled state strengthens opacity + adds a lifted shadow so the floating
+   pill reads clearly against any background below it. */
+.navbar-scrolled .navbar-pill {
+  background-color: hsl(var(--background) / 0.9);
   border-color: hsl(var(--border));
-  box-shadow: 0 1px 0 hsl(var(--border) / 0.6);
+  box-shadow:
+    0 10px 30px -12px hsl(var(--foreground) / 0.18),
+    0 1px 0 hsl(var(--border) / 0.6);
 }
 
 /* Scroll indicator gentle bounce */
@@ -145,4 +163,34 @@ html {
   background: linear-gradient(135deg, hsl(238 73% 45%), hsl(258 80% 55%), hsl(238 73% 50%));
   background-size: 200% 200%;
   animation: gradient-shift 8s ease infinite;
+}
+
+/* ─── GSAP entrance state (hides only when JS is ready) ──────────────────────
+   Applied via <html class="js-ready"> set by an inline <head> script BEFORE
+   the browser paints the body. If JS fails or CSP blocks the script, the
+   `js-ready` class is never added and content stays visible by default.
+   A 1.2s timeout adds `.gsap-fallback` which force-reveals anything still
+   hidden — safety net against hydration errors or CSP blocks. */
+html.js-ready [data-gsap-init] {
+  opacity: 0;
+}
+
+html.js-ready [data-gsap-clip] {
+  opacity: 0;
+  clip-path: inset(0 0 100% 0 round 24px);
+}
+
+html.gsap-fallback [data-gsap-init],
+html.gsap-fallback [data-gsap-clip] {
+  opacity: 1 !important;
+  clip-path: none !important;
+  transition: opacity 0.4s ease-out, clip-path 0.4s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.js-ready [data-gsap-init],
+  html.js-ready [data-gsap-clip] {
+    opacity: 1;
+    clip-path: none;
+  }
 }

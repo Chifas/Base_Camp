@@ -60,7 +60,7 @@ export function CTA() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div
           ref={boxRef}
-          style={{ opacity: 0, clipPath: "inset(0 0 100% 0 round 24px)" }}
+          data-gsap-clip
           className="relative overflow-hidden rounded-3xl cta-gradient px-8 py-16 text-center sm:px-16 sm:py-24"
         >
           {/* Border glow */}
@@ -76,7 +76,7 @@ export function CTA() {
           <div className="relative">
             <div
               data-cta-icon
-              style={{ opacity: 0 }}
+              data-gsap-init
               className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15 backdrop-blur-sm ring-1 ring-white/20"
             >
               <Sparkles className="h-7 w-7 text-white" />
@@ -84,7 +84,7 @@ export function CTA() {
 
             <h2
               data-cta-headline
-              style={{ opacity: 0 }}
+              data-gsap-init
               className="font-heading text-3xl font-bold tracking-tight text-primary-foreground sm:text-4xl lg:text-5xl"
             >
               ¿Listo para dar el siguiente
@@ -93,7 +93,7 @@ export function CTA() {
 
             <p
               data-cta-sub
-              style={{ opacity: 0 }}
+              data-gsap-init
               className="mx-auto mt-5 max-w-xl text-lg text-primary-foreground/80 leading-relaxed"
             >
               Conecta con el mentor o coach que necesitas. Reserva tu primera
@@ -102,7 +102,7 @@ export function CTA() {
 
             <div
               data-cta-btns
-              style={{ opacity: 0 }}
+              data-gsap-init
               className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row"
             >
               <Button

@@ -6,7 +6,7 @@ import { CATEGORY_LABELS } from "@/types";
  * Fetch and score professionals for the landing page featured section.
  * Applies a daily-rotation factor so the order varies each day.
  */
-export async function getFeaturedProfessionals(limit = 4): Promise<Professional[]> {
+export async function getFeaturedProfessionals(limit = 6): Promise<Professional[]> {
   try {
     const professionals = await prisma.professionalProfile.findMany({
       include: {

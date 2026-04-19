@@ -3,173 +3,209 @@
 import Image from "next/image";
 import { useRef } from "react";
 import { Star, Quote } from "lucide-react";
-import { gsap, useGSAP } from "@/lib/gsap-config";
-import { FadeIn } from "@/components/shared/motion-wrapper";
+import { gsap, ScrollTrigger, useGSAP } from "@/lib/gsap-config";
+import { BentoGrid } from "@/components/bento/bento-grid";
 import { TESTIMONIALS } from "@/data/mock";
 
-// Enough copies for seamless dual-row infinite loop
-const row1 = [...TESTIMONIALS, ...TESTIMONIALS, ...TESTIMONIALS, ...TESTIMONIALS];
-const row2 = [...TESTIMONIALS, ...TESTIMONIALS, ...TESTIMONIALS, ...TESTIMONIALS].reverse();
+type Tone = "dark" | "glass" | "primary" | "amber" | "emerald" | "violet" | "rose";
 
-function TestimonialCard({
-  testimonial,
-}: {
-  testimonial: (typeof TESTIMONIALS)[number];
-}) {
-  return (
-    <div className="glass relative w-[320px] shrink-0 rounded-2xl p-6 mx-3 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl group">
-      <div className="mb-4 flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
-        <Quote className="h-4 w-4 text-primary" />
-      </div>
+const TONE_CLASSES: Record<Tone, string> = {
+  dark: "bg-zinc-950 text-white border-white/10",
+  glass:
+    "bg-white/70 dark:bg-zinc-900/60 backdrop-blur-xl border-white/50 dark:border-white/10",
+  primary:
+    "bg-gradient-to-br from-indigo-500 via-indigo-600 to-violet-700 text-white border-indigo-400/30",
+  amber:
+    "bg-gradient-to-br from-amber-400 to-orange-500 text-white border-amber-300/40",
+  emerald:
+    "bg-gradient-to-br from-emerald-500 to-teal-600 text-white border-emerald-400/30",
+  violet:
+    "bg-gradient-to-br from-violet-500 to-fuchsia-600 text-white border-violet-400/30",
+  rose:
+    "bg-gradient-to-br from-rose-500 to-pink-600 text-white border-rose-400/30",
+};
 
-      <div className="flex gap-0.5">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Star
-            key={i}
-            className={`h-4 w-4 ${
-              i < testimonial.rating
-                ? "fill-yellow-400 text-yellow-400 drop-shadow-[0_0_4px_rgba(250,204,21,0.4)]"
-                : "text-muted-foreground/30"
-            }`}
-          />
-        ))}
-      </div>
+// Pick 5 testimonials, first one gets hero card treatment
+const items = TESTIMONIALS.slice(0, 5);
 
-      <blockquote className="mt-4 text-sm leading-relaxed text-muted-foreground line-clamp-4">
-        &ldquo;{testimonial.quote}&rdquo;
-      </blockquote>
+type Card = {
+  tone: Tone;
+  span: string;
+  variant: "hero" | "compact";
+};
 
-      <div className="mt-5 mb-4 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
-
-      <div className="flex items-center gap-3">
-        <div className="relative h-10 w-10 overflow-hidden rounded-full ring-2 ring-primary/10 group-hover:ring-primary/30 transition-all">
-          <Image
-            src={testimonial.image}
-            alt={testimonial.name}
-            fill
-            className="object-cover"
-            sizes="40px"
-          />
-        </div>
-        <div>
-          <p className="text-sm font-semibold">{testimonial.name}</p>
-          <p className="text-xs text-muted-foreground">{testimonial.role}</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function MarqueeRow({
-  items,
-  direction,
-  trackRef,
-}: {
-  items: typeof TESTIMONIALS;
-  direction: "left" | "right";
-  trackRef: React.RefObject<HTMLDivElement>;
-}) {
-  return (
-    <div className="relative overflow-hidden py-2">
-      <div
-        ref={trackRef}
-        className="flex will-change-transform"
-        style={{ width: "max-content" }}
-      >
-        {items.map((t, i) => (
-          <TestimonialCard key={`${t.id}-${i}`} testimonial={t} />
-        ))}
-      </div>
-    </div>
-  );
-}
+const LAYOUT: Card[] = [
+  { tone: "dark", span: "col-span-2 sm:col-span-4 md:col-span-6 lg:col-span-7 row-span-2", variant: "hero" },
+  { tone: "glass", span: "col-span-2 sm:col-span-4 md:col-span-3 lg:col-span-5", variant: "compact" },
+  { tone: "amber", span: "col-span-2 sm:col-span-2 md:col-span-3 lg:col-span-5", variant: "compact" },
+  { tone: "violet", span: "col-span-2 sm:col-span-2 md:col-span-3 lg:col-span-6", variant: "compact" },
+  { tone: "emerald", span: "col-span-2 sm:col-span-4 md:col-span-3 lg:col-span-6", variant: "compact" },
+];
 
 export function Testimonials() {
-  const wrapperRef = useRef<HTMLDivElement>(null);
-  const track1Ref = useRef<HTMLDivElement>(null);
-  const track2Ref = useRef<HTMLDivElement>(null);
+  const sectionRef = useRef<HTMLElement>(null);
+  const headingRef = useRef<HTMLHeadingElement>(null);
 
   useGSAP(
-    (_, contextSafe) => {
-      const t1 = track1Ref.current;
-      const t2 = track2Ref.current;
-      if (!t1 || !t2) return;
+    () => {
+      const root = sectionRef.current;
+      if (!root) return;
 
-      const halfW1 = t1.scrollWidth / 2;
-      const halfW2 = t2.scrollWidth / 2;
+      const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const cards = gsap.utils.toArray<HTMLElement>("[data-testi-card]", root);
 
-      const speed = 80; // px/s
+      if (reduced) {
+        gsap.set(cards, { opacity: 1, y: 0, scale: 1 });
+        return;
+      }
 
-      const tween1 = gsap.to(t1, {
-        x: `-=${halfW1}`,
-        duration: halfW1 / speed,
-        ease: "none",
-        repeat: -1,
-        modifiers: { x: gsap.utils.unitize((x) => parseFloat(x) % halfW1) },
+      gsap.set(cards, { opacity: 0, y: 48, scale: 0.96 });
+
+      ScrollTrigger.batch(cards, {
+        start: "top 86%",
+        once: true,
+        onEnter: (els) =>
+          gsap.to(els, {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            duration: 0.9,
+            ease: "expo.out",
+            stagger: { amount: 0.45 },
+          }),
       });
-
-      const tween2 = gsap.fromTo(
-        t2,
-        { x: `-${halfW2 * 0.5}` },
-        {
-          x: 0,
-          duration: halfW2 / speed,
-          ease: "none",
-          repeat: -1,
-          modifiers: { x: gsap.utils.unitize((x) => parseFloat(x) % halfW2) },
-        }
-      );
-
-      const pause1 = contextSafe!(() => tween1.pause());
-      const play1 = contextSafe!(() => tween1.play());
-      const pause2 = contextSafe!(() => tween2.pause());
-      const play2 = contextSafe!(() => tween2.play());
-
-      t1.addEventListener("mouseenter", pause1 as EventListener);
-      t1.addEventListener("mouseleave", play1 as EventListener);
-      t2.addEventListener("mouseenter", pause2 as EventListener);
-      t2.addEventListener("mouseleave", play2 as EventListener);
-
-      return () => {
-        tween1.kill();
-        tween2.kill();
-        t1.removeEventListener("mouseenter", pause1 as EventListener);
-        t1.removeEventListener("mouseleave", play1 as EventListener);
-        t2.removeEventListener("mouseenter", pause2 as EventListener);
-        t2.removeEventListener("mouseleave", play2 as EventListener);
-      };
     },
-    { scope: wrapperRef }
+    { scope: sectionRef }
   );
 
   return (
-    <section className="bg-muted/30 py-20 sm:py-28">
+    <section ref={sectionRef} className="bg-muted/30 py-20 sm:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <FadeIn className="mx-auto max-w-2xl text-center">
-          <p className="text-sm font-semibold uppercase tracking-widest text-primary mb-2">
-            Testimonios
+        <div className="mx-auto max-w-2xl text-center">
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">
+            Voces reales
           </p>
-          <h2 className="font-heading text-3xl font-bold tracking-tight sm:text-4xl">
-            Lo que dicen nuestros usuarios
+          <h2
+            ref={headingRef}
+            className="mt-3 font-heading text-4xl font-bold tracking-tight sm:text-5xl"
+          >
+            Lo que cuentan quienes ya lo han vivido
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            Miles de profesionales ya han encontrado la orientación que
-            necesitaban.
+            Miles de profesionales han encontrado en GuidePath la orientación
+            que estaban buscando.
           </p>
-        </FadeIn>
+        </div>
 
-      {/* Dual-row marquee */}
-      <div ref={wrapperRef} className="relative mt-14 space-y-4">
-        {/* Fade edges */}
-        <div className="pointer-events-none absolute left-0 top-0 bottom-0 z-10 w-20 sm:w-40 bg-gradient-to-r from-muted/80 to-transparent dark:from-background" />
-        <div className="pointer-events-none absolute right-0 top-0 bottom-0 z-10 w-20 sm:w-40 bg-gradient-to-l from-muted/80 to-transparent dark:from-background" />
+        <BentoGrid columns={12} gap="normal" className="mt-14">
+          {items.map((t, i) => {
+            const layout = LAYOUT[i] ?? LAYOUT[LAYOUT.length - 1];
+            const isHero = layout.variant === "hero";
+            const isDark =
+              layout.tone === "dark" ||
+              layout.tone === "primary" ||
+              layout.tone === "amber" ||
+              layout.tone === "violet" ||
+              layout.tone === "emerald" ||
+              layout.tone === "rose";
 
-        {/* Row 1 — left */}
-        <MarqueeRow items={row1} direction="left" trackRef={track1Ref} />
+            return (
+              <article
+                key={t.id}
+                data-testi-card
+                className={`relative overflow-hidden rounded-3xl ${TONE_CLASSES[layout.tone]} ${
+                  layout.span
+                } ${isHero ? "p-8 sm:p-10" : "p-6 sm:p-7"} flex flex-col`}
+              >
+                {/* Aurora for dark hero */}
+                {isHero && (
+                  <>
+                    <span
+                      aria-hidden
+                      className="pointer-events-none absolute inset-0"
+                      style={{
+                        background:
+                          "radial-gradient(70% 60% at 20% 10%, rgba(99,102,241,0.5) 0%, transparent 70%), radial-gradient(50% 50% at 90% 80%, rgba(236,72,153,0.3) 0%, transparent 65%)",
+                      }}
+                    />
+                    <span
+                      aria-hidden
+                      className="pointer-events-none absolute inset-0 opacity-[0.1]"
+                      style={{
+                        backgroundImage:
+                          "linear-gradient(to right, rgba(255,255,255,0.15) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.15) 1px, transparent 1px)",
+                        backgroundSize: "38px 38px",
+                      }}
+                    />
+                  </>
+                )}
 
-        {/* Row 2 — right (offset) */}
-        <MarqueeRow items={row2} direction="right" trackRef={track2Ref} />
-      </div>
+                <div className="relative z-[1] flex h-full flex-col">
+                  <div
+                    className={`flex h-10 w-10 items-center justify-center rounded-2xl ${
+                      isDark ? "bg-white/15 ring-1 ring-white/20" : "bg-primary/10"
+                    }`}
+                  >
+                    <Quote className={`h-5 w-5 ${isDark ? "text-white" : "text-primary"}`} />
+                  </div>
+
+                  <div className="mt-5 flex gap-0.5">
+                    {Array.from({ length: 5 }).map((_, si) => (
+                      <Star
+                        key={si}
+                        className={`h-4 w-4 ${
+                          si < t.rating
+                            ? "fill-yellow-400 text-yellow-400"
+                            : isDark
+                            ? "text-white/20"
+                            : "text-muted-foreground/30"
+                        }`}
+                      />
+                    ))}
+                  </div>
+
+                  <blockquote
+                    className={`mt-5 font-heading tracking-tight leading-snug ${
+                      isHero
+                        ? "text-2xl sm:text-3xl lg:text-4xl font-semibold"
+                        : "text-base sm:text-lg font-medium"
+                    } ${isDark ? "text-white" : ""}`}
+                  >
+                    &ldquo;{t.quote}&rdquo;
+                  </blockquote>
+
+                  <div
+                    className={`mt-auto pt-6 flex items-center gap-3 ${
+                      isDark ? "border-t border-white/10" : "border-t border-border/60"
+                    }`}
+                  >
+                    <div className="relative h-10 w-10 overflow-hidden rounded-full ring-2 ring-white/20">
+                      <Image
+                        src={t.image}
+                        alt={t.name}
+                        fill
+                        className="object-cover"
+                        sizes="40px"
+                      />
+                    </div>
+                    <div>
+                      <p className={`text-sm font-semibold ${isDark ? "text-white" : ""}`}>
+                        {t.name}
+                      </p>
+                      <p
+                        className={`text-xs ${
+                          isDark ? "text-white/70" : "text-muted-foreground"
+                        }`}
+                      >
+                        {t.role}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+        </BentoGrid>
       </div>
     </section>
   );

@@ -1,10 +1,9 @@
 "use client";
 
-import { useMemo, useEffect, useState, useCallback } from "react";
+import { useMemo, useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
-import { motion } from "framer-motion";
 import { toast } from "sonner";
 import {
   Calendar,
@@ -15,21 +14,26 @@ import {
   ArrowRight,
   X,
   Loader2,
+  Sparkles,
+  Gift,
+  TrendingUp,
+  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FadeIn } from "@/components/shared/motion-wrapper";
 import { DashboardSkeleton } from "@/components/shared/dashboard-skeleton";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PhotoUpload } from "@/components/shared/photo-upload";
 import { BetaFeedbackModal } from "@/components/shared/beta-feedback-modal";
 import { ReferralPanel } from "@/components/shared/referral-panel";
 import { SessionChat } from "@/components/shared/session-chat";
+import { AnimatedCounter } from "@/components/shared/animated-counter";
 import { OnboardingTour, type TourStep } from "@/components/shared/onboarding-tour";
 import { STATUS_LABELS, type Session } from "@/types";
 import { formatDate, formatTime } from "@/lib/utils";
 import { CREDITS_CONFIG } from "@/lib/credits-config";
+import { gsap, ScrollTrigger, useGSAP } from "@/lib/gsap-config";
 
 const CLIENT_TOUR_STEPS: TourStep[] = [
   {
@@ -48,7 +52,7 @@ const CLIENT_TOUR_STEPS: TourStep[] = [
     target: '[data-tour="new-session-btn"]',
     title: "Reserva una sesión",
     description:
-      "Pulsa aquí para explorar mentores, coaches y psicólogos. Elige el que mejor se adapte a lo que necesitas.",
+      "Pulsa aquí para explorar mentores, coaches y psicólogos.",
   },
   {
     target: '[data-tour="dashboard-tabs"]',
@@ -97,7 +101,6 @@ export default function ClientDashboard() {
   const [loadingSessions, setLoadingSessions] = useState(true);
   const [now, setNow] = useState(() => Date.now());
 
-  // Review modal state
   const [reviewSessionId, setReviewSessionId] = useState<string | null>(null);
   const [reviewRating, setReviewRating] = useState(0);
   const [reviewComment, setReviewComment] = useState("");
@@ -110,15 +113,14 @@ export default function ClientDashboard() {
   const [feedbackSessionId, setFeedbackSessionId] = useState<string | null>(null);
   const [chatSessionId, setChatSessionId] = useState<string | null>(null);
 
-  // Credits state
   const [credits, setCredits] = useState<{ used: number; limit: number; remaining: number } | null>(null);
-
-  // Referrals state
   const [referrals, setReferrals] = useState<{ referrals: never[]; stats: { total: 0; completed: 0; pending: 0; totalCredits: 0 } }>({ referrals: [], stats: { total: 0, completed: 0, pending: 0, totalCredits: 0 } });
+
+  const pageRef = useRef<HTMLDivElement>(null);
 
   const fetchReferrals = useCallback(() => {
     fetch("/api/referrals")
-      .then((r) => r.ok ? r.json() : { referrals: [], stats: { total: 0, completed: 0, pending: 0, totalCredits: 0 } })
+      .then((r) => (r.ok ? r.json() : { referrals: [], stats: { total: 0, completed: 0, pending: 0, totalCredits: 0 } }))
       .then(setReferrals)
       .catch(() => {});
   }, []);
@@ -142,7 +144,11 @@ export default function ClientDashboard() {
       });
       if (res.ok) {
         toast.success("Reseña enviada correctamente");
-        setReviewedSessionIds((prev) => { const next = new Set(Array.from(prev)); next.add(reviewSessionId); return next; });
+        setReviewedSessionIds((prev) => {
+          const next = new Set(Array.from(prev));
+          next.add(reviewSessionId);
+          return next;
+        });
         setReviewSessionId(null);
         resetReviewForm();
       } else {
@@ -167,12 +173,12 @@ export default function ClientDashboard() {
 
   useEffect(() => {
     fetch("/api/sessions")
-      .then((r) => r.ok ? r.json() : [])
+      .then((r) => (r.ok ? r.json() : []))
       .then((data) => setSessions(Array.isArray(data) ? data : []))
       .catch(() => setSessions([]))
       .finally(() => setLoadingSessions(false));
     fetch("/api/credits")
-      .then((r) => r.ok ? r.json() : null)
+      .then((r) => (r.ok ? r.json() : null))
       .then(setCredits)
       .catch(() => {});
     fetchReferrals();
@@ -184,175 +190,345 @@ export default function ClientDashboard() {
   }, []);
 
   const upcomingSessions = useMemo(
-    () =>
-      sessions.filter(
-        (s) => s.status === "CONFIRMED" || s.status === "PENDING"
-      ),
+    () => sessions.filter((s) => s.status === "CONFIRMED" || s.status === "PENDING"),
     [sessions]
   );
 
   const pastSessions = useMemo(
-    () =>
-      sessions.filter(
-        (s) => s.status === "COMPLETED" || s.status === "CANCELLED"
-      ),
+    () => sessions.filter((s) => s.status === "COMPLETED" || s.status === "CANCELLED"),
     [sessions]
+  );
+
+  const completedCount = pastSessions.filter((s) => s.status === "COMPLETED").length;
+
+  // Bento reveal
+  useGSAP(
+    () => {
+      const root = pageRef.current;
+      if (!root) return;
+      if (loadingSessions) return;
+
+      const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const header = root.querySelectorAll<HTMLElement>("[data-dash-head]");
+      const cards = gsap.utils.toArray<HTMLElement>("[data-bento-card]", root);
+
+      if (reduced) {
+        gsap.set(header, { opacity: 1, y: 0 });
+        gsap.set(cards, { opacity: 1, y: 0, scale: 1 });
+        return;
+      }
+
+      if (header.length) {
+        gsap.fromTo(
+          header,
+          { opacity: 0, y: 20 },
+          { opacity: 1, y: 0, duration: 0.85, ease: "expo.out", stagger: 0.08 }
+        );
+      }
+
+      if (cards.length) {
+        gsap.set(cards, { opacity: 0, y: 44, scale: 0.95 });
+        const batch = ScrollTrigger.batch(cards, {
+          start: "top 92%",
+          once: true,
+          onEnter: (els) => {
+            gsap.to(els, {
+              opacity: 1,
+              y: 0,
+              scale: 1,
+              duration: 0.9,
+              ease: "expo.out",
+              stagger: { amount: 0.5, from: "start" },
+            });
+          },
+        });
+        requestAnimationFrame(() => ScrollTrigger.refresh());
+        return () => batch.forEach((st) => st.kill());
+      }
+    },
+    { scope: pageRef, dependencies: [loadingSessions] }
   );
 
   if (loadingSessions) return <DashboardSkeleton />;
 
-  return (
-    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
-      <OnboardingTour storageKey="guidepath_tour_client_v1" steps={CLIENT_TOUR_STEPS} />
+  const creditLimit = credits?.limit ?? CREDITS_CONFIG.FREE_SESSIONS_PER_MONTH;
+  const creditsUsed = credits?.used ?? 0;
+  const creditsRemaining = credits?.remaining ?? creditLimit;
+  const creditsPercent = Math.min(100, Math.round((creditsUsed / creditLimit) * 100));
 
-      <FadeIn>
-        <div className="flex items-center justify-between">
+  return (
+    <div ref={pageRef} className="relative">
+      {/* Aurora */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute left-1/2 top-0 h-[400px] w-[900px] -translate-x-1/2 rounded-full bg-gradient-to-br from-indigo-500/10 via-violet-500/8 to-transparent blur-3xl"
+      />
+
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <OnboardingTour storageKey="guidepath_tour_client_v1" steps={CLIENT_TOUR_STEPS} />
+
+        <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="font-heading text-2xl font-bold sm:text-3xl">
-              Mi Panel
+            <p data-dash-head className="text-xs font-semibold uppercase tracking-widest text-primary">
+              Panel de cliente
+            </p>
+            <h1 data-dash-head className="mt-1 font-heading text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
+              Hola, {authSession?.user?.name?.split(" ")[0] || "bienvenido"}
             </h1>
-            <p className="mt-1 text-muted-foreground">
-              Gestiona tus sesiones y revisa tu historial.
+            <p data-dash-head className="mt-2 max-w-xl text-muted-foreground">
+              Gestiona tus sesiones, revisa tu historial y mantén tu camino profesional en movimiento.
             </p>
           </div>
-          <Button asChild data-tour="new-session-btn">
+          <Button data-dash-head asChild data-tour="new-session-btn" className="shrink-0">
             <Link href="/explore">
               Nueva sesión
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
         </div>
-      </FadeIn>
 
-      {/* Stats */}
-      <FadeIn delay={0.1}>
-        <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
-          {[
-            { label: "Sesiones disponibles", value: credits ? `${credits.remaining}/${credits.limit}` : `—/${CREDITS_CONFIG.FREE_SESSIONS_PER_MONTH}`, icon: Calendar, tourAttr: "credits-stat" },
-            { label: "Sesiones completadas", value: pastSessions.filter((s) => s.status === "COMPLETED").length.toString(), icon: Clock, tourAttr: undefined },
-            { label: "Próximas sesiones", value: upcomingSessions.length.toString(), icon: Star, tourAttr: undefined },
-            { label: "Reseñas dejadas", value: "2", icon: MessageSquare, tourAttr: undefined },
-          ].map((stat) => (
-            <div
-              key={stat.label}
-              className="rounded-xl border bg-card p-4"
-              {...(stat.tourAttr ? { "data-tour": stat.tourAttr } : {})}
-            >
-              <stat.icon className="h-5 w-5 text-muted-foreground" />
-              <p className="mt-2 font-heading text-2xl font-bold">
-                {stat.value}
-              </p>
-              <p className="text-xs text-muted-foreground">{stat.label}</p>
+        {/* Stats bento */}
+        <div className="mt-10 grid auto-rows-[minmax(120px,auto)] grid-cols-2 gap-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-12">
+          {/* HERO credits card */}
+          <div
+            data-bento-card
+            data-tour="credits-stat"
+            className="col-span-2 sm:col-span-4 md:col-span-6 lg:col-span-6 row-span-2"
+          >
+            <div className="relative flex h-full flex-col overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 p-6 text-white sm:p-8">
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-0 opacity-[0.15]"
+                style={{
+                  backgroundImage:
+                    "linear-gradient(to right, rgba(255,255,255,0.08) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.08) 1px, transparent 1px)",
+                  backgroundSize: "32px 32px",
+                }}
+              />
+              <div className="relative flex items-center justify-between">
+                <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-medium backdrop-blur ring-1 ring-white/20">
+                  <Sparkles className="h-3.5 w-3.5" /> Freemium
+                </span>
+                <span className="text-xs font-medium opacity-80">
+                  Este mes
+                </span>
+              </div>
+              <div className="relative mt-auto">
+                <p className="font-heading text-6xl font-bold leading-none tracking-tight sm:text-7xl">
+                  {creditsRemaining}
+                  <span className="ml-2 text-2xl font-medium opacity-70">/{creditLimit}</span>
+                </p>
+                <p className="mt-3 text-lg font-medium">
+                  {creditsRemaining > 0
+                    ? `sesiones disponibles este mes`
+                    : "has usado todas tus sesiones de este mes"}
+                </p>
+                {/* Progress bar */}
+                <div className="mt-5 h-2 overflow-hidden rounded-full bg-white/15">
+                  <div
+                    className="h-full rounded-full bg-white transition-all duration-700"
+                    style={{ width: `${creditsPercent}%` }}
+                  />
+                </div>
+                <p className="mt-2 text-xs opacity-80">
+                  Se reinician el 1 de cada mes
+                </p>
+              </div>
             </div>
-          ))}
-        </div>
-      </FadeIn>
+          </div>
 
-      {/* Sessions tabs */}
-      <FadeIn delay={0.2}>
-        <Tabs defaultValue="upcoming" className="mt-8">
+          {/* Stat: completadas */}
+          <div
+            data-bento-card
+            className="col-span-1 sm:col-span-2 md:col-span-3 lg:col-span-3"
+          >
+            <div className="flex h-full flex-col justify-between rounded-3xl border bg-card p-5">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+                <TrendingUp className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="font-heading text-4xl font-bold leading-none">
+                  <AnimatedCounter target={completedCount} decimals={0} />
+                </p>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  sesiones completadas
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Stat: próximas */}
+          <div
+            data-bento-card
+            className="col-span-1 sm:col-span-2 md:col-span-3 lg:col-span-3"
+          >
+            <div className="flex h-full flex-col justify-between rounded-3xl border bg-gradient-to-br from-amber-400 to-orange-500 p-5 text-white">
+              <Clock className="h-5 w-5" />
+              <div>
+                <p className="font-heading text-4xl font-bold leading-none">
+                  <AnimatedCounter target={upcomingSessions.length} decimals={0} />
+                </p>
+                <p className="mt-2 text-xs font-medium opacity-90">
+                  próximas sesiones
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Stat: referidos */}
+          <div
+            data-bento-card
+            className="col-span-1 sm:col-span-2 md:col-span-3 lg:col-span-3"
+          >
+            <div className="flex h-full flex-col justify-between rounded-3xl border bg-card p-5">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-pink-500/15 text-pink-600 dark:text-pink-400">
+                <Gift className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="font-heading text-4xl font-bold leading-none">
+                  {referrals.stats.total}
+                </p>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  referidos enviados
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Stat: reseñas */}
+          <div
+            data-bento-card
+            className="col-span-1 sm:col-span-2 md:col-span-3 lg:col-span-3"
+          >
+            <div className="flex h-full flex-col justify-between rounded-3xl border bg-card p-5">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400">
+                <Star className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="font-heading text-4xl font-bold leading-none">
+                  {reviewedSessionIds.size}
+                </p>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  reseñas dejadas
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <Tabs defaultValue="upcoming" className="mt-10">
           <div data-tour="dashboard-tabs">
-          <TabsList className="overflow-x-auto">
-            <TabsTrigger value="upcoming">
-              Próximas ({upcomingSessions.length})
-            </TabsTrigger>
-            <TabsTrigger value="past">
-              Historial ({pastSessions.length})
-            </TabsTrigger>
-            <TabsTrigger value="referrals">Referidos</TabsTrigger>
-            <TabsTrigger value="profile">Mi perfil</TabsTrigger>
-          </TabsList>
+            <TabsList className="overflow-x-auto rounded-full bg-muted/70 p-1.5 backdrop-blur">
+              <TabsTrigger value="upcoming" className="rounded-full">
+                Próximas ({upcomingSessions.length})
+              </TabsTrigger>
+              <TabsTrigger value="past" className="rounded-full">
+                Historial ({pastSessions.length})
+              </TabsTrigger>
+              <TabsTrigger value="referrals" className="rounded-full">
+                Referidos
+              </TabsTrigger>
+              <TabsTrigger value="profile" className="rounded-full">
+                Mi perfil
+              </TabsTrigger>
+            </TabsList>
           </div>
 
           <TabsContent value="upcoming" className="mt-6">
             {upcomingSessions.length === 0 ? (
-              <div className="rounded-xl border bg-card p-12 text-center">
-                <Calendar className="mx-auto h-12 w-12 text-muted-foreground/40" />
-                <h3 className="mt-4 font-heading text-lg font-semibold">
+              <div data-bento-card className="rounded-3xl border bg-card/80 p-12 text-center backdrop-blur">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-500/10">
+                  <Calendar className="h-8 w-8 text-indigo-500" />
+                </div>
+                <h3 className="font-heading text-xl font-semibold">
                   No tienes sesiones próximas
                 </h3>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  Explora profesionales y reserva tu primera sesión.
+                  Explora profesionales y reserva tu primera sesión gratuita.
                 </p>
                 <Button className="mt-4" asChild>
                   <Link href="/explore">Explorar profesionales</Link>
                 </Button>
               </div>
             ) : (
-              <div className="space-y-4">
-                {upcomingSessions.map((session, i) => (
-                  <motion.div
+              <div className="grid auto-rows-[minmax(120px,auto)] grid-cols-2 gap-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-12">
+                {upcomingSessions.map((session) => (
+                  <div
                     key={session.id}
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.05 }}
-                    className="flex flex-col gap-4 rounded-xl border bg-card p-5 sm:flex-row sm:items-center sm:justify-between"
+                    data-bento-card
+                    className="col-span-2 sm:col-span-4 md:col-span-6 lg:col-span-6"
                   >
-                    <div className="flex items-center gap-4">
-                      <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl">
-                        <Image
-                          src={session.professionalImage}
-                          alt={session.professionalName}
-                          fill
-                          className="object-cover"
-                          sizes="56px"
-                        />
-                      </div>
-                      <div>
-                        <p className="font-semibold">
-                          {session.professionalName}
-                        </p>
-                        <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <Calendar className="h-3.5 w-3.5" />
-                            {formatDate(session.scheduledAt)}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Clock className="h-3.5 w-3.5" />
-                            {formatTime(session.scheduledAt)}
-                          </span>
+                    <div className="group flex h-full flex-col gap-4 rounded-3xl border bg-card p-5 transition-all hover:shadow-lg sm:flex-row sm:items-center">
+                      <div className="flex flex-1 items-center gap-4">
+                        <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl">
+                          <Image
+                            src={session.professionalImage}
+                            alt={session.professionalName}
+                            fill
+                            className="object-cover transition-transform duration-500 group-hover:scale-105"
+                            sizes="64px"
+                          />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate font-heading font-semibold">
+                            {session.professionalName}
+                          </p>
+                          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                            <span className="inline-flex items-center gap-1">
+                              <Calendar className="h-3.5 w-3.5" />
+                              {formatDate(session.scheduledAt)}
+                            </span>
+                            <span className="inline-flex items-center gap-1">
+                              <Clock className="h-3.5 w-3.5" />
+                              {formatTime(session.scheduledAt)}
+                            </span>
+                          </div>
+                          <Badge
+                            className={`mt-2 ${statusColors[session.status]}`}
+                            variant="secondary"
+                          >
+                            {STATUS_LABELS[session.status]}
+                          </Badge>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="flex flex-col items-end gap-1.5 sm:items-center sm:flex-row sm:gap-3">
-                      <Badge
-                        className={statusColors[session.status]}
-                        variant="secondary"
-                      >
-                        {STATUS_LABELS[session.status]}
-                      </Badge>
-                      {["PENDING", "CONFIRMED"].includes(session.status) && (
-                        <Button size="sm" variant="outline" onClick={() => setChatSessionId(session.id)}>
-                          <MessageSquare className="mr-2 h-4 w-4" />
-                          Chat
-                        </Button>
-                      )}
-                      {session.status === "CONFIRMED" && (() => {
-                        void now; // re-render on tick
-                        const canJoin = isJoinEnabled(session.scheduledAt, session.duration);
-                        const waitMsg = timeUntilEnabled(session.scheduledAt);
-                        return canJoin ? (
-                          <Button size="sm" asChild>
-                            <Link href={`/session/${session.id}`}>
-                              <Video className="mr-2 h-4 w-4" />
-                              Unirse
-                            </Link>
+                      <div className="flex items-center justify-end gap-2 sm:flex-col sm:items-end">
+                        {["PENDING", "CONFIRMED"].includes(session.status) && (
+                          <Button size="sm" variant="outline" onClick={() => setChatSessionId(session.id)}>
+                            <MessageSquare className="mr-2 h-4 w-4" />
+                            Chat
                           </Button>
-                        ) : (
-                          <div className="flex flex-col items-end gap-0.5">
-                            <Button size="sm" disabled>
-                              <Video className="mr-2 h-4 w-4" />
-                              Unirse
-                            </Button>
-                            {waitMsg && (
-                              <span className="text-xs text-muted-foreground">{waitMsg}</span>
-                            )}
-                          </div>
-                        );
-                      })()}
+                        )}
+                        {session.status === "CONFIRMED" &&
+                          (() => {
+                            void now;
+                            const canJoin = isJoinEnabled(session.scheduledAt, session.duration);
+                            const waitMsg = timeUntilEnabled(session.scheduledAt);
+                            return canJoin ? (
+                              <Button size="sm" asChild>
+                                <Link href={`/session/${session.id}`}>
+                                  <Video className="mr-2 h-4 w-4" />
+                                  Unirse
+                                </Link>
+                              </Button>
+                            ) : (
+                              <div className="flex flex-col items-end gap-0.5">
+                                <Button size="sm" disabled>
+                                  <Video className="mr-2 h-4 w-4" />
+                                  Unirse
+                                </Button>
+                                {waitMsg && (
+                                  <span className="text-[10px] text-muted-foreground">
+                                    {waitMsg}
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          })()}
+                      </div>
                     </div>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
             )}
@@ -362,110 +538,94 @@ export default function ClientDashboard() {
             {pastSessions.length === 0 ? (
               <EmptyState
                 icon={Clock}
-                title="Sin historial todav\u00eda"
-                description="Aqu\u00ed ver\u00e1s las sesiones que ya hayas completado o cancelado."
+                title="Sin historial todavía"
+                description="Aquí verás las sesiones que ya hayas completado o cancelado."
               />
             ) : (
-            <div className="space-y-4">
-              {pastSessions.map((session, i) => (
-                <motion.div
-                  key={session.id}
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                  className="flex flex-col gap-4 rounded-xl border bg-card p-5 sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl">
-                      <Image
-                        src={session.professionalImage}
-                        alt={session.professionalName}
-                        fill
-                        className="object-cover"
-                        sizes="56px"
-                      />
-                    </div>
-                    <div>
-                      <p className="font-semibold">
-                        {session.professionalName}
-                      </p>
-                      <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
-                        <span>{formatDate(session.scheduledAt)}</span>
-                        <span>·</span>
-                        <span className="text-green-600 dark:text-green-400">Gratuita</span>
+              <div className="grid auto-rows-[minmax(120px,auto)] grid-cols-2 gap-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-12">
+                {pastSessions.map((session) => (
+                  <div
+                    key={session.id}
+                    data-bento-card
+                    className="col-span-2 sm:col-span-4 md:col-span-6 lg:col-span-6"
+                  >
+                    <div className="flex h-full flex-col gap-4 rounded-3xl border bg-card p-5 sm:flex-row sm:items-center">
+                      <div className="flex flex-1 items-center gap-4">
+                        <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl">
+                          <Image
+                            src={session.professionalImage}
+                            alt={session.professionalName}
+                            fill
+                            className="object-cover"
+                            sizes="56px"
+                          />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate font-semibold">
+                            {session.professionalName}
+                          </p>
+                          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                            <span>{formatDate(session.scheduledAt)}</span>
+                            <span>·</span>
+                            <span className="text-emerald-600 dark:text-emerald-400">Gratuita</span>
+                          </div>
+                          <Badge className={`mt-2 ${statusColors[session.status]}`} variant="secondary">
+                            {STATUS_LABELS[session.status]}
+                          </Badge>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap items-center justify-end gap-2">
+                        {session.status === "COMPLETED" && !reviewedSessionIds.has(session.id) && (
+                          <Button size="sm" variant="outline" onClick={() => setReviewSessionId(session.id)}>
+                            <Star className="mr-2 h-4 w-4" />
+                            Reseña
+                          </Button>
+                        )}
+                        {session.status === "COMPLETED" && (
+                          <Button size="sm" variant="outline" onClick={() => setChatSessionId(session.id)}>
+                            <MessageSquare className="mr-2 h-4 w-4" />
+                            Chat
+                          </Button>
+                        )}
+                        {session.status === "COMPLETED" && (
+                          <Button size="sm" variant="ghost" onClick={() => setFeedbackSessionId(session.id)}>
+                            <Zap className="mr-2 h-4 w-4" />
+                            Feedback
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </div>
-
-                  <div className="flex items-center gap-3">
-                    <Badge
-                      className={statusColors[session.status]}
-                      variant="secondary"
-                    >
-                      {STATUS_LABELS[session.status]}
-                    </Badge>
-                    {session.status === "COMPLETED" && !reviewedSessionIds.has(session.id) && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setReviewSessionId(session.id)}
-                      >
-                        <Star className="mr-2 h-4 w-4" />
-                        Dejar reseña
-                      </Button>
-                    )}
-                    {session.status === "COMPLETED" && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setChatSessionId(session.id)}
-                      >
-                        <MessageSquare className="mr-2 h-4 w-4" />
-                        Chat
-                      </Button>
-                    )}
-                    {session.status === "COMPLETED" && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setFeedbackSessionId(session.id)}
-                      >
-                        <MessageSquare className="mr-2 h-4 w-4" />
-                        Feedback beta
-                      </Button>
-                    )}
-                  </div>
-                </motion.div>
-              ))}
-            </div>
+                ))}
+              </div>
             )}
           </TabsContent>
-          {/* ===== Referrals ===== */}
+
           <TabsContent value="referrals" className="mt-6">
-            <ReferralPanel
-              referrals={referrals.referrals}
-              stats={referrals.stats}
-              userRole="CLIENT"
-              onRefresh={fetchReferrals}
-            />
+            <div data-bento-card className="rounded-3xl border bg-card p-6">
+              <ReferralPanel
+                referrals={referrals.referrals}
+                stats={referrals.stats}
+                userRole="CLIENT"
+                onRefresh={fetchReferrals}
+              />
+            </div>
           </TabsContent>
 
-          {/* ===== Profile ===== */}
           <TabsContent value="profile" className="mt-6">
-            <div className="rounded-xl border bg-card p-6">
+            <div data-bento-card className="rounded-3xl border bg-card p-6">
               <h3 className="font-heading text-lg font-semibold">Mi perfil</h3>
               <p className="mt-1 text-sm text-muted-foreground">
                 Actualiza tu foto de perfil.
               </p>
               <div className="mt-6">
-                <PhotoUpload
-                  currentImage={authSession?.user?.image || ""}
-                />
+                <PhotoUpload currentImage={authSession?.user?.image || ""} />
               </div>
             </div>
           </TabsContent>
         </Tabs>
-      </FadeIn>
+      </div>
 
       {/* Beta feedback modal */}
       {feedbackSessionId && (
@@ -477,19 +637,21 @@ export default function ClientDashboard() {
 
       {/* Review modal */}
       {reviewSessionId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="mx-4 w-full max-w-md rounded-xl border bg-card p-6 shadow-xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur">
+          <div className="mx-4 w-full max-w-md rounded-3xl border bg-card p-6 shadow-xl">
             <div className="flex items-center justify-between">
               <h3 className="font-heading text-lg font-semibold">Dejar reseña</h3>
               <button
-                onClick={() => { setReviewSessionId(null); resetReviewForm(); }}
+                onClick={() => {
+                  setReviewSessionId(null);
+                  resetReviewForm();
+                }}
                 className="text-muted-foreground hover:text-foreground"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            {/* Overall rating */}
             <div className="mt-4">
               <p className="text-sm font-medium">Valoración general</p>
               <div className="mt-2 flex gap-1">
@@ -510,15 +672,16 @@ export default function ClientDashboard() {
               </div>
             </div>
 
-            {/* Category ratings */}
             <div className="mt-4 space-y-3">
               <p className="text-sm font-medium text-muted-foreground">Valoraciones detalladas (opcional)</p>
-              {([
-                ["ratingPunctuality", reviewPunctuality, setReviewPunctuality],
-                ["ratingKnowledge", reviewKnowledge, setReviewKnowledge],
-                ["ratingCommunication", reviewCommunication, setReviewCommunication],
-                ["ratingValue", reviewValue, setReviewValue],
-              ] as const).map(([key, value, setter]) => (
+              {(
+                [
+                  ["ratingPunctuality", reviewPunctuality, setReviewPunctuality],
+                  ["ratingKnowledge", reviewKnowledge, setReviewKnowledge],
+                  ["ratingCommunication", reviewCommunication, setReviewCommunication],
+                  ["ratingValue", reviewValue, setReviewValue],
+                ] as const
+              ).map(([key, value, setter]) => (
                 <div key={key} className="flex items-center justify-between">
                   <span className="text-sm">{CATEGORY_LABELS_REVIEW[key]}</span>
                   <div className="flex gap-0.5">
@@ -540,7 +703,6 @@ export default function ClientDashboard() {
               ))}
             </div>
 
-            {/* Comment */}
             <div className="mt-4">
               <textarea
                 className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -551,18 +713,17 @@ export default function ClientDashboard() {
               />
             </div>
 
-            {/* Submit */}
             <div className="mt-4 flex justify-end gap-2">
               <Button
                 variant="ghost"
-                onClick={() => { setReviewSessionId(null); resetReviewForm(); }}
+                onClick={() => {
+                  setReviewSessionId(null);
+                  resetReviewForm();
+                }}
               >
                 Cancelar
               </Button>
-              <Button
-                onClick={handleSubmitReview}
-                disabled={submittingReview || reviewRating === 0}
-              >
+              <Button onClick={handleSubmitReview} disabled={submittingReview || reviewRating === 0}>
                 {submittingReview && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Enviar reseña
               </Button>
@@ -573,14 +734,14 @@ export default function ClientDashboard() {
 
       {/* Chat modal */}
       {chatSessionId && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center bg-black/50">
-          <div className="mx-0 sm:mx-4 w-full max-w-lg rounded-t-xl sm:rounded-xl border bg-card shadow-xl flex flex-col" style={{ height: "min(600px, 80vh)" }}>
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur sm:items-center">
+          <div
+            className="mx-0 flex w-full max-w-lg flex-col rounded-t-3xl border bg-card shadow-xl sm:mx-4 sm:rounded-3xl"
+            style={{ height: "min(600px, 80vh)" }}
+          >
             <div className="flex items-center justify-between border-b px-4 py-3">
               <h3 className="font-heading text-base font-semibold">Chat de sesión</h3>
-              <button
-                onClick={() => setChatSessionId(null)}
-                className="text-muted-foreground hover:text-foreground"
-              >
+              <button onClick={() => setChatSessionId(null)} className="text-muted-foreground hover:text-foreground">
                 <X className="h-5 w-5" />
               </button>
             </div>

@@ -49,7 +49,7 @@ export function FadeIn({
   }, { scope: ref });
 
   return (
-    <div ref={ref} className={className} style={{ opacity: 0 }}>
+    <div ref={ref} className={className} data-gsap-init>
       {children}
     </div>
   );
@@ -108,7 +108,7 @@ export function StaggerItem({
   className?: string;
 }) {
   return (
-    <div data-stagger-item className={className} style={{ opacity: 0 }}>
+    <div data-stagger-item data-gsap-init className={className}>
       {children}
     </div>
   );
@@ -143,7 +143,7 @@ export function ScaleIn({
   }, { scope: ref });
 
   return (
-    <div ref={ref} className={className} style={{ opacity: 0 }}>
+    <div ref={ref} className={className} data-gsap-init>
       {children}
     </div>
   );

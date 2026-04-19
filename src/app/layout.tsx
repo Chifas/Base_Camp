@@ -98,6 +98,16 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
       <head>
+        {/* Mark <html> as JS-ready BEFORE body paints so the `opacity:0`
+            initial states (gated on `.js-ready`) only apply when JS is alive.
+            A 1.2s safety timeout force-reveals any animated element that
+            never got a chance to play — protects against hydration failures,
+            CSP blocks, or any bug that prevents GSAP from firing. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){var h=document.documentElement;h.classList.add('js-ready');setTimeout(function(){h.classList.add('gsap-fallback')},1200)})();`,
+          }}
+        />
         <script
           dangerouslySetInnerHTML={{
             __html: `
