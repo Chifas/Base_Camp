@@ -34,6 +34,31 @@ const SORT_OPTIONS = [
 
 const LANGUAGES = ["ES", "EN", "FR", "DE"];
 
+function getCoverColor(name: string): string {
+  const colors = [
+    "bg-teal-100",
+    "bg-amber-100",
+    "bg-sky-100",
+    "bg-violet-100",
+    "bg-rose-100",
+    "bg-emerald-100",
+    "bg-orange-100",
+  ];
+  const index =
+    name.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0) %
+    colors.length;
+  return colors[index];
+}
+
+function getInitials(name: string) {
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+}
+
 function getNextAvailability(availability: Professional["availability"]) {
   if (!availability || availability.length === 0) return null;
   const days = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
@@ -264,62 +289,99 @@ export default function ExplorePage() {
             const langCount = (pro.name.charCodeAt(0) % 2) + 1;
             const langs = LANGUAGES.slice(0, langCount);
 
+            const coverColor = getCoverColor(pro.name);
+            const initials = getInitials(pro.name);
+            const isAvailableToday = nextSlot?.startsWith("Hoy");
+
             return (
               <div key={pro.id} data-pro-card style={{ opacity: 0 }}>
                 <Link href={`/professional/${pro.id}`} className="group block h-full">
-                  <div className="h-full overflow-hidden rounded-2xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
+                  <div className="h-full overflow-hidden rounded-2xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 transition-all duration-300 group-hover:shadow-xl group-hover:-translate-y-1.5">
 
-                    {/* Header: photo + name + rating */}
-                    <div className="flex items-start gap-4 p-5 pb-4">
-                      <div className="relative h-[72px] w-[72px] shrink-0 overflow-hidden rounded-xl bg-stone-100 dark:bg-stone-800">
-                        <Image
-                          src={
-                            pro.image ||
-                            `https://api.dicebear.com/7.x/avataaars/svg?seed=${pro.name}`
-                          }
-                          alt={pro.name}
-                          fill
-                          className="object-cover"
-                          sizes="72px"
-                        />
+                    {/* Cover band */}
+                    <div className={`relative h-20 ${coverColor} transition-all duration-300 group-hover:brightness-95`}>
+                      <svg
+                        className="absolute inset-0 h-full w-full opacity-20"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <defs>
+                          <pattern
+                            id={`dots-${pro.id}`}
+                            x="0"
+                            y="0"
+                            width="16"
+                            height="16"
+                            patternUnits="userSpaceOnUse"
+                          >
+                            <circle cx="2" cy="2" r="1.5" fill="currentColor" className="text-stone-600" />
+                          </pattern>
+                        </defs>
+                        <rect width="100%" height="100%" fill={`url(#dots-${pro.id})`} />
+                      </svg>
+
+                      {/* "Disponible hoy" badge */}
+                      {isAvailableToday && (
+                        <span className="absolute right-3 top-3 rounded-full bg-green-500 px-2 py-0.5 text-[10px] font-semibold text-white">
+                          Disponible hoy
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Circular photo — overlaps cover */}
+                    <div className="flex flex-col items-center px-5 pb-4">
+                      <div className="relative -mt-11 h-[88px] w-[88px] shrink-0 overflow-hidden rounded-full ring-4 ring-white dark:ring-stone-900 bg-stone-100 dark:bg-stone-800">
+                        {pro.image ? (
+                          <Image
+                            src={pro.image}
+                            alt={pro.name}
+                            fill
+                            className="object-cover"
+                            sizes="88px"
+                          />
+                        ) : (
+                          <div className={`flex h-full w-full items-center justify-center ${coverColor} text-lg font-bold text-stone-700`}>
+                            {initials}
+                          </div>
+                        )}
                       </div>
 
-                      <div className="min-w-0 flex-1 pt-0.5">
-                        <div className="flex items-center gap-1.5 min-w-0">
-                          <h3 className="truncate font-display text-base font-semibold text-stone-900 dark:text-stone-50 group-hover:text-teal-700 dark:group-hover:text-teal-400 transition-colors">
-                            {pro.name}
-                          </h3>
-                          {pro.verified && (
-                            <CheckCircle2 className="h-4 w-4 shrink-0 text-teal-600 dark:text-teal-400" />
-                          )}
-                        </div>
+                      {/* Name + verified */}
+                      <div className="mt-3 flex items-center gap-1.5">
+                        <h3 className="text-center font-display text-base font-semibold text-stone-900 dark:text-stone-50 group-hover:text-teal-700 dark:group-hover:text-teal-400 transition-colors">
+                          {pro.name}
+                        </h3>
+                        {pro.verified && (
+                          <CheckCircle2 className="h-4 w-4 shrink-0 text-teal-600 dark:text-teal-400" />
+                        )}
+                      </div>
 
-                        <p className="mt-0.5 text-xs font-medium text-teal-600 dark:text-teal-400 truncate">
-                          {pro.categoryName}
-                        </p>
+                      {/* Specialty */}
+                      <p className="mt-0.5 text-center text-xs font-medium text-teal-600 dark:text-teal-400">
+                        {pro.categoryName}
+                      </p>
 
-                        <div className="mt-1.5 flex items-center gap-1">
-                          <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                          <span className="text-sm font-semibold text-stone-800 dark:text-stone-200">
-                            {pro.rating.toFixed(1)}
-                          </span>
-                          <span className="text-xs text-stone-400 dark:text-stone-500">
-                            ({pro.reviewCount} reseñas)
-                          </span>
-                        </div>
+                      {/* Rating */}
+                      <div className="mt-1.5 flex items-center justify-center gap-1">
+                        <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                        <span className="text-sm font-semibold text-stone-800 dark:text-stone-200">
+                          {pro.rating.toFixed(1)}
+                        </span>
+                        <span className="text-xs text-stone-400 dark:text-stone-500">
+                          ({pro.reviewCount} reseñas)
+                        </span>
                       </div>
                     </div>
 
                     {/* Bio */}
                     <div className="border-t border-stone-100 dark:border-stone-800 px-5 py-3">
-                      <p className="line-clamp-2 text-sm text-stone-500 dark:text-stone-400 leading-relaxed">
+                      <p className="line-clamp-2 text-center text-sm text-stone-500 dark:text-stone-400 leading-relaxed">
                         {pro.bio}
                       </p>
                     </div>
 
-                    {/* Tags from headline */}
+                    {/* Tags */}
                     {pro.headline && (
-                      <div className="px-5 py-2 flex flex-wrap gap-1.5">
+                      <div className="px-5 py-2 flex flex-wrap justify-center gap-1.5">
                         {pro.headline
                           .split("·")
                           .slice(1)
@@ -328,7 +390,7 @@ export default function ExplorePage() {
                           .map((tag) => (
                             <span
                               key={tag}
-                              className="rounded-md bg-stone-100 dark:bg-stone-800 px-2 py-0.5 text-[11px] text-stone-500 dark:text-stone-400"
+                              className="rounded-full bg-stone-100 dark:bg-stone-800 px-2.5 py-0.5 text-[11px] text-stone-500 dark:text-stone-400"
                             >
                               {tag}
                             </span>
@@ -336,8 +398,8 @@ export default function ExplorePage() {
                       </div>
                     )}
 
-                    {/* Meta row: languages + next slot */}
-                    <div className="border-t border-stone-100 dark:border-stone-800 px-5 py-2.5 flex items-center gap-4 text-xs text-stone-500 dark:text-stone-400">
+                    {/* Meta row */}
+                    <div className="border-t border-stone-100 dark:border-stone-800 px-5 py-2.5 flex items-center justify-center gap-4 text-xs text-stone-400 dark:text-stone-500">
                       <span className="flex items-center gap-1.5">
                         <MessageSquare className="h-3.5 w-3.5 shrink-0" />
                         {langs.join(", ")}
@@ -352,14 +414,15 @@ export default function ExplorePage() {
                       )}
                     </div>
 
-                    {/* Footer: price + CTA */}
+                    {/* Footer */}
                     <div className="flex items-center justify-between border-t border-stone-100 dark:border-stone-800 px-5 py-3">
                       <span className="text-sm font-semibold text-stone-900 dark:text-stone-50">
                         Gratis · 3/mes
                       </span>
                       <Button
                         size="sm"
-                        className="pointer-events-none bg-teal-700 text-white hover:bg-teal-800 font-display text-xs"
+                        variant="outline"
+                        className="pointer-events-none border-teal-200 text-teal-700 hover:bg-teal-50 dark:border-teal-800 dark:text-teal-400 font-display text-xs"
                       >
                         Ver perfil →
                       </Button>
