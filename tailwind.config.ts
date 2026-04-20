@@ -12,8 +12,8 @@ const config: Config = {
     extend: {
       fontFamily: {
         sans: ["Inter", "system-ui", "sans-serif"],
-        display: ["Plus Jakarta Sans", "system-ui", "sans-serif"],
-        heading: ["Plus Jakarta Sans", "system-ui", "sans-serif"],
+        display: ["var(--font-display)", "system-ui", "sans-serif"],
+        heading: ["var(--font-display)", "system-ui", "sans-serif"],
       },
       colors: {
         // shadcn/ui tokens — CSS variable driven, required for Radix primitives

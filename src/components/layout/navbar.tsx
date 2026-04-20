@@ -89,7 +89,7 @@ export function Navbar() {
             height={40}
             className="h-10 w-auto brightness-150 saturate-150 transition-transform group-hover:scale-110 dark:brightness-200 dark:saturate-200"
           />
-          <span className="font-heading text-xl font-bold tracking-tight">
+          <span className="font-display text-xl font-bold tracking-tight">
             GuidePath
           </span>
         </Link>

@@ -4,45 +4,44 @@ import Image from "next/image";
 import { useRef } from "react";
 import { Star, Quote } from "lucide-react";
 import { gsap, useGSAP } from "@/lib/gsap-config";
-import { FadeIn } from "@/components/shared/motion-wrapper";
 import { TESTIMONIALS } from "@/data/mock";
-
-// Enough copies for seamless dual-row infinite loop
-const row1 = [...TESTIMONIALS, ...TESTIMONIALS, ...TESTIMONIALS, ...TESTIMONIALS];
-const row2 = [...TESTIMONIALS, ...TESTIMONIALS, ...TESTIMONIALS, ...TESTIMONIALS].reverse();
 
 function TestimonialCard({
   testimonial,
+  featured = false,
 }: {
   testimonial: (typeof TESTIMONIALS)[number];
+  featured?: boolean;
 }) {
   return (
-    <div className="glass relative w-[320px] shrink-0 rounded-2xl p-6 mx-3 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl group">
-      <div className="mb-4 flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
-        <Quote className="h-4 w-4 text-primary" />
-      </div>
-
-      <div className="flex gap-0.5">
+    <div
+      data-testimonial-card
+      className={`group rounded-2xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 p-6 transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 ${
+        featured ? "sm:p-8" : ""
+      }`}
+    >
+      {/* Stars */}
+      <div className="flex gap-0.5 mb-4">
         {Array.from({ length: 5 }).map((_, i) => (
           <Star
             key={i}
             className={`h-4 w-4 ${
               i < testimonial.rating
-                ? "fill-yellow-400 text-yellow-400 drop-shadow-[0_0_4px_rgba(250,204,21,0.4)]"
-                : "text-muted-foreground/30"
+                ? "fill-amber-400 text-amber-400"
+                : "text-stone-200 dark:text-stone-700"
             }`}
           />
         ))}
       </div>
 
-      <blockquote className="mt-4 text-sm leading-relaxed text-muted-foreground line-clamp-4">
+      {/* Quote */}
+      <blockquote className={`font-display font-medium leading-relaxed text-stone-700 dark:text-stone-300 ${featured ? "text-lg italic" : "text-sm"}`}>
         &ldquo;{testimonial.quote}&rdquo;
       </blockquote>
 
-      <div className="mt-5 mb-4 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
-
-      <div className="flex items-center gap-3">
-        <div className="relative h-10 w-10 overflow-hidden rounded-full ring-2 ring-primary/10 group-hover:ring-primary/30 transition-all">
+      {/* Author */}
+      <div className="mt-5 flex items-center gap-3">
+        <div className="relative h-10 w-10 overflow-hidden rounded-full ring-2 ring-stone-100 dark:ring-stone-800">
           <Image
             src={testimonial.image}
             alt={testimonial.name}
@@ -52,124 +51,87 @@ function TestimonialCard({
           />
         </div>
         <div>
-          <p className="text-sm font-semibold">{testimonial.name}</p>
-          <p className="text-xs text-muted-foreground">{testimonial.role}</p>
+          <p className="text-sm font-semibold text-stone-900 dark:text-stone-100">{testimonial.name}</p>
+          <p className="text-xs text-stone-500 dark:text-stone-400">{testimonial.role}</p>
         </div>
       </div>
     </div>
   );
 }
 
-function MarqueeRow({
-  items,
-  direction,
-  trackRef,
-}: {
-  items: typeof TESTIMONIALS;
-  direction: "left" | "right";
-  trackRef: React.RefObject<HTMLDivElement>;
-}) {
-  return (
-    <div className="relative overflow-hidden py-2">
-      <div
-        ref={trackRef}
-        className="flex will-change-transform"
-        style={{ width: "max-content" }}
-      >
-        {items.map((t, i) => (
-          <TestimonialCard key={`${t.id}-${i}`} testimonial={t} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
 export function Testimonials() {
-  const wrapperRef = useRef<HTMLDivElement>(null);
-  const track1Ref = useRef<HTMLDivElement>(null);
-  const track2Ref = useRef<HTMLDivElement>(null);
+  const sectionRef = useRef<HTMLDivElement>(null);
 
-  useGSAP(
-    (_, contextSafe) => {
-      const t1 = track1Ref.current;
-      const t2 = track2Ref.current;
-      if (!t1 || !t2) return;
+  useGSAP(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-      const halfW1 = t1.scrollWidth / 2;
-      const halfW2 = t2.scrollWidth / 2;
+    const cards = gsap.utils.toArray<HTMLElement>("[data-testimonial-card]", sectionRef.current!);
 
-      const speed = 80; // px/s
+    gsap.set(cards, { opacity: 0, y: 30 });
 
-      const tween1 = gsap.to(t1, {
-        x: `-=${halfW1}`,
-        duration: halfW1 / speed,
-        ease: "none",
-        repeat: -1,
-        modifiers: { x: gsap.utils.unitize((x) => parseFloat(x) % halfW1) },
+    cards.forEach((card, i) => {
+      gsap.to(card, {
+        opacity: 1,
+        y: 0,
+        duration: 0.6,
+        ease: "power3.out",
+        delay: (i % 3) * 0.1,
+        scrollTrigger: {
+          trigger: card,
+          start: "top 88%",
+          once: true,
+        },
       });
+    });
+  }, { scope: sectionRef });
 
-      const tween2 = gsap.fromTo(
-        t2,
-        { x: `-${halfW2 * 0.5}` },
-        {
-          x: 0,
-          duration: halfW2 / speed,
-          ease: "none",
-          repeat: -1,
-          modifiers: { x: gsap.utils.unitize((x) => parseFloat(x) % halfW2) },
-        }
-      );
-
-      const pause1 = contextSafe!(() => tween1.pause());
-      const play1 = contextSafe!(() => tween1.play());
-      const pause2 = contextSafe!(() => tween2.pause());
-      const play2 = contextSafe!(() => tween2.play());
-
-      t1.addEventListener("mouseenter", pause1 as EventListener);
-      t1.addEventListener("mouseleave", play1 as EventListener);
-      t2.addEventListener("mouseenter", pause2 as EventListener);
-      t2.addEventListener("mouseleave", play2 as EventListener);
-
-      return () => {
-        tween1.kill();
-        tween2.kill();
-        t1.removeEventListener("mouseenter", pause1 as EventListener);
-        t1.removeEventListener("mouseleave", play1 as EventListener);
-        t2.removeEventListener("mouseenter", pause2 as EventListener);
-        t2.removeEventListener("mouseleave", play2 as EventListener);
-      };
-    },
-    { scope: wrapperRef }
-  );
+  // Use first 5 testimonials for editorial layout
+  const featured = TESTIMONIALS[0];
+  const rest = TESTIMONIALS.slice(1, 5);
 
   return (
-    <section className="bg-muted/30 py-20 sm:py-28">
+    <section className="bg-warm-surface/50 dark:bg-stone-900/20 py-20 sm:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <FadeIn className="mx-auto max-w-2xl text-center">
-          <p className="text-sm font-semibold uppercase tracking-widest text-primary mb-2">
+        {/* Header */}
+        <div className="mx-auto max-w-2xl text-center mb-14">
+          <div className="mx-auto mb-5 flex h-10 w-10 items-center justify-center rounded-xl bg-teal-100 dark:bg-teal-900/30">
+            <Quote className="h-5 w-5 text-teal-600 dark:text-teal-400" />
+          </div>
+          <p className="text-sm font-display font-semibold uppercase tracking-widest text-teal-600 dark:text-teal-400 mb-2">
             Testimonios
           </p>
-          <h2 className="font-heading text-3xl font-bold tracking-tight sm:text-4xl">
+          <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl text-stone-900 dark:text-stone-50">
             Lo que dicen nuestros usuarios
           </h2>
-          <p className="mt-4 text-lg text-muted-foreground">
-            Miles de profesionales ya han encontrado la orientación que
-            necesitaban.
+          <p className="mt-4 text-lg text-stone-600 dark:text-stone-400">
+            Miles de profesionales ya han encontrado la orientación que necesitaban.
           </p>
-        </FadeIn>
+        </div>
 
-      {/* Dual-row marquee */}
-      <div ref={wrapperRef} className="relative mt-14 space-y-4">
-        {/* Fade edges */}
-        <div className="pointer-events-none absolute left-0 top-0 bottom-0 z-10 w-20 sm:w-40 bg-gradient-to-r from-muted/80 to-transparent dark:from-background" />
-        <div className="pointer-events-none absolute right-0 top-0 bottom-0 z-10 w-20 sm:w-40 bg-gradient-to-l from-muted/80 to-transparent dark:from-background" />
+        {/* Editorial grid */}
+        <div ref={sectionRef}>
+          {/* Featured quote — full width on mobile, 2-col span on desktop */}
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {/* Featured (spans 2 cols on lg) */}
+            <div className="sm:col-span-2 lg:col-span-2">
+              <TestimonialCard testimonial={featured} featured />
+            </div>
 
-        {/* Row 1 — left */}
-        <MarqueeRow items={row1} direction="left" trackRef={track1Ref} />
+            {/* First of the rest */}
+            {rest[0] && (
+              <div>
+                <TestimonialCard testimonial={rest[0]} />
+              </div>
+            )}
 
-        {/* Row 2 — right (offset) */}
-        <MarqueeRow items={row2} direction="right" trackRef={track2Ref} />
-      </div>
+            {/* Remaining 3 */}
+            {rest.slice(1).map((t) => (
+              <div key={t.id}>
+                <TestimonialCard testimonial={t} />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </section>
   );

@@ -208,10 +208,10 @@ export default function ClientDashboard() {
       <FadeIn>
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="font-heading text-2xl font-bold sm:text-3xl">
+            <h1 className="font-display text-2xl font-bold sm:text-3xl text-stone-900 dark:text-stone-50">
               Mi Panel
             </h1>
-            <p className="mt-1 text-muted-foreground">
+            <p className="mt-1 text-stone-500 dark:text-stone-400">
               Gestiona tus sesiones y revisa tu historial.
             </p>
           </div>
@@ -228,21 +228,23 @@ export default function ClientDashboard() {
       <FadeIn delay={0.1}>
         <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
           {[
-            { label: "Sesiones disponibles", value: credits ? `${credits.remaining}/${credits.limit}` : `—/${CREDITS_CONFIG.FREE_SESSIONS_PER_MONTH}`, icon: Calendar, tourAttr: "credits-stat" },
-            { label: "Sesiones completadas", value: pastSessions.filter((s) => s.status === "COMPLETED").length.toString(), icon: Clock, tourAttr: undefined },
-            { label: "Próximas sesiones", value: upcomingSessions.length.toString(), icon: Star, tourAttr: undefined },
-            { label: "Reseñas dejadas", value: "2", icon: MessageSquare, tourAttr: undefined },
+            { label: "Sesiones disponibles", value: credits ? `${credits.remaining}/${credits.limit}` : `—/${CREDITS_CONFIG.FREE_SESSIONS_PER_MONTH}`, icon: Calendar, tourAttr: "credits-stat", accent: "text-teal-600 dark:text-teal-400", iconBg: "bg-teal-100 dark:bg-teal-900/30" },
+            { label: "Sesiones completadas", value: pastSessions.filter((s) => s.status === "COMPLETED").length.toString(), icon: Clock, tourAttr: undefined, accent: "text-stone-700 dark:text-stone-300", iconBg: "bg-stone-100 dark:bg-stone-800" },
+            { label: "Próximas sesiones", value: upcomingSessions.length.toString(), icon: Star, tourAttr: undefined, accent: "text-amber-600 dark:text-amber-400", iconBg: "bg-amber-100 dark:bg-amber-900/30" },
+            { label: "Reseñas dejadas", value: "2", icon: MessageSquare, tourAttr: undefined, accent: "text-stone-700 dark:text-stone-300", iconBg: "bg-stone-100 dark:bg-stone-800" },
           ].map((stat) => (
             <div
               key={stat.label}
-              className="rounded-xl border bg-card p-4"
+              className="rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 p-4"
               {...(stat.tourAttr ? { "data-tour": stat.tourAttr } : {})}
             >
-              <stat.icon className="h-5 w-5 text-muted-foreground" />
-              <p className="mt-2 font-heading text-2xl font-bold">
+              <div className={`inline-flex h-9 w-9 items-center justify-center rounded-lg ${stat.iconBg}`}>
+                <stat.icon className={`h-4.5 w-4.5 ${stat.accent}`} />
+              </div>
+              <p className={`mt-2 font-display text-2xl font-bold ${stat.accent}`}>
                 {stat.value}
               </p>
-              <p className="text-xs text-muted-foreground">{stat.label}</p>
+              <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">{stat.label}</p>
             </div>
           ))}
         </div>
@@ -266,15 +268,15 @@ export default function ClientDashboard() {
 
           <TabsContent value="upcoming" className="mt-6">
             {upcomingSessions.length === 0 ? (
-              <div className="rounded-xl border bg-card p-12 text-center">
-                <Calendar className="mx-auto h-12 w-12 text-muted-foreground/40" />
-                <h3 className="mt-4 font-heading text-lg font-semibold">
+              <div className="rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 p-12 text-center">
+                <Calendar className="mx-auto h-12 w-12 text-stone-300 dark:text-stone-700" />
+                <h3 className="mt-4 font-display text-lg font-semibold text-stone-900 dark:text-stone-50">
                   No tienes sesiones próximas
                 </h3>
-                <p className="mt-2 text-sm text-muted-foreground">
+                <p className="mt-2 text-sm text-stone-500 dark:text-stone-400">
                   Explora profesionales y reserva tu primera sesión.
                 </p>
-                <Button className="mt-4" asChild>
+                <Button className="mt-4 bg-teal-600 hover:bg-teal-700 text-white font-display" asChild>
                   <Link href="/explore">Explorar profesionales</Link>
                 </Button>
               </div>

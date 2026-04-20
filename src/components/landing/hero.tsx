@@ -11,9 +11,6 @@ import { RotatingWords } from "@/components/shared/rotating-words";
 import { gsap, useGSAP } from "@/lib/gsap-config";
 
 // ─── Word-safe character split ─────────────────────────────────────────────────
-// Each word is wrapped in whitespace-nowrap so the browser can only break
-// between words (never mid-word). Spaces are separate data-char spans so
-// they still participate in the GSAP entrance stagger.
 
 function CharSplit({
   text,
@@ -38,7 +35,7 @@ function CharSplit({
               >
                 <span
                   data-char
-                  className={`inline-block${gradient ? " text-gradient" : ""}`}
+                  className={`inline-block${gradient ? " text-gradient-teal" : ""}`}
                 >
                   {char}
                 </span>
@@ -61,14 +58,14 @@ function CharSplit({
   );
 }
 
-// ─── Mentor avatar stack (social proof) ───────────────────────────────────────
+// ─── Avatar stack — warm teal/amber palette ────────────────────────────────────
 
 const AVATARS = [
-  { initials: "CR", from: "from-indigo-500", to: "to-violet-600" },
-  { initials: "AM", from: "from-violet-500", to: "to-purple-600" },
-  { initials: "LP", from: "from-blue-500", to: "to-cyan-500" },
-  { initials: "MG", from: "from-emerald-500", to: "to-teal-500" },
-  { initials: "SR", from: "from-rose-500", to: "to-pink-500" },
+  { initials: "CR", bg: "bg-teal-600" },
+  { initials: "AM", bg: "bg-teal-500" },
+  { initials: "LP", bg: "bg-amber-600" },
+  { initials: "MG", bg: "bg-teal-700" },
+  { initials: "SR", bg: "bg-amber-500" },
 ];
 
 // ─── Main Hero ─────────────────────────────────────────────────────────────────
@@ -81,20 +78,20 @@ export function Hero() {
 
   useGSAP(
     (_, contextSafe) => {
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
       const chars = gsap.utils.toArray<HTMLElement>("[data-char]", sectionRef.current!);
       const badge = sectionRef.current?.querySelector<HTMLElement>("[data-badge]");
       const subtitle = sectionRef.current?.querySelector<HTMLElement>("[data-subtitle]");
       const cta = sectionRef.current?.querySelector<HTMLElement>("[data-cta]");
       const social = sectionRef.current?.querySelector<HTMLElement>("[data-social]");
 
-      // Initial states
       gsap.set(chars, { y: "110%", rotation: 4, opacity: 0 });
       if (badge) gsap.set(badge, { opacity: 0, y: 24 });
       if (subtitle) gsap.set(subtitle, { opacity: 0, y: 28 });
       if (cta) gsap.set(cta, { opacity: 0, y: 28 });
       if (social) gsap.set(social, { opacity: 0, y: 20 });
 
-      // Master entrance timeline
       const tl = gsap.timeline({ delay: 0.2 });
 
       if (badge) {
@@ -103,19 +100,12 @@ export function Hero() {
 
       tl.to(
           chars,
-          {
-            y: "0%",
-            rotation: 0,
-            opacity: 1,
-            duration: 0.8,
-            ease: "expo.out",
-            stagger: { amount: 0.5, from: "start" },
-          },
+          { y: "0%", rotation: 0, opacity: 1, duration: 0.8, ease: "expo.out", stagger: { amount: 0.5 } },
           "-=0.2"
         )
-        .to(subtitle ?? [], { opacity: 1, y: 0, duration: 0.7, ease: "expo.out" }, "-=0.4")
-        .to(cta ?? [], { opacity: 1, y: 0, duration: 0.65, ease: "expo.out" }, "-=0.4")
-        .to(social ?? [], { opacity: 1, y: 0, duration: 0.6, ease: "expo.out" }, "-=0.35");
+        .to(subtitle ?? [], { opacity: 1, y: 0, duration: 0.7, ease: "power3.out" }, "-=0.4")
+        .to(cta ?? [], { opacity: 1, y: 0, duration: 0.65, ease: "power3.out" }, "-=0.4")
+        .to(social ?? [], { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, "-=0.35");
 
       // Magnetic buttons
       const makeMagnetic = contextSafe!((el: HTMLElement, strength: number) => {
@@ -160,14 +150,14 @@ export function Hero() {
   return (
     <section
       ref={sectionRef}
-      className="relative flex min-h-[calc(100svh-4rem)] flex-col items-center justify-start overflow-hidden"
+      className="relative flex min-h-[calc(100svh-4rem)] flex-col items-center justify-start overflow-hidden bg-hero-gradient"
     >
       <AnimatedGradientBg />
 
-      {/* Cursor spotlight */}
+      {/* Cursor spotlight — teal tint */}
       <div
         ref={spotlightRef}
-        className="pointer-events-none absolute h-[500px] w-[500px] rounded-full bg-primary/6 blur-[120px] -z-10 will-change-transform"
+        className="pointer-events-none absolute h-[500px] w-[500px] rounded-full bg-teal-400/5 blur-[120px] -z-10 will-change-transform"
         style={{ transform: "translate(-9999px, -9999px)" }}
       />
 
@@ -176,23 +166,23 @@ export function Hero() {
 
         {/* Badge */}
         <div data-badge style={{ opacity: 0 }}>
-          <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/60 px-4 py-1.5 text-sm text-muted-foreground backdrop-blur-sm transition-colors hover:border-primary/30">
-            <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
-            Orientación profesional gratuita · Más de 150 mentores
+          <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-teal-200 bg-teal-50/80 px-4 py-1.5 text-sm text-teal-700 backdrop-blur-sm dark:border-teal-800 dark:bg-teal-900/20 dark:text-teal-400">
+            <span className="h-1.5 w-1.5 rounded-full bg-teal-500 animate-pulse" />
+            Orientación profesional gratuita · Más de 230 expertos verificados
           </span>
         </div>
 
         {/* Headline */}
-        <h1 className="font-heading font-bold tracking-tight text-[clamp(2.8rem,8vw,6.5rem)] leading-[1.05]">
+        <h1 className="font-display font-bold tracking-tight text-[clamp(2.8rem,8vw,6.5rem)] leading-[1.05] text-stone-900 dark:text-stone-50">
           <CharSplit text="Encuentra" />
           {" "}
           <CharSplit text="tu camino" gradient />
           <br />
-          <span className="text-[0.82em] text-muted-foreground/90 font-semibold">
+          <span className="text-[0.82em] text-stone-500 dark:text-stone-400 font-semibold">
             <CharSplit text="con quien te " />
             <RotatingWords
               words={["guíe", "inspire", "impulse", "acompañe"]}
-              className="text-gradient font-bold"
+              className="text-gradient-teal font-bold"
             />
           </span>
         </h1>
@@ -201,11 +191,11 @@ export function Hero() {
         <p
           data-subtitle
           style={{ opacity: 0 }}
-          className="mx-auto mt-5 max-w-xl text-lg sm:text-xl text-muted-foreground leading-relaxed"
+          className="mx-auto mt-6 max-w-xl text-lg sm:text-xl text-stone-600 dark:text-stone-400 leading-relaxed"
         >
           Coaches, mentores y psicólogos laborales certificados.
           <br className="hidden sm:block" />
-          <span className="text-foreground/80 font-medium">
+          <span className="text-stone-800 dark:text-stone-200 font-medium">
             {" "}Sesiones por videollamada, completamente gratis.
           </span>
         </p>
@@ -219,7 +209,7 @@ export function Hero() {
           <div ref={btn1Ref} className="inline-flex w-full sm:w-auto">
             <Button
               size="lg"
-              className="group w-full sm:w-auto h-13 px-8 text-base font-medium bg-foreground text-background hover:bg-foreground/90 transition-all duration-200 shadow-lg shadow-foreground/10"
+              className="group w-full sm:w-auto h-13 px-8 text-base font-display font-semibold bg-teal-600 text-white hover:bg-teal-700 transition-transform duration-180 hover:scale-[1.02] active:scale-[0.99] shadow-lg shadow-teal-600/20"
               asChild
             >
               <Link href="/explore">
@@ -232,7 +222,7 @@ export function Hero() {
             <Button
               variant="outline"
               size="lg"
-              className="w-full sm:w-auto h-13 px-8 text-base font-medium border-border/60 bg-background/50 backdrop-blur-sm hover:bg-background/80 transition-all duration-200"
+              className="w-full sm:w-auto h-13 px-8 text-base font-display font-medium border-stone-300 bg-white/60 backdrop-blur-sm hover:bg-white/80 text-stone-700 transition-all duration-200 dark:border-stone-700 dark:bg-stone-900/40 dark:text-stone-300"
               asChild
             >
               <Link href="#como-funciona">
@@ -250,10 +240,10 @@ export function Hero() {
         >
           {/* Avatar stack */}
           <div className="flex -space-x-2.5">
-            {AVATARS.map(({ initials, from, to }) => (
+            {AVATARS.map(({ initials, bg }) => (
               <div
                 key={initials}
-                className={`flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br ${from} ${to} text-[11px] font-bold text-white ring-2 ring-background shadow-sm`}
+                className={`flex h-9 w-9 items-center justify-center rounded-full ${bg} text-[11px] font-bold text-white ring-2 ring-white dark:ring-stone-900 shadow-sm`}
               >
                 {initials}
               </div>
@@ -263,13 +253,13 @@ export function Hero() {
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-0.5">
               {Array.from({ length: 5 }).map((_, i) => (
-                <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />
               ))}
             </div>
-            <span className="text-sm font-semibold">4.9</span>
-            <span className="text-sm text-muted-foreground">
+            <span className="text-sm font-semibold text-stone-800 dark:text-stone-200">4.9</span>
+            <span className="text-sm text-stone-500 dark:text-stone-400">
               ·{" "}
-              <span className="font-medium text-foreground/80">
+              <span className="font-medium text-stone-700 dark:text-stone-300">
                 <AnimatedCounter target={2500} suffix="+" decimals={0} />
               </span>{" "}
               sesiones completadas
@@ -279,8 +269,8 @@ export function Hero() {
 
       </div>
 
-      {/* Scroll indicator — flex item pushed to bottom, always visible */}
-      <div className="relative z-10 mt-auto mb-6 flex flex-col items-center gap-1 text-foreground/40 animate-bounce-slow">
+      {/* Scroll indicator */}
+      <div className="relative z-10 mt-auto mb-6 flex flex-col items-center gap-1 text-stone-400 animate-bounce-slow">
         <span className="text-[11px] uppercase tracking-widest font-medium">Descubre más</span>
         <ChevronDown className="h-4 w-4" />
       </div>

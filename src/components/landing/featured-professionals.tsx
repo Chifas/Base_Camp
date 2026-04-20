@@ -74,19 +74,16 @@ const MOCK_PROFESSIONALS: Professional[] = [
   },
 ];
 
-// ── Skeleton components ────────────────────────────────────────────────────────
+// ── Skeletons ─────────────────────────────────────────────────────────────────
 
 export function ProfessionalCardSkeleton() {
   return (
     <div className="w-[280px] sm:w-[300px] shrink-0">
-      <div className="rounded-2xl border overflow-hidden animate-pulse">
-        <div className="aspect-[4/5] bg-muted" />
+      <div className="rounded-2xl border border-stone-200 dark:border-stone-800 overflow-hidden animate-pulse">
+        <div className="aspect-[4/5] bg-stone-100 dark:bg-stone-800" />
         <div className="flex items-center justify-between p-4">
-          <div className="flex items-center gap-2">
-            <div className="h-4 w-4 rounded-full bg-muted" />
-            <div className="h-4 w-12 rounded bg-muted" />
-          </div>
-          <div className="h-6 w-16 rounded-full bg-muted" />
+          <div className="h-4 w-24 rounded bg-stone-100 dark:bg-stone-800" />
+          <div className="h-6 w-16 rounded-full bg-stone-100 dark:bg-stone-800" />
         </div>
       </div>
     </div>
@@ -97,9 +94,7 @@ export function FeaturedProfessionalsSkeleton() {
   return (
     <section className="py-20 sm:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="space-y-2">
-          <div className="h-8 w-72 rounded bg-muted animate-pulse" />
-        </div>
+        <div className="h-8 w-72 rounded bg-stone-100 dark:bg-stone-800 animate-pulse" />
       </div>
       <div className="mt-12 flex gap-6 overflow-hidden px-4 sm:px-6 lg:px-8">
         {Array.from({ length: 4 }).map((_, i) => (
@@ -154,10 +149,13 @@ export function FeaturedProfessionals({ professionals }: FeaturedProfessionalsPr
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <FadeIn className="flex items-end justify-between">
           <div>
-            <h2 className="font-heading text-3xl font-bold tracking-tight sm:text-4xl">
+            <p className="text-sm font-display font-semibold uppercase tracking-widest text-teal-600 dark:text-teal-400 mb-1">
+              Comunidad
+            </p>
+            <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl text-stone-900 dark:text-stone-50">
               Profesionales destacados
             </h2>
-            <p className="mt-2 text-muted-foreground">
+            <p className="mt-2 text-stone-600 dark:text-stone-400">
               Los mejor valorados por nuestra comunidad.
             </p>
           </div>
@@ -165,20 +163,20 @@ export function FeaturedProfessionals({ professionals }: FeaturedProfessionalsPr
             <button
               onClick={() => scroll("left")}
               disabled={!canScrollLeft}
-              className="flex h-10 w-10 items-center justify-center rounded-full border bg-background transition-colors hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 transition-colors hover:bg-stone-50 dark:hover:bg-stone-800 disabled:opacity-30 disabled:cursor-not-allowed"
               aria-label="Anterior"
             >
-              <ChevronLeft className="h-5 w-5" />
+              <ChevronLeft className="h-5 w-5 text-stone-600 dark:text-stone-400" />
             </button>
             <button
               onClick={() => scroll("right")}
               disabled={!canScrollRight}
-              className="flex h-10 w-10 items-center justify-center rounded-full border bg-background transition-colors hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 transition-colors hover:bg-stone-50 dark:hover:bg-stone-800 disabled:opacity-30 disabled:cursor-not-allowed"
               aria-label="Siguiente"
             >
-              <ChevronRight className="h-5 w-5" />
+              <ChevronRight className="h-5 w-5 text-stone-600 dark:text-stone-400" />
             </button>
-            <Button variant="ghost" className="group ml-2" asChild>
+            <Button variant="ghost" className="group ml-2 font-display font-medium text-teal-600 dark:text-teal-400 hover:text-teal-700 hover:bg-teal-50 dark:hover:bg-teal-950/30" asChild>
               <Link href="/explore">
                 Ver todos
                 <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -199,42 +197,42 @@ export function FeaturedProfessionals({ professionals }: FeaturedProfessionalsPr
 
         <div
           ref={scrollRef}
-          className="flex gap-6 overflow-x-auto scroll-smooth px-4 sm:px-6 lg:px-[max(1.5rem,calc((100vw-80rem)/2+1.5rem))] pb-4 no-scrollbar"
+          className="flex gap-5 overflow-x-auto scroll-smooth px-4 sm:px-6 lg:px-[max(1.5rem,calc((100vw-80rem)/2+1.5rem))] pb-4 no-scrollbar"
         >
           {displayProfessionals.map((pro) => (
             <Link
               key={pro.id}
               href={`/professional/${pro.id}`}
-              className="group w-[280px] sm:w-[300px] shrink-0 block"
+              className="group w-[270px] sm:w-[290px] shrink-0 block"
             >
-              <div className="relative overflow-hidden rounded-2xl border bg-card transition-all duration-200 hover:shadow-lg hover:-translate-y-1">
+              <div className="relative overflow-hidden rounded-2xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 transition-all duration-200 hover:shadow-lg hover:-translate-y-1">
                 {/* Image */}
-                <div className="relative aspect-[4/5] overflow-hidden">
+                <div className="relative aspect-[4/5] overflow-hidden bg-stone-100 dark:bg-stone-800">
                   <Image
                     src={pro.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${pro.name}`}
                     alt={pro.name}
                     fill
                     className="object-cover transition-transform duration-500 group-hover:scale-105"
-                    sizes="300px"
+                    sizes="290px"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
 
                   <div className="absolute left-3 top-3">
-                    <Badge variant="secondary" className="bg-white/90 text-xs dark:bg-black/70 dark:text-white">
+                    <Badge className="bg-white/90 text-stone-700 text-xs font-medium dark:bg-stone-900/80 dark:text-stone-200 border-0">
                       {pro.categoryName}
                     </Badge>
                   </div>
 
                   {pro.verified && (
                     <div className="absolute right-3 top-3">
-                      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white/90 dark:bg-black/70">
-                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white/90 dark:bg-stone-900/80">
+                        <CheckCircle2 className="h-4 w-4 text-teal-600" />
                       </div>
                     </div>
                   )}
 
                   <div className="absolute bottom-0 left-0 right-0 p-4">
-                    <h3 className="font-heading text-lg font-semibold text-white">
+                    <h3 className="font-display text-lg font-semibold text-white">
                       {pro.name}
                     </h3>
                     <p className="mt-0.5 text-sm text-white/80 line-clamp-1">
@@ -246,13 +244,13 @@ export function FeaturedProfessionals({ professionals }: FeaturedProfessionalsPr
                 {/* Card bottom */}
                 <div className="flex items-center justify-between p-4">
                   <div className="flex items-center gap-1">
-                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                    <span className="text-sm font-medium">{pro.rating}</span>
-                    <span className="text-sm text-muted-foreground">
+                    <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                    <span className="text-sm font-medium text-stone-800 dark:text-stone-200">{pro.rating}</span>
+                    <span className="text-sm text-stone-500 dark:text-stone-400">
                       ({pro.reviewCount})
                     </span>
                   </div>
-                  <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-sm font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                  <span className="inline-flex items-center rounded-full bg-teal-100 dark:bg-teal-900/30 px-2.5 py-0.5 text-sm font-semibold text-teal-700 dark:text-teal-400">
                     Gratuito
                   </span>
                 </div>
@@ -262,9 +260,9 @@ export function FeaturedProfessionals({ professionals }: FeaturedProfessionalsPr
         </div>
       </div>
 
-      {/* Mobile view all button */}
+      {/* Mobile view all */}
       <div className="mt-8 text-center md:hidden px-4">
-        <Button variant="outline" asChild>
+        <Button variant="outline" className="border-stone-300 dark:border-stone-700" asChild>
           <Link href="/explore">
             Ver todos los profesionales
             <ArrowRight className="ml-2 h-4 w-4" />
