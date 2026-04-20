@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, X, Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 export interface TourStep {
   /** CSS selector del elemento a destacar, o null para tarjeta centrada */
@@ -152,13 +151,14 @@ export function OnboardingTour({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="pointer-events-none fixed z-[81] rounded-xl ring-2 ring-indigo-500 ring-offset-1"
+            className="pointer-events-none fixed z-[81] rounded-xl ring-2 ring-teal-500 ring-offset-1"
             style={{
               top: targetRect.top - PAD,
               left: targetRect.left - PAD,
               width: targetRect.width + PAD * 2,
               height: targetRect.height + PAD * 2,
-              boxShadow: "0 0 0 4px rgba(99,102,241,0.15), 0 0 24px 8px rgba(99,102,241,0.2)",
+              boxShadow:
+                "0 0 0 4px rgba(20,184,166,0.15), 0 0 24px 8px rgba(20,184,166,0.2)",
             }}
           />
         )}
@@ -173,7 +173,7 @@ export function OnboardingTour({
           exit={{ opacity: 0, y: -8, scale: 0.97 }}
           transition={{ duration: 0.22, ease: "easeOut" }}
           className={[
-            "fixed z-[82] w-[calc(100vw-32px)] max-w-sm rounded-2xl border bg-card px-5 py-5 shadow-2xl",
+            "fixed z-[82] w-[calc(100vw-32px)] max-w-sm rounded-2xl border border-stone-200 bg-white px-5 py-5 shadow-2xl dark:border-stone-700 dark:bg-stone-900",
             isCentered ? "left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" : "",
           ].join(" ")}
           style={isCentered ? {} : cardStyle}
@@ -181,14 +181,14 @@ export function OnboardingTour({
           {/* Cabecera: contador + botón cerrar */}
           <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-1.5">
-              <Sparkles className="h-3.5 w-3.5 text-indigo-500" />
+              <Sparkles className="h-3.5 w-3.5 text-teal-500" />
               <span className="text-xs font-medium text-muted-foreground">
                 {index + 1} de {steps.length}
               </span>
             </div>
             <button
               onClick={complete}
-              className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="flex h-7 w-7 items-center justify-center rounded-lg bg-stone-100 text-stone-400 transition-colors hover:bg-stone-200 hover:text-stone-700 dark:bg-stone-800 dark:hover:bg-stone-700 dark:hover:text-stone-300"
               aria-label="Cerrar guía"
             >
               <X className="h-4 w-4" />
@@ -201,12 +201,12 @@ export function OnboardingTour({
               <div
                 key={i}
                 className={[
-                  "h-1 rounded-full transition-all duration-300",
+                  "h-1.5 rounded-full transition-all duration-300",
                   i === index
-                    ? "w-6 bg-indigo-500"
+                    ? "w-6 bg-teal-500"
                     : i < index
-                    ? "w-2 bg-indigo-300 dark:bg-indigo-700"
-                    : "w-2 bg-muted-foreground/20",
+                    ? "w-2 bg-teal-300 dark:bg-teal-700"
+                    : "w-2 bg-stone-200 dark:bg-stone-700",
                 ].join(" ")}
               />
             ))}
@@ -230,20 +230,26 @@ export function OnboardingTour({
             </button>
             <div className="flex items-center gap-2">
               {index > 0 && (
-                <Button variant="outline" size="sm" onClick={prev}>
+                <button
+                  onClick={prev}
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-stone-200 text-stone-600 transition-colors hover:bg-stone-100 dark:border-stone-700 dark:text-stone-400 dark:hover:bg-stone-800"
+                >
                   <ChevronLeft className="h-4 w-4" />
-                </Button>
+                </button>
               )}
-              <Button size="sm" onClick={next}>
+              <button
+                onClick={next}
+                className="inline-flex h-8 items-center gap-1 rounded-lg bg-teal-600 px-4 text-sm font-medium text-white transition-colors hover:bg-teal-700"
+              >
                 {isLast ? (
                   "¡Empezar!"
                 ) : (
                   <>
                     Siguiente
-                    <ChevronRight className="ml-1 h-4 w-4" />
+                    <ChevronRight className="h-4 w-4" />
                   </>
                 )}
-              </Button>
+              </button>
             </div>
           </div>
         </motion.div>
