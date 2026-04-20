@@ -2,14 +2,12 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useRef, useState, useEffect } from "react";
-import { Star, ArrowRight, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
+import { useRef } from "react";
+import { Star, ArrowRight, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { gsap, ScrollTrigger, useGSAP } from "@/lib/gsap-config";
 import { FadeIn } from "@/components/shared/motion-wrapper";
 import type { Professional } from "@/types";
-
-// ── Mock fallback data ─────────────────────────────────────────────────────────
 
 const MOCK_PROFESSIONALS: Professional[] = [
   {
@@ -17,7 +15,7 @@ const MOCK_PROFESSIONALS: Professional[] = [
     userId: "mock-u1",
     name: "Laura Sánchez",
     image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Laura",
-    bio: "Executive Coach con 12 años de experiencia en liderazgo.",
+    bio: "Executive Coach con 12 años de experiencia ayudando a líderes a desarrollar su potencial, comunicar con impacto y tomar decisiones en entornos de alta presión.",
     headline: "Executive Coach · Experta en liderazgo femenino",
     category: "COACH",
     categoryName: "Coaching Ejecutivo",
@@ -48,7 +46,7 @@ const MOCK_PROFESSIONALS: Professional[] = [
     name: "Elena Torres",
     image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Elena",
     bio: "Psicóloga organizacional especializada en burnout.",
-    headline: "Psicóloga Laboral · Burnout & bienestar en el trabajo",
+    headline: "Psicóloga Laboral · Burnout & bienestar",
     category: "PSYCHOLOGIST",
     categoryName: "Psicología Laboral",
     hourlyRate: 0,
@@ -63,7 +61,7 @@ const MOCK_PROFESSIONALS: Professional[] = [
     name: "Marcos Ibáñez",
     image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Marcos",
     bio: "Experto en estrategia de producto y fintech.",
-    headline: "Especialista Sectorial · Product Strategy & Fintech",
+    headline: "Especialista · Product Strategy & Fintech",
     category: "NUTRITIONIST",
     categoryName: "Especialistas Sectoriales",
     hourlyRate: 0,
@@ -74,78 +72,59 @@ const MOCK_PROFESSIONALS: Professional[] = [
   },
 ];
 
-// ── Skeletons ─────────────────────────────────────────────────────────────────
-
-export function ProfessionalCardSkeleton() {
-  return (
-    <div className="w-[280px] sm:w-[300px] shrink-0">
-      <div className="rounded-2xl border border-stone-200 dark:border-stone-800 overflow-hidden animate-pulse">
-        <div className="aspect-[4/5] bg-stone-100 dark:bg-stone-800" />
-        <div className="flex items-center justify-between p-4">
-          <div className="h-4 w-24 rounded bg-stone-100 dark:bg-stone-800" />
-          <div className="h-6 w-16 rounded-full bg-stone-100 dark:bg-stone-800" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export function FeaturedProfessionalsSkeleton() {
   return (
     <section className="py-20 sm:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="h-8 w-72 rounded bg-stone-100 dark:bg-stone-800 animate-pulse" />
-      </div>
-      <div className="mt-12 flex gap-6 overflow-hidden px-4 sm:px-6 lg:px-8">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <ProfessionalCardSkeleton key={i} />
-        ))}
+        <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-48 rounded-2xl bg-stone-100 dark:bg-stone-800 animate-pulse" />
+          ))}
+        </div>
       </div>
     </section>
   );
 }
-
-// ── Main component ─────────────────────────────────────────────────────────────
 
 interface FeaturedProfessionalsProps {
   professionals: Professional[];
 }
 
 export function FeaturedProfessionals({ professionals }: FeaturedProfessionalsProps) {
-  const displayProfessionals = professionals.length > 0 ? professionals : MOCK_PROFESSIONALS;
+  const displayProfessionals =
+    professionals.length > 0 ? professionals : MOCK_PROFESSIONALS;
+  const featured = displayProfessionals[0];
+  const rest = displayProfessionals.slice(1, 4);
 
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(true);
+  const sectionRef = useRef<HTMLElement>(null);
 
-  const checkScroll = () => {
-    const el = scrollRef.current;
-    if (!el) return;
-    setCanScrollLeft(el.scrollLeft > 10);
-    setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 10);
-  };
+  useGSAP(
+    () => {
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    checkScroll();
-    el.addEventListener("scroll", checkScroll, { passive: true });
-    window.addEventListener("resize", checkScroll);
-    return () => {
-      el.removeEventListener("scroll", checkScroll);
-      window.removeEventListener("resize", checkScroll);
-    };
-  }, []);
+      const cards = gsap.utils.toArray<HTMLElement>("[data-pro-card]", sectionRef.current!);
+      gsap.set(cards, { opacity: 0, y: 28 });
 
-  const scroll = (direction: "left" | "right") => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const cardWidth = el.querySelector("a")?.offsetWidth ?? 300;
-    el.scrollBy({ left: direction === "left" ? -cardWidth - 24 : cardWidth + 24, behavior: "smooth" });
-  };
+      ScrollTrigger.batch(cards, {
+        start: "top 88%",
+        once: true,
+        onEnter: (els) => {
+          gsap.to(els, {
+            opacity: 1,
+            y: 0,
+            duration: 0.65,
+            ease: "power3.out",
+            stagger: 0.08,
+          });
+        },
+      });
+    },
+    { scope: sectionRef }
+  );
 
   return (
-    <section className="py-20 sm:py-28">
+    <section ref={sectionRef} className="py-20 sm:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <FadeIn className="flex items-end justify-between">
           <div>
@@ -159,115 +138,147 @@ export function FeaturedProfessionals({ professionals }: FeaturedProfessionalsPr
               Los mejor valorados por nuestra comunidad.
             </p>
           </div>
-          <div className="hidden md:flex items-center gap-2">
-            <button
-              onClick={() => scroll("left")}
-              disabled={!canScrollLeft}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 transition-colors hover:bg-stone-50 dark:hover:bg-stone-800 disabled:opacity-30 disabled:cursor-not-allowed"
-              aria-label="Anterior"
-            >
-              <ChevronLeft className="h-5 w-5 text-stone-600 dark:text-stone-400" />
-            </button>
-            <button
-              onClick={() => scroll("right")}
-              disabled={!canScrollRight}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 transition-colors hover:bg-stone-50 dark:hover:bg-stone-800 disabled:opacity-30 disabled:cursor-not-allowed"
-              aria-label="Siguiente"
-            >
-              <ChevronRight className="h-5 w-5 text-stone-600 dark:text-stone-400" />
-            </button>
-            <Button variant="ghost" className="group ml-2 font-display font-medium text-teal-600 dark:text-teal-400 hover:text-teal-700 hover:bg-teal-50 dark:hover:bg-teal-950/30" asChild>
-              <Link href="/explore">
-                Ver todos
-                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </Link>
-            </Button>
-          </div>
+          <Button
+            variant="ghost"
+            className="hidden md:flex group font-display font-medium text-teal-600 dark:text-teal-400 hover:text-teal-700 hover:bg-teal-50 dark:hover:bg-teal-950/30"
+            asChild
+          >
+            <Link href="/explore">
+              Ver todos
+              <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+            </Link>
+          </Button>
         </FadeIn>
-      </div>
 
-      {/* Horizontal scroll carousel */}
-      <div className="relative mt-10">
-        {canScrollLeft && (
-          <div className="pointer-events-none absolute left-0 top-0 bottom-0 z-10 w-8 sm:w-20 bg-gradient-to-r from-background to-transparent" />
-        )}
-        {canScrollRight && (
-          <div className="pointer-events-none absolute right-0 top-0 bottom-0 z-10 w-8 sm:w-20 bg-gradient-to-l from-background to-transparent" />
-        )}
-
-        <div
-          ref={scrollRef}
-          className="flex gap-5 overflow-x-auto scroll-smooth px-4 sm:px-6 lg:px-[max(1.5rem,calc((100vw-80rem)/2+1.5rem))] pb-4 no-scrollbar"
-        >
-          {displayProfessionals.map((pro) => (
-            <Link
-              key={pro.id}
-              href={`/professional/${pro.id}`}
-              className="group w-[270px] sm:w-[290px] shrink-0 block"
-            >
-              <div className="relative overflow-hidden rounded-2xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 transition-all duration-200 hover:shadow-lg hover:-translate-y-1">
-                {/* Image */}
-                <div className="relative aspect-[4/5] overflow-hidden bg-stone-100 dark:bg-stone-800">
-                  <Image
-                    src={pro.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${pro.name}`}
-                    alt={pro.name}
-                    fill
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                    sizes="290px"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
-
-                  <div className="absolute left-3 top-3">
-                    <Badge className="bg-white/90 text-stone-700 text-xs font-medium dark:bg-stone-900/80 dark:text-stone-200 border-0">
-                      {pro.categoryName}
-                    </Badge>
+        {/* Asymmetric grid */}
+        <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {/* Featured card — col-span-2 */}
+          <div data-pro-card style={{ opacity: 0 }} className="sm:col-span-2">
+            <Link href={`/professional/${featured.id}`} className="group block h-full">
+              <div className="h-full rounded-2xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 p-6 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5">
+                <div className="flex items-start gap-5">
+                  {/* Photo */}
+                  <div className="relative h-[120px] w-[120px] shrink-0 overflow-hidden rounded-2xl bg-stone-100 dark:bg-stone-800">
+                    <Image
+                      src={featured.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${featured.name}`}
+                      alt={featured.name}
+                      fill
+                      className="object-cover"
+                      sizes="120px"
+                    />
                   </div>
 
-                  {pro.verified && (
-                    <div className="absolute right-3 top-3">
-                      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white/90 dark:bg-stone-900/80">
-                        <CheckCircle2 className="h-4 w-4 text-teal-600" />
-                      </div>
+                  {/* Info */}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="font-display text-xl font-semibold text-stone-900 dark:text-stone-50 group-hover:text-teal-700 dark:group-hover:text-teal-400 transition-colors">
+                        {featured.name}
+                      </h3>
+                      <span className="rounded-full bg-teal-100 dark:bg-teal-900/40 px-2.5 py-0.5 text-xs font-medium text-teal-700 dark:text-teal-300">
+                        ⭐ Destacado
+                      </span>
+                      {featured.verified && (
+                        <CheckCircle2 className="h-4 w-4 text-teal-600 dark:text-teal-400 shrink-0" />
+                      )}
                     </div>
-                  )}
 
-                  <div className="absolute bottom-0 left-0 right-0 p-4">
-                    <h3 className="font-display text-lg font-semibold text-white">
-                      {pro.name}
-                    </h3>
-                    <p className="mt-0.5 text-sm text-white/80 line-clamp-1">
-                      {pro.headline}
+                    <p className="mt-1 text-sm text-teal-600 dark:text-teal-400 font-medium">
+                      {featured.headline}
+                    </p>
+
+                    <div className="mt-2 flex items-center gap-1">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`h-3.5 w-3.5 ${
+                            i < Math.round(featured.rating)
+                              ? "fill-amber-400 text-amber-400"
+                              : "text-stone-200 dark:text-stone-700"
+                          }`}
+                        />
+                      ))}
+                      <span className="ml-1 text-sm font-medium text-stone-700 dark:text-stone-300">
+                        {featured.rating}
+                      </span>
+                      <span className="text-sm text-stone-400">
+                        ({featured.reviewCount} reseñas)
+                      </span>
+                    </div>
+
+                    <p className="mt-3 line-clamp-2 text-sm text-stone-600 dark:text-stone-400 leading-relaxed">
+                      {featured.bio}
                     </p>
                   </div>
                 </div>
 
-                {/* Card bottom */}
-                <div className="flex items-center justify-between p-4">
-                  <div className="flex items-center gap-1">
-                    <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-                    <span className="text-sm font-medium text-stone-800 dark:text-stone-200">{pro.rating}</span>
-                    <span className="text-sm text-stone-500 dark:text-stone-400">
-                      ({pro.reviewCount})
-                    </span>
-                  </div>
-                  <span className="inline-flex items-center rounded-full bg-teal-100 dark:bg-teal-900/30 px-2.5 py-0.5 text-sm font-semibold text-teal-700 dark:text-teal-400">
-                    Gratuito
+                <div className="mt-5 flex items-center justify-between border-t border-stone-100 dark:border-stone-800 pt-4">
+                  <span className="text-sm font-semibold text-stone-900 dark:text-stone-50">
+                    Gratis · 3 sesiones/mes
                   </span>
+                  <Button
+                    size="sm"
+                    className="bg-teal-700 text-white hover:bg-teal-800 font-display"
+                  >
+                    Ver perfil
+                    <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                  </Button>
                 </div>
               </div>
             </Link>
+          </div>
+
+          {/* Regular cards */}
+          {rest.map((pro) => (
+            <div key={pro.id} data-pro-card style={{ opacity: 0 }}>
+              <Link href={`/professional/${pro.id}`} className="group block h-full">
+                <div className="h-full rounded-2xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 p-5 transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 flex flex-col items-center text-center">
+                  {/* Circular photo */}
+                  <div className="relative h-16 w-16 overflow-hidden rounded-full bg-stone-100 dark:bg-stone-800 ring-2 ring-stone-100 dark:ring-stone-800">
+                    <Image
+                      src={pro.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${pro.name}`}
+                      alt={pro.name}
+                      fill
+                      className="object-cover"
+                      sizes="64px"
+                    />
+                  </div>
+
+                  <h3 className="mt-3 font-display text-base font-semibold text-stone-900 dark:text-stone-50 group-hover:text-teal-700 dark:group-hover:text-teal-400 transition-colors">
+                    {pro.name}
+                  </h3>
+
+                  <p className="mt-0.5 text-xs font-medium text-teal-600 dark:text-teal-400">
+                    {pro.categoryName}
+                  </p>
+
+                  <div className="mt-2 flex items-center gap-1">
+                    <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                    <span className="text-sm font-medium text-stone-700 dark:text-stone-300">
+                      {pro.rating}
+                    </span>
+                    <span className="text-xs text-stone-400">({pro.reviewCount})</span>
+                  </div>
+
+                  <div className="mt-auto pt-4 w-full">
+                    <span className="inline-flex items-center rounded-full bg-teal-50 dark:bg-teal-900/20 px-3 py-1 text-xs font-medium text-teal-700 dark:text-teal-400">
+                      Disponible
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            </div>
           ))}
         </div>
-      </div>
 
-      {/* Mobile view all */}
-      <div className="mt-8 text-center md:hidden px-4">
-        <Button variant="outline" className="border-stone-300 dark:border-stone-700" asChild>
-          <Link href="/explore">
-            Ver todos los profesionales
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </Link>
-        </Button>
+        {/* Mobile view all */}
+        <div className="mt-8 text-center md:hidden">
+          <Button variant="outline" className="border-stone-200 dark:border-stone-700" asChild>
+            <Link href="/explore">
+              Ver todos los profesionales
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+          </Button>
+        </div>
       </div>
     </section>
   );
