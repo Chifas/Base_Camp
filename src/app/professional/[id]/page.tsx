@@ -1,19 +1,6 @@
 import type { Metadata } from "next";
-import Image from "next/image";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import {
-  Star,
-  CheckCircle2,
-  Clock,
-  Video,
-  ChevronLeft,
-  Globe,
-  Award,
-  GraduationCap,
-} from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+import { GraduationCap } from "lucide-react";
 import { FadeIn } from "@/components/shared/motion-wrapper";
 import { prisma } from "@/lib/prisma";
 import { CATEGORY_LABELS } from "@/types";
@@ -21,6 +8,7 @@ import type { ProfessionalCategory, Review } from "@/types";
 import { BookingCard } from "./booking-card";
 import { ReviewsSection } from "./reviews-section";
 import { SendMessageButton } from "./send-message-button";
+import { ProfileHero } from "./profile-hero";
 
 const DAYS = [
   "Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado",
@@ -79,9 +67,9 @@ export default async function ProfessionalProfilePage({
 
   if (!professional) notFound();
 
-  const name = professional.user.name ?? "";
-  const image = professional.user.image ?? "";
-  const bio = professional.user.bio ?? "";
+  const name     = professional.user.name ?? "";
+  const image    = professional.user.image ?? "";
+  const bio      = professional.user.bio ?? "";
   const headline = professional.headline ?? "";
   const category = professional.category as ProfessionalCategory;
 
@@ -133,6 +121,8 @@ export default async function ProfessionalProfilePage({
     }),
   };
 
+  const todayDow = new Date().getDay();
+
   return (
     <>
       <script
@@ -140,174 +130,184 @@ export default async function ProfessionalProfilePage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        {/* Back */}
-        <FadeIn>
-          <Link
-            href="/explore"
-            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ChevronLeft className="h-4 w-4" />
-            Volver a explorar
-          </Link>
-        </FadeIn>
+      {/* Hero — full width */}
+      <ProfileHero
+        name={name}
+        image={image}
+        headline={headline}
+        rating={professional.rating}
+        reviewCount={professional.reviewCount}
+        verified={professional.verified}
+        categoryLabel={CATEGORY_LABELS[category]}
+        yearsExperience={professional.yearsExperience ?? undefined}
+        languages={professional.languages}
+        hasAvailability={professional.availability.length > 0}
+      />
 
-        <div className="mt-6 grid gap-8 lg:grid-cols-3">
-          {/* Left column - Profile info */}
-          <div className="lg:col-span-2 space-y-8">
-            <FadeIn>
-              {/* Profile header */}
-              <div className="flex flex-col gap-6 sm:flex-row">
-                <div className="relative h-32 w-32 shrink-0 overflow-hidden rounded-2xl">
-                  <Image
-                    src={image || "/placeholder-avatar.png"}
-                    alt={name}
-                    fill
-                    className="object-cover"
-                    sizes="128px"
-                    priority
-                  />
-                </div>
+      {/* Content grid */}
+      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <div className="grid gap-8 lg:grid-cols-3">
 
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <h1 className="font-heading text-2xl font-bold sm:text-3xl">{name}</h1>
-                    {professional.verified && (
-                      <span title="Profesional verificado">
-                        <CheckCircle2 className="h-6 w-6 text-green-600" />
-                      </span>
-                    )}
-                  </div>
-                  <p className="mt-1 text-lg text-muted-foreground">{headline}</p>
-
-                  <div className="mt-3 flex flex-wrap items-center gap-3">
-                    <Badge variant="secondary">{CATEGORY_LABELS[category]}</Badge>
-                    <div className="flex items-center gap-1">
-                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      <span className="text-sm font-medium">{professional.rating.toFixed(1)}</span>
-                      <span className="text-sm text-muted-foreground">
-                        ({professional.reviewCount} reseñas)
-                      </span>
-                    </div>
-                    {professional.yearsExperience && (
-                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                        <Award className="h-4 w-4" />
-                        {professional.yearsExperience} años de experiencia
-                      </div>
-                    )}
-                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                      <Clock className="h-4 w-4" />
-                      Sesiones de 60 min
-                    </div>
-                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                      <Video className="h-4 w-4" />
-                      Videollamada
-                    </div>
-                  </div>
-
-                  {/* Languages */}
-                  {professional.languages.length > 0 && (
-                    <div className="mt-2 flex items-center gap-2">
-                      <Globe className="h-4 w-4 text-muted-foreground" />
-                      <div className="flex flex-wrap gap-1">
-                        {professional.languages.map((lang) => (
-                          <Badge key={lang} variant="outline" className="text-xs">
-                            {lang}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </FadeIn>
+          {/* ── Left column ── */}
+          <div className="lg:col-span-2 space-y-10">
 
             {/* Bio */}
             <FadeIn delay={0.1}>
               <div>
-                <h2 className="font-heading text-xl font-semibold">Sobre mí</h2>
-                <p className="mt-3 leading-relaxed text-muted-foreground">{bio}</p>
+                <h2 className="font-display text-xl font-bold text-stone-900 dark:text-stone-50 border-l-4 border-teal-500 pl-4">
+                  Sobre mí
+                </h2>
+                <p className="mt-4 text-base leading-relaxed text-stone-600 dark:text-stone-400">
+                  {bio}
+                </p>
               </div>
             </FadeIn>
 
-            {/* Certifications */}
-            {professional.certifications.length > 0 && (
-              <>
-                <Separator />
-                <FadeIn delay={0.12}>
-                  <div>
-                    <h2 className="font-heading text-xl font-semibold flex items-center gap-2">
-                      <GraduationCap className="h-5 w-5" />
-                      Certificaciones
-                    </h2>
-                    <div className="mt-4 space-y-3">
-                      {professional.certifications.map((cert) => (
-                        <div key={cert.id} className="rounded-lg border bg-card p-4">
-                          <p className="font-medium">{cert.title}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {cert.institution}{cert.year ? ` · ${cert.year}` : ""}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </FadeIn>
-              </>
+            {/* Specialties — extracted from headline */}
+            {headline && (
+              <FadeIn delay={0.12}>
+                <div className="flex flex-wrap gap-2">
+                  {headline
+                    .split("·")
+                    .map((tag) => tag.trim())
+                    .filter(Boolean)
+                    .map((tag) => (
+                      <span
+                        key={tag}
+                        className="rounded-full border border-teal-200 bg-teal-50 px-3 py-1 text-sm font-medium text-teal-700 dark:border-teal-800 dark:bg-teal-900/20 dark:text-teal-300"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                </div>
+              </FadeIn>
             )}
 
-            <Separator />
+            {/* Certifications */}
+            {professional.certifications.length > 0 && (
+              <FadeIn delay={0.14}>
+                <div>
+                  <h2 className="font-display text-xl font-bold text-stone-900 dark:text-stone-50 border-l-4 border-teal-500 pl-4">
+                    Certificaciones
+                  </h2>
+                  <div className="mt-4 space-y-3">
+                    {professional.certifications.map((cert) => (
+                      <div
+                        key={cert.id}
+                        className="flex items-start gap-4 rounded-xl border-l-4 border-teal-400 bg-stone-50 p-4 dark:bg-stone-800/50"
+                      >
+                        <GraduationCap className="mt-0.5 h-5 w-5 shrink-0 text-teal-600 dark:text-teal-400" />
+                        <div>
+                          <p className="font-display font-semibold text-stone-900 dark:text-stone-50">
+                            {cert.title}
+                          </p>
+                          <p className="mt-0.5 text-sm text-stone-500 dark:text-stone-400">
+                            {cert.institution}
+                            {cert.year ? ` · ${cert.year}` : ""}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </FadeIn>
+            )}
 
-            {/* Availability overview */}
+            {/* Availability */}
             <FadeIn delay={0.15}>
               <div>
-                <h2 className="font-heading text-xl font-semibold">Disponibilidad semanal</h2>
-                <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-                  {professional.availability.map((slot) => (
-                    <div key={slot.id} className="rounded-lg border bg-card p-3 text-center">
-                      <p className="text-sm font-medium">{DAYS[slot.dayOfWeek]}</p>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {slot.startTime} - {slot.endTime}
-                      </p>
-                    </div>
-                  ))}
+                <h2 className="font-display text-xl font-bold text-stone-900 dark:text-stone-50 border-l-4 border-teal-500 pl-4">
+                  Disponibilidad semanal
+                </h2>
+                <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-7">
+                  {DAYS.map((day, dayIndex) => {
+                    const slot = professional.availability.find(
+                      (a) => a.dayOfWeek === dayIndex
+                    );
+                    const isToday = dayIndex === todayDow;
+
+                    if (slot) {
+                      return (
+                        <div
+                          key={dayIndex}
+                          className="relative rounded-xl border border-teal-100 bg-teal-50 p-3 text-center dark:border-teal-900 dark:bg-teal-900/20"
+                        >
+                          {isToday && (
+                            <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 rounded-full bg-green-500 px-2 py-0.5 text-[10px] font-semibold text-white whitespace-nowrap">
+                              Hoy
+                            </span>
+                          )}
+                          <p className="font-display text-xs font-semibold text-stone-900 dark:text-stone-50">
+                            {day.slice(0, 3)}
+                          </p>
+                          <p className="mt-1 text-[11px] text-stone-500 dark:text-stone-400">
+                            {slot.startTime}
+                          </p>
+                          <p className="text-[11px] text-stone-400 dark:text-stone-500">
+                            {slot.endTime}
+                          </p>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div
+                        key={dayIndex}
+                        className="rounded-xl border border-stone-100 bg-stone-100 p-3 text-center opacity-40 dark:border-stone-800 dark:bg-stone-800"
+                      >
+                        <p className="font-display text-xs font-semibold text-stone-400 dark:text-stone-500">
+                          {day.slice(0, 3)}
+                        </p>
+                        <p className="mt-1 text-[11px] text-stone-300 dark:text-stone-600">–</p>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </FadeIn>
 
-            <Separator />
-
             {/* Reviews */}
             <FadeIn delay={0.2}>
-              <ReviewsSection
-                reviews={reviews}
-                rating={professional.rating}
-                reviewCount={professional.reviewCount}
-              />
+              <div>
+                <h2 className="font-display text-xl font-bold text-stone-900 dark:text-stone-50 border-l-4 border-teal-500 pl-4">
+                  Reseñas
+                </h2>
+                <div className="mt-6">
+                  <ReviewsSection
+                    reviews={reviews}
+                    rating={professional.rating}
+                    reviewCount={professional.reviewCount}
+                  />
+                </div>
+              </div>
             </FadeIn>
           </div>
 
-          {/* Right column - Booking card + Message */}
-          <div className="lg:col-span-1 space-y-4">
-            <BookingCard
-              professionalId={professional.id}
-              availability={professional.availability.map((a) => ({
-                id: a.id,
-                dayOfWeek: a.dayOfWeek,
-                startTime: a.startTime,
-                endTime: a.endTime,
-              }))}
-              socialImpactScore={professional.socialImpactScore}
-            />
-            <div className="rounded-xl border bg-card p-4">
-              <p className="text-sm text-muted-foreground mb-3">
-                ¿Tienes alguna pregunta antes de reservar?
-              </p>
-              <SendMessageButton
+          {/* ── Right column — sticky ── */}
+          <div className="lg:col-span-1">
+            <div className="sticky top-6 space-y-4">
+              <BookingCard
                 professionalId={professional.id}
-                professionalName={name}
+                availability={professional.availability.map((a) => ({
+                  id: a.id,
+                  dayOfWeek: a.dayOfWeek,
+                  startTime: a.startTime,
+                  endTime: a.endTime,
+                }))}
+                socialImpactScore={professional.socialImpactScore}
               />
+              <div className="rounded-xl border border-stone-200 bg-stone-50 p-4 dark:border-stone-700 dark:bg-stone-800/50">
+                <p className="mb-3 text-sm text-muted-foreground">
+                  ¿Tienes alguna pregunta antes de reservar?
+                </p>
+                <SendMessageButton
+                  professionalId={professional.id}
+                  professionalName={name}
+                />
+              </div>
             </div>
           </div>
+
         </div>
       </div>
     </>
