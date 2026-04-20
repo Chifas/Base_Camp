@@ -170,10 +170,9 @@ export function ProfileHero({
                 {name}
               </h1>
               {verified && (
-                <CheckCircle2
-                  className="h-6 w-6 shrink-0 text-teal-600"
-                  title="Profesional verificado"
-                />
+                <span title="Profesional verificado">
+                  <CheckCircle2 className="h-6 w-6 shrink-0 text-teal-600" />
+                </span>
               )}
             </div>
             <div ref={metaRef}>
