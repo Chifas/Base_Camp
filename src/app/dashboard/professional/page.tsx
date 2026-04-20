@@ -473,10 +473,10 @@ export default function ProfessionalDashboard() {
       <OnboardingTour storageKey="guidepath_tour_professional_v1" steps={PROFESSIONAL_TOUR_STEPS} />
 
       <FadeIn>
-        <h1 className="font-heading text-2xl font-bold sm:text-3xl">
+        <h1 className="font-display text-2xl font-bold sm:text-3xl text-stone-900 dark:text-stone-50">
           Panel Profesional
         </h1>
-        <p className="mt-1 text-muted-foreground">
+        <p className="mt-1 text-stone-500 dark:text-stone-400">
           Gestiona tus sesiones, disponibilidad e impacto social.
         </p>
       </FadeIn>
@@ -485,15 +485,17 @@ export default function ProfessionalDashboard() {
       <FadeIn delay={0.1}>
         <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
           {[
-            { label: "Puntos de impacto", value: (profile?.impactPoints ?? 0).toString(), icon: Sparkles },
-            { label: "Impacto social", value: (profile?.socialImpactScore ?? 0).toFixed(1), icon: TrendingUp },
-            { label: "Sesiones completadas", value: totalSessions.toString(), icon: Users },
-            { label: "Próximas sesiones", value: (confirmedSessions.length + pendingSessions.length).toString(), icon: Calendar },
+            { label: "Puntos de impacto", value: (profile?.impactPoints ?? 0).toString(), icon: Sparkles, accent: "text-amber-600 dark:text-amber-400", iconBg: "bg-amber-100 dark:bg-amber-900/30" },
+            { label: "Impacto social", value: (profile?.socialImpactScore ?? 0).toFixed(1), icon: TrendingUp, accent: "text-teal-600 dark:text-teal-400", iconBg: "bg-teal-100 dark:bg-teal-900/30" },
+            { label: "Sesiones completadas", value: totalSessions.toString(), icon: Users, accent: "text-stone-700 dark:text-stone-300", iconBg: "bg-stone-100 dark:bg-stone-800" },
+            { label: "Próximas sesiones", value: (confirmedSessions.length + pendingSessions.length).toString(), icon: Calendar, accent: "text-stone-700 dark:text-stone-300", iconBg: "bg-stone-100 dark:bg-stone-800" },
           ].map((stat) => (
-            <div key={stat.label} className="rounded-xl border bg-card p-4">
-              <stat.icon className="h-5 w-5 text-muted-foreground" />
-              <p className="mt-2 font-heading text-2xl font-bold">{stat.value}</p>
-              <p className="text-xs text-muted-foreground">{stat.label}</p>
+            <div key={stat.label} className="rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 p-4">
+              <div className={`inline-flex h-9 w-9 items-center justify-center rounded-lg ${stat.iconBg}`}>
+                <stat.icon className={`h-4 w-4 ${stat.accent}`} />
+              </div>
+              <p className={`mt-2 font-display text-2xl font-bold ${stat.accent}`}>{stat.value}</p>
+              <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">{stat.label}</p>
             </div>
           ))}
         </div>
@@ -536,7 +538,7 @@ export default function ProfessionalDashboard() {
           <TabsContent value="sessions" className="mt-6 space-y-6">
             {pendingSessions.length > 0 && (
               <div>
-                <h3 className="font-heading text-lg font-semibold">
+                <h3 className="font-display text-lg font-semibold text-stone-900 dark:text-stone-50">
                   Pendientes de aprobación
                 </h3>
                 <div className="mt-3 space-y-3">
