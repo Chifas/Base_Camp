@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Pagination } from "@/components/shared/pagination";
+import { ExploreSkeleton } from "@/components/shared/explore-skeleton";
 import { gsap } from "@/lib/gsap-config";
 import type { Category, Professional } from "@/types";
 
@@ -271,11 +272,7 @@ export default function ExplorePage() {
       </p>
 
       {/* Loading */}
-      {loading && (
-        <div className="mt-16 flex justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-teal-500" />
-        </div>
-      )}
+      {loading && <ExploreSkeleton />}
 
       {/* Grid */}
       {!loading && (

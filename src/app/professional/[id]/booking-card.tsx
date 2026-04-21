@@ -88,14 +88,16 @@ export function BookingCard({ professionalId, availability, socialImpactScore }:
           <Calendar className="h-4 w-4" />
           Selecciona fecha
         </h3>
-        <div className="mt-3 flex gap-2 overflow-x-auto pb-2">
+        <div className="mt-3 flex gap-2 overflow-x-auto pb-2 snap-x snap-mandatory">
           {availableDays.slice(0, 7).map((day) => {
             const isSelected = selectedDate?.toDateString() === day.toDateString();
             return (
               <button
                 key={day.toISOString()}
                 onClick={() => { setSelectedDate(day); setSelectedTime(null); }}
-                className={`flex shrink-0 flex-col items-center rounded-lg border px-3 py-2 text-xs transition-all ${
+                aria-label={`${DAYS[day.getDay()]} ${day.getDate()} de ${day.toLocaleDateString("es-ES", { month: "long" })}`}
+                aria-pressed={isSelected}
+                className={`flex shrink-0 snap-center flex-col items-center rounded-lg border px-3 py-2 text-xs transition-all ${
                   isSelected ? "border-primary bg-primary text-primary-foreground" : "hover:border-primary/50"
                 }`}
               >
@@ -116,11 +118,13 @@ export function BookingCard({ professionalId, availability, socialImpactScore }:
               <Clock className="h-4 w-4" />
               Selecciona hora
             </h3>
-            <div className="mt-3 grid grid-cols-3 gap-2">
+            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
               {availableSlots.map((slot) => (
                 <button
                   key={slot}
                   onClick={() => setSelectedTime(slot)}
+                  aria-label={`Hora ${slot}`}
+                  aria-pressed={selectedTime === slot}
                   className={`rounded-lg border px-3 py-2 text-sm tabular transition-all ${
                     selectedTime === slot ? "border-primary bg-primary text-primary-foreground" : "hover:border-primary/50"
                   }`}
@@ -139,7 +143,7 @@ export function BookingCard({ professionalId, availability, socialImpactScore }:
           asChild={selectedDate && selectedTime ? true : undefined}
         >
           {selectedDate && selectedTime ? (
-            <Link href={`/book/new?professional=${professionalId}&date=${selectedDate.toISOString()}&time=${selectedTime}`}>
+            <Link href={`/book/new?${new URLSearchParams({ professional: professionalId, date: selectedDate.toISOString(), time: selectedTime! }).toString()}`}>
               Reservar sesión gratuita
             </Link>
           ) : (
