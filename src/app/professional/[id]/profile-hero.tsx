@@ -170,8 +170,9 @@ export function ProfileHero({
                 {name}
               </h1>
               {verified && (
-                <span title="Profesional verificado">
-                  <CheckCircle2 className="h-6 w-6 shrink-0 text-teal-600" />
+                <span className="inline-flex items-center gap-1 rounded-full bg-teal-50 dark:bg-teal-900/30 border border-teal-200 dark:border-teal-800 px-2.5 py-0.5 text-xs font-semibold text-teal-700 dark:text-teal-400">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  Verificado
                 </span>
               )}
             </div>
@@ -198,10 +199,10 @@ export function ProfileHero({
         >
           <div className="flex items-center gap-2 rounded-full bg-stone-100 px-4 py-2 text-sm dark:bg-stone-800">
             <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-            <span className="font-semibold text-stone-900 dark:text-stone-50">
+            <span className="font-semibold tabular text-stone-900 dark:text-stone-50">
               {rating.toFixed(1)}
             </span>
-            <span className="text-stone-500">({reviewCount} reseñas)</span>
+            <span className="tabular text-stone-500">({reviewCount} reseñas)</span>
           </div>
 
           {yearsExperience && yearsExperience > 0 && (

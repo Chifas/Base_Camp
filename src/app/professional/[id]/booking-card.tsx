@@ -68,14 +68,17 @@ export function BookingCard({ professionalId, availability, socialImpactScore }:
     >
       <div className="rounded-2xl border bg-card p-6 shadow-sm">
         <div className="text-center">
-          <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-sm px-4 py-1">
+          <Badge className="bg-teal-600 text-white text-sm px-4 py-1 border-0">
             <Sparkles className="mr-1.5 h-4 w-4" />
             Sesión gratuita
           </Badge>
           {socialImpactScore !== undefined && socialImpactScore > 0 && (
-            <p className="mt-2 text-xs text-muted-foreground">
-              Impacto social: {socialImpactScore.toFixed(1)} pts
-            </p>
+            <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 px-3 py-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-500 shrink-0" />
+              <span className="text-xs font-medium text-amber-700 dark:text-amber-400 tabular">
+                Impacto social: {socialImpactScore.toFixed(1)} pts
+              </span>
+            </div>
           )}
         </div>
 
@@ -97,7 +100,7 @@ export function BookingCard({ professionalId, availability, socialImpactScore }:
                 }`}
               >
                 <span className="font-medium">{DAYS[day.getDay()].slice(0, 3)}</span>
-                <span className="mt-0.5 text-lg font-bold">{day.getDate()}</span>
+                <span className="mt-0.5 text-lg font-bold tabular">{day.getDate()}</span>
               </button>
             );
           })}
@@ -118,7 +121,7 @@ export function BookingCard({ professionalId, availability, socialImpactScore }:
                 <button
                   key={slot}
                   onClick={() => setSelectedTime(slot)}
-                  className={`rounded-lg border px-3 py-2 text-sm transition-all ${
+                  className={`rounded-lg border px-3 py-2 text-sm tabular transition-all ${
                     selectedTime === slot ? "border-primary bg-primary text-primary-foreground" : "hover:border-primary/50"
                   }`}
                 >
