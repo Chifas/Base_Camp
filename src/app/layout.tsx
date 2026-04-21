@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import { ThemeProvider } from "@/components/layout/theme-provider";
 import { AuthSessionProvider } from "@/components/layout/session-provider";
 import { Navbar } from "@/components/layout/navbar";
@@ -17,11 +18,11 @@ const inter = localFont({
   weight: "100 900",
 });
 
-const geist = localFont({
-  src: "./fonts/GeistVF.woff2",
-  variable: "--font-heading",
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-display",
   display: "swap",
-  weight: "100 900",
+  weight: ["400", "500", "600", "700", "800"],
 });
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://guidepath.vercel.app";
@@ -29,7 +30,7 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://guidepath.vercel.ap
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   manifest: "/manifest.json",
-  themeColor: "#4f46e5",
+  themeColor: "#0d7377",
   icons: {
     icon: [
       { url: "/favicon.svg", type: "image/svg+xml" },
@@ -110,7 +111,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${inter.variable} ${geist.variable} font-sans antialiased`}>
+      <body className={`${inter.variable} ${plusJakartaSans.variable} font-sans antialiased`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

@@ -35,7 +35,10 @@ export default withAuth(
   },
   {
     callbacks: {
-      authorized({ token }) {
+      authorized({ token, req }) {
+        // API routes: let middleware run for CSRF validation;
+        // each route handler manages its own auth independently
+        if (req.nextUrl.pathname.startsWith("/api/")) return true;
         return !!token;
       },
     },
@@ -48,5 +51,17 @@ export const config = {
     "/session/:path*",
     "/book/:path*",
     "/onboarding/:path*",
+    "/api/sessions/:path*",
+    "/api/conversations/:path*",
+    "/api/reviews/:path*",
+    "/api/availability/:path*",
+    "/api/blocked-dates/:path*",
+    "/api/notifications/:path*",
+    "/api/messages/:path*",
+    "/api/credits/:path*",
+    "/api/rewards/:path*",
+    "/api/certifications/:path*",
+    "/api/referrals/:path*",
+    "/api/upload",
   ],
 };

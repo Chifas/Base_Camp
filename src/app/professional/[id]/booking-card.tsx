@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { memo, useMemo, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Calendar, Clock, MessageSquare, Video, Sparkles } from "lucide-react";
@@ -36,7 +36,7 @@ interface BookingCardProps {
   socialImpactScore?: number;
 }
 
-export function BookingCard({ professionalId, availability, socialImpactScore }: BookingCardProps) {
+export const BookingCard = memo(function BookingCard({ professionalId, availability, socialImpactScore }: BookingCardProps) {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
 
@@ -68,14 +68,17 @@ export function BookingCard({ professionalId, availability, socialImpactScore }:
     >
       <div className="rounded-2xl border bg-card p-6 shadow-sm">
         <div className="text-center">
-          <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-sm px-4 py-1">
+          <Badge className="bg-teal-600 text-white text-sm px-4 py-1 border-0">
             <Sparkles className="mr-1.5 h-4 w-4" />
             Sesión gratuita
           </Badge>
           {socialImpactScore !== undefined && socialImpactScore > 0 && (
-            <p className="mt-2 text-xs text-muted-foreground">
-              Impacto social: {socialImpactScore.toFixed(1)} pts
-            </p>
+            <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 px-3 py-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-500 shrink-0" />
+              <span className="text-xs font-medium text-amber-700 dark:text-amber-400 tabular">
+                Impacto social: {socialImpactScore.toFixed(1)} pts
+              </span>
+            </div>
           )}
         </div>
 
@@ -85,19 +88,21 @@ export function BookingCard({ professionalId, availability, socialImpactScore }:
           <Calendar className="h-4 w-4" />
           Selecciona fecha
         </h3>
-        <div className="mt-3 flex gap-2 overflow-x-auto pb-2">
+        <div className="mt-3 flex gap-2 overflow-x-auto pb-2 snap-x snap-mandatory">
           {availableDays.slice(0, 7).map((day) => {
             const isSelected = selectedDate?.toDateString() === day.toDateString();
             return (
               <button
                 key={day.toISOString()}
                 onClick={() => { setSelectedDate(day); setSelectedTime(null); }}
-                className={`flex shrink-0 flex-col items-center rounded-lg border px-3 py-2 text-xs transition-all ${
+                aria-label={`${DAYS[day.getDay()]} ${day.getDate()} de ${day.toLocaleDateString("es-ES", { month: "long" })}`}
+                aria-pressed={isSelected}
+                className={`flex shrink-0 snap-center flex-col items-center rounded-lg border px-3 py-2 text-xs transition-all ${
                   isSelected ? "border-primary bg-primary text-primary-foreground" : "hover:border-primary/50"
                 }`}
               >
                 <span className="font-medium">{DAYS[day.getDay()].slice(0, 3)}</span>
-                <span className="mt-0.5 text-lg font-bold">{day.getDate()}</span>
+                <span className="mt-0.5 text-lg font-bold tabular">{day.getDate()}</span>
               </button>
             );
           })}
@@ -113,12 +118,14 @@ export function BookingCard({ professionalId, availability, socialImpactScore }:
               <Clock className="h-4 w-4" />
               Selecciona hora
             </h3>
-            <div className="mt-3 grid grid-cols-3 gap-2">
+            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
               {availableSlots.map((slot) => (
                 <button
                   key={slot}
                   onClick={() => setSelectedTime(slot)}
-                  className={`rounded-lg border px-3 py-2 text-sm transition-all ${
+                  aria-label={`Hora ${slot}`}
+                  aria-pressed={selectedTime === slot}
+                  className={`rounded-lg border px-3 py-2 text-sm tabular transition-all ${
                     selectedTime === slot ? "border-primary bg-primary text-primary-foreground" : "hover:border-primary/50"
                   }`}
                 >
@@ -136,7 +143,7 @@ export function BookingCard({ professionalId, availability, socialImpactScore }:
           asChild={selectedDate && selectedTime ? true : undefined}
         >
           {selectedDate && selectedTime ? (
-            <Link href={`/book/new?professional=${professionalId}&date=${selectedDate.toISOString()}&time=${selectedTime}`}>
+            <Link href={`/book/new?${new URLSearchParams({ professional: professionalId, date: selectedDate.toISOString(), time: selectedTime! }).toString()}`}>
               Reservar sesión gratuita
             </Link>
           ) : (
@@ -157,4 +164,4 @@ export function BookingCard({ professionalId, availability, socialImpactScore }:
       </div>
     </motion.div>
   );
-}
+});

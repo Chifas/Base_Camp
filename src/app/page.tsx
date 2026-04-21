@@ -9,7 +9,6 @@ import {
 } from "@/components/landing/featured-professionals";
 import { Testimonials } from "@/components/landing/testimonials";
 import { CTA } from "@/components/landing/cta";
-import { TrustBar } from "@/components/landing/trust-bar";
 import { getFeaturedProfessionals } from "@/lib/professionals";
 
 export const metadata: Metadata = {
@@ -35,7 +34,6 @@ export default function HomePage() {
   return (
     <>
       <Hero />
-      <TrustBar />
       <Categories />
       <HowItWorks />
       <Suspense fallback={<FeaturedProfessionalsSkeleton />}>

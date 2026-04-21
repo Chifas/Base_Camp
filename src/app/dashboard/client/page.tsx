@@ -26,9 +26,37 @@ import { PhotoUpload } from "@/components/shared/photo-upload";
 import { BetaFeedbackModal } from "@/components/shared/beta-feedback-modal";
 import { ReferralPanel } from "@/components/shared/referral-panel";
 import { SessionChat } from "@/components/shared/session-chat";
+import { OnboardingTour, type TourStep } from "@/components/shared/onboarding-tour";
 import { STATUS_LABELS, type Session } from "@/types";
 import { formatDate, formatTime } from "@/lib/utils";
 import { CREDITS_CONFIG } from "@/lib/credits-config";
+
+const CLIENT_TOUR_STEPS: TourStep[] = [
+  {
+    target: null,
+    title: "¡Bienvenido/a a GuidePath!",
+    description:
+      "Te mostramos en 4 pasos cómo funciona tu panel. Puedes saltar la guía en cualquier momento.",
+  },
+  {
+    target: '[data-tour="credits-stat"]',
+    title: "Tus sesiones gratuitas",
+    description:
+      "Tienes 3 sesiones gratuitas al mes. El contador se reinicia el 1 de cada mes automáticamente.",
+  },
+  {
+    target: '[data-tour="new-session-btn"]',
+    title: "Reserva una sesión",
+    description:
+      "Pulsa aquí para explorar mentores, coaches y psicólogos. Elige el que mejor se adapte a lo que necesitas.",
+  },
+  {
+    target: '[data-tour="dashboard-tabs"]',
+    title: "Navega por tu panel",
+    description:
+      "En Próximas verás tus sesiones activas. En Historial las pasadas. En Referidos invita amigos y gana créditos extra.",
+  },
+];
 
 const statusColors: Record<string, string> = {
   PENDING: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400",
@@ -175,17 +203,19 @@ export default function ClientDashboard() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+      <OnboardingTour storageKey="guidepath_tour_client_v1" steps={CLIENT_TOUR_STEPS} />
+
       <FadeIn>
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="font-heading text-2xl font-bold sm:text-3xl">
+            <h1 className="font-display text-2xl font-bold sm:text-3xl text-stone-900 dark:text-stone-50">
               Mi Panel
             </h1>
-            <p className="mt-1 text-muted-foreground">
+            <p className="mt-1 text-stone-500 dark:text-stone-400">
               Gestiona tus sesiones y revisa tu historial.
             </p>
           </div>
-          <Button asChild>
+          <Button asChild data-tour="new-session-btn">
             <Link href="/explore">
               Nueva sesión
               <ArrowRight className="ml-2 h-4 w-4" />
@@ -198,20 +228,23 @@ export default function ClientDashboard() {
       <FadeIn delay={0.1}>
         <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
           {[
-            { label: "Sesiones disponibles", value: credits ? `${credits.remaining}/${credits.limit}` : `—/${CREDITS_CONFIG.FREE_SESSIONS_PER_MONTH}`, icon: Calendar },
-            { label: "Sesiones completadas", value: pastSessions.filter((s) => s.status === "COMPLETED").length.toString(), icon: Clock },
-            { label: "Próximas sesiones", value: upcomingSessions.length.toString(), icon: Star },
-            { label: "Reseñas dejadas", value: "2", icon: MessageSquare },
+            { label: "Sesiones disponibles", value: credits ? `${credits.remaining}/${credits.limit}` : `—/${CREDITS_CONFIG.FREE_SESSIONS_PER_MONTH}`, icon: Calendar, tourAttr: "credits-stat", accent: "text-teal-600 dark:text-teal-400", iconBg: "bg-teal-100 dark:bg-teal-900/30" },
+            { label: "Sesiones completadas", value: pastSessions.filter((s) => s.status === "COMPLETED").length.toString(), icon: Clock, tourAttr: undefined, accent: "text-stone-700 dark:text-stone-300", iconBg: "bg-stone-100 dark:bg-stone-800" },
+            { label: "Próximas sesiones", value: upcomingSessions.length.toString(), icon: Star, tourAttr: undefined, accent: "text-amber-600 dark:text-amber-400", iconBg: "bg-amber-100 dark:bg-amber-900/30" },
+            { label: "Reseñas dejadas", value: "2", icon: MessageSquare, tourAttr: undefined, accent: "text-stone-700 dark:text-stone-300", iconBg: "bg-stone-100 dark:bg-stone-800" },
           ].map((stat) => (
             <div
               key={stat.label}
-              className="rounded-xl border bg-card p-4"
+              className="rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 p-4"
+              {...(stat.tourAttr ? { "data-tour": stat.tourAttr } : {})}
             >
-              <stat.icon className="h-5 w-5 text-muted-foreground" />
-              <p className="mt-2 font-heading text-2xl font-bold">
+              <div className={`inline-flex h-9 w-9 items-center justify-center rounded-lg ${stat.iconBg}`}>
+                <stat.icon className={`h-4.5 w-4.5 ${stat.accent}`} />
+              </div>
+              <p className={`mt-2 font-display text-2xl font-bold ${stat.accent}`}>
                 {stat.value}
               </p>
-              <p className="text-xs text-muted-foreground">{stat.label}</p>
+              <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">{stat.label}</p>
             </div>
           ))}
         </div>
@@ -220,6 +253,7 @@ export default function ClientDashboard() {
       {/* Sessions tabs */}
       <FadeIn delay={0.2}>
         <Tabs defaultValue="upcoming" className="mt-8">
+          <div data-tour="dashboard-tabs">
           <TabsList className="overflow-x-auto">
             <TabsTrigger value="upcoming">
               Próximas ({upcomingSessions.length})
@@ -230,18 +264,19 @@ export default function ClientDashboard() {
             <TabsTrigger value="referrals">Referidos</TabsTrigger>
             <TabsTrigger value="profile">Mi perfil</TabsTrigger>
           </TabsList>
+          </div>
 
           <TabsContent value="upcoming" className="mt-6">
             {upcomingSessions.length === 0 ? (
-              <div className="rounded-xl border bg-card p-12 text-center">
-                <Calendar className="mx-auto h-12 w-12 text-muted-foreground/40" />
-                <h3 className="mt-4 font-heading text-lg font-semibold">
+              <div className="rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 p-12 text-center">
+                <Calendar className="mx-auto h-12 w-12 text-stone-300 dark:text-stone-700" />
+                <h3 className="mt-4 font-display text-lg font-semibold text-stone-900 dark:text-stone-50">
                   No tienes sesiones próximas
                 </h3>
-                <p className="mt-2 text-sm text-muted-foreground">
+                <p className="mt-2 text-sm text-stone-500 dark:text-stone-400">
                   Explora profesionales y reserva tu primera sesión.
                 </p>
-                <Button className="mt-4" asChild>
+                <Button className="mt-4 bg-teal-600 hover:bg-teal-700 text-white font-display" asChild>
                   <Link href="/explore">Explorar profesionales</Link>
                 </Button>
               </div>

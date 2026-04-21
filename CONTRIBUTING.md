@@ -4,7 +4,7 @@
 
 - Node.js >= 18.17
 - npm >= 9
-- PostgreSQL (Supabase)
+- PostgreSQL (Supabase o local via docker-compose)
 
 ## Configurar entorno local
 
@@ -18,7 +18,7 @@ npm install
 
 # Copiar variables de entorno
 cp .env.example .env
-# Rellenar .env con claves reales
+# Rellenar .env con claves reales (ver docs/DEPLOY.md)
 
 # Generar Prisma client y sincronizar schema
 npm run db:generate
@@ -31,14 +31,29 @@ npm run db:seed
 npm run dev
 ```
 
+Para levantar PostgreSQL en local sin Supabase:
+
+```bash
+docker-compose up -d
+# DATABASE_URL=postgresql://postgres:postgres@localhost:5433/guidepath
+```
+
 ## Ramas
 
 | Rama | Uso |
 |------|-----|
-| `main` | Estable, solo merges desde Develop |
-| `Develop` | Desarrollo activo |
+| `main` | Estable, solo merges desde `develop` |
+| `develop` | Desarrollo activo — rama principal |
 | `feature/*` | Nuevas funcionalidades |
 | `fix/*` | Correcciones de bugs |
+
+Crea siempre tu rama desde `develop`:
+
+```bash
+git checkout develop
+git pull
+git checkout -b feature/nombre-descriptivo
+```
 
 ## Commits
 
@@ -69,24 +84,39 @@ npm test
 
 ## Pull Requests
 
-1. Crear rama desde `Develop`
+1. Crear rama desde `develop`
 2. Hacer cambios con commits convencionales
 3. Asegurarse de que pasan lint, build y tests
-4. Crear PR hacia `Develop`
+4. Crear PR hacia `develop`
 5. Esperar revision y aprobacion
+
+El CI de GitHub Actions ejecuta lint, build, tipos y tests en cada PR.
 
 ## Tests
 
 ```bash
-npm test          # Ejecutar una vez
-npm run test:watch  # Modo watch
+npm test               # Tests unitarios e integracion (Vitest, una vez)
+npm run test:watch     # Modo watch
+npm run test:e2e       # Tests end-to-end (Playwright, requiere servidor activo)
 ```
 
 ## Base de datos
 
 ```bash
-npm run db:generate  # Regenerar Prisma client
-npm run db:push      # Sincronizar schema (dev)
-npm run db:migrate   # Crear migracion (produccion)
+npm run db:generate  # Regenerar Prisma client tras cambios en schema
+npm run db:push      # Sincronizar schema con DB (dev — sin migraciones)
+npm run db:migrate   # Crear y aplicar migracion (produccion)
 npm run db:studio    # Abrir Prisma Studio
+npm run db:seed      # Insertar usuarios de prueba
 ```
+
+> En produccion usar siempre `db:migrate` en vez de `db:push`.
+
+## Usuarios de prueba
+
+Tras ejecutar `npm run db:seed`:
+
+| Email | Contrasena | Rol |
+|-------|------------|-----|
+| `cliente@guidepath.dev` | `password123` | CLIENT |
+| `profesional@guidepath.dev` | `password123` | PROFESSIONAL |

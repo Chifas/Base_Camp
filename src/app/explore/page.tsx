@@ -4,54 +4,95 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import { motion } from "framer-motion";
 import {
   Search,
   Star,
   CheckCircle2,
-  SlidersHorizontal,
-  Loader2,
-  Filter,
   X,
+  MessageSquare,
+  Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Pagination } from "@/components/shared/pagination";
-import type { Category, Professional } from "@/types";
+import { ExploreSkeleton } from "@/components/shared/explore-skeleton";
+import { gsap } from "@/lib/gsap-config";
+import type { Professional } from "@/types";
+
+const CATEGORY_PILLS = [
+  { value: "ALL", label: "Todos" },
+  { value: "PSYCHOLOGIST", label: "Psicología Laboral" },
+  { value: "COACH", label: "Coaching Ejecutivo" },
+  { value: "CAREER_MENTOR", label: "Mentoría de Carrera" },
+  { value: "NUTRITIONIST", label: "Especialistas" },
+];
+
+const SORT_OPTIONS = [
+  { value: "relevance", label: "Más relevantes" },
+  { value: "rating", label: "Mejor valorados" },
+  { value: "reviews", label: "Más reseñas" },
+];
+
+const LANGUAGES = ["ES", "EN", "FR", "DE"];
+
+function getCoverColor(name: string): string {
+  const colors = [
+    "bg-teal-100",
+    "bg-amber-100",
+    "bg-sky-100",
+    "bg-violet-100",
+    "bg-rose-100",
+    "bg-emerald-100",
+    "bg-orange-100",
+  ];
+  const index =
+    name.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0) %
+    colors.length;
+  return colors[index];
+}
+
+function getInitials(name: string) {
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+}
+
+function getNextAvailability(availability: Professional["availability"]) {
+  if (!availability || availability.length === 0) return null;
+  const days = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+  const today = new Date().getDay();
+  const sorted = [...availability].sort((a, b) => {
+    const da = (a.dayOfWeek - today + 7) % 7;
+    const db = (b.dayOfWeek - today + 7) % 7;
+    return da - db;
+  });
+  const next = sorted[0];
+  const diff = (next.dayOfWeek - today + 7) % 7;
+  const label = diff === 0 ? "Hoy" : diff === 1 ? "Mañana" : days[next.dayOfWeek];
+  return `${label} ${next.startTime}`;
+}
 
 export default function ExplorePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const [professionals, setProfessionals] = useState<Professional[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
 
-  // Read filters from URL
-  const searchQuery = searchParams.get("search") || "";
-  const selectedCategory = searchParams.get("category") || "ALL";
-  const sortBy = searchParams.get("sort") || "relevance";
-  const page = parseInt(searchParams.get("page") || "1");
-  const minRating = searchParams.get("minRating") || "";
+  const searchQuery    = searchParams.get("search") || "";
+  const selectedCat    = searchParams.get("category") || "ALL";
+  const sortBy         = searchParams.get("sort") || "relevance";
+  const page           = parseInt(searchParams.get("page") || "1");
+  const minRating      = searchParams.get("minRating") || "";
 
-  // Advanced filters panel
-  const [showAdvanced, setShowAdvanced] = useState(false);
-
-  // Debounce search
   const [localSearch, setLocalSearch] = useState(searchQuery);
   const debounceRef = useRef<NodeJS.Timeout>();
+  const gridRef     = useRef<HTMLDivElement>(null);
 
-  // Update URL params
   const updateParams = useCallback(
     (updates: Record<string, string>) => {
       const params = new URLSearchParams(searchParams.toString());
@@ -62,32 +103,56 @@ export default function ExplorePage() {
           params.delete(key);
         }
       });
-      // Reset to page 1 when filters change (unless page itself is changing)
-      if (!("page" in updates)) {
-        params.delete("page");
-      }
+      if (!("page" in updates)) params.delete("page");
       router.push(`/explore?${params.toString()}`, { scroll: false });
     },
     [router, searchParams]
   );
 
-  // Debounced search
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      if (localSearch !== searchQuery) {
-        updateParams({ search: localSearch });
-      }
+      if (localSearch !== searchQuery) updateParams({ search: localSearch });
     }, 300);
     return () => clearTimeout(debounceRef.current);
   }, [localSearch, searchQuery, updateParams]);
 
-  // Fetch professionals from API
   useEffect(() => {
+    const grid = gridRef.current;
+    if (!grid || loading) return;
+
+    const cards = Array.from(grid.querySelectorAll<HTMLElement>("[data-pro-card]"));
+    if (!cards.length) return;
+
+    gsap.fromTo(
+      cards,
+      { opacity: 0, scale: 0.97, y: 16 },
+      {
+        opacity: 1,
+        scale: 1,
+        y: 0,
+        duration: 0.4,
+        ease: "power2.out",
+        stagger: 0.05,
+        clearProps: "transform",
+      }
+    );
+  }, [professionals, loading]);
+
+  useEffect(() => {
+    // Animate out
+    const grid = gridRef.current;
+    if (grid) {
+      const cards = Array.from(grid.querySelectorAll<HTMLElement>("[data-pro-card]"));
+      if (cards.length) {
+        gsap.to(cards, { opacity: 0, scale: 0.95, duration: 0.15, ease: "power2.in" });
+      }
+    }
+
     setLoading(true);
     const params = new URLSearchParams();
     if (searchQuery) params.set("search", searchQuery);
-    if (selectedCategory !== "ALL") params.set("category", selectedCategory);
+    if (selectedCat !== "ALL") params.set("category", selectedCat);
     if (sortBy) params.set("sort", sortBy);
     if (minRating) params.set("minRating", minRating);
     params.set("page", page.toString());
@@ -100,18 +165,13 @@ export default function ExplorePage() {
         setTotal(res.total ?? 0);
         setTotalPages(res.totalPages ?? 1);
       })
-      .catch(() => {
-        setProfessionals([]);
-      })
+      .catch(() => setProfessionals([]))
       .finally(() => setLoading(false));
-  }, [searchQuery, selectedCategory, sortBy, page, minRating]);
+  }, [searchQuery, selectedCat, sortBy, page, minRating]);
 
-  // Fetch categories once
+  // Categories fetch kept for potential dynamic use
   useEffect(() => {
-    fetch("/api/categories")
-      .then((r) => r.json())
-      .then((data) => setCategories(Array.isArray(data) ? data : []))
-      .catch(() => setCategories([]));
+    fetch("/api/categories").catch(() => {});
   }, []);
 
   const hasActiveFilters = !!minRating;
@@ -119,249 +179,278 @@ export default function ExplorePage() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <h1 className="font-heading text-3xl font-bold tracking-tight sm:text-4xl">
+      <div>
+        <h1 className="font-display text-3xl font-bold tracking-tight sm:text-4xl text-stone-900 dark:text-stone-50">
           Explorar profesionales
         </h1>
-        <p className="mt-2 text-lg text-muted-foreground">
-          Encuentra al profesional perfecto para ti entre nuestros expertos
-          verificados.
+        <p className="mt-2 text-lg text-stone-600 dark:text-stone-400">
+          Encuentra al profesional perfecto para ti entre nuestros expertos verificados.
         </p>
-      </motion.div>
+      </div>
 
-      {/* Filters */}
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
-        className="mt-8 flex flex-col gap-4 rounded-xl border bg-card p-4 sm:flex-row sm:items-center"
-      >
+      {/* Filter bar */}
+      <div className="mt-8 space-y-4">
         {/* Search */}
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
+        <div className="relative max-w-xl">
+          <label htmlFor="search-professionals" className="sr-only">
+            Buscar profesionales por nombre o especialidad
+          </label>
+          <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" aria-hidden="true" />
+          <input
+            id="search-professionals"
+            type="search"
             placeholder="Buscar por nombre o especialidad..."
             value={localSearch}
             onChange={(e) => setLocalSearch(e.target.value)}
-            className="pl-10"
+            className="w-full rounded-full border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 py-2.5 pl-10 pr-4 text-sm text-stone-900 dark:text-stone-50 shadow-sm placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-shadow"
           />
         </div>
 
-        {/* Category filter */}
-        <Select
-          value={selectedCategory}
-          onValueChange={(v) => updateParams({ category: v })}
-        >
-          <SelectTrigger className="w-full sm:w-[200px]">
-            <SlidersHorizontal className="mr-2 h-4 w-4" />
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="ALL">Todas las categorías</SelectItem>
-            {categories.map((cat) => (
-              <SelectItem key={cat.slug} value={cat.slug}>
-                {cat.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        {/* Sort */}
-        <Select value={sortBy} onValueChange={(v) => updateParams({ sort: v })}>
-          <SelectTrigger className="w-full sm:w-[180px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="relevance">Más relevantes</SelectItem>
-            <SelectItem value="rating">Mejor valorados</SelectItem>
-            <SelectItem value="reviews">Más reseñas</SelectItem>
-          </SelectContent>
-        </Select>
-
-        {/* Advanced filters toggle */}
-        <Button
-          variant={hasActiveFilters ? "default" : "outline"}
-          size="sm"
-          onClick={() => setShowAdvanced(!showAdvanced)}
-          className="gap-1"
-        >
-          <Filter className="h-4 w-4" />
-          Filtros
-          {hasActiveFilters && (
-            <span className="ml-1 rounded-full bg-white/20 px-1.5 text-xs">
-              {[minRating].filter(Boolean).length}
-            </span>
-          )}
-        </Button>
-      </motion.div>
-
-      {/* Advanced filters panel */}
-      {showAdvanced && (
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: "auto" }}
-          exit={{ opacity: 0, height: 0 }}
-          className="mt-2 flex flex-col gap-4 rounded-xl border bg-card p-4 sm:flex-row sm:items-center"
-        >
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-muted-foreground">Rating mínimo</label>
-            <div className="flex h-9 items-center gap-1">
-              {[1, 2, 3, 4, 5].map((r) => (
-                <button
-                  key={r}
-                  onClick={() => updateParams({ minRating: minRating === r.toString() ? "" : r.toString() })}
-                  className="transition-transform hover:scale-110"
-                >
-                  <Star
-                    className={`h-5 w-5 ${
-                      r <= parseInt(minRating || "0")
-                        ? "fill-yellow-400 text-yellow-400"
-                        : "text-zinc-300"
-                    }`}
-                  />
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {hasActiveFilters && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="mt-auto"
-              onClick={() => updateParams({ minRating: "" })}
+        {/* Category + rating pills row */}
+        <div className="flex flex-wrap gap-2">
+          {CATEGORY_PILLS.map((pill) => (
+            <button
+              key={pill.value}
+              onClick={() => updateParams({ category: pill.value })}
+              aria-pressed={selectedCat === pill.value}
+              className={`rounded-full px-4 py-1.5 text-sm font-display font-medium transition-all duration-150 ${
+                selectedCat === pill.value
+                  ? "bg-teal-700 text-white shadow-sm shadow-teal-700/20"
+                  : "border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-600 dark:text-stone-400 hover:border-teal-300 hover:text-teal-700 dark:hover:border-teal-700 dark:hover:text-teal-400"
+              }`}
             >
-              <X className="mr-1 h-3.5 w-3.5" />
+              {pill.label}
+            </button>
+          ))}
+
+          {[4, 5].map((r) => (
+            <button
+              key={r}
+              onClick={() =>
+                updateParams({ minRating: minRating === r.toString() ? "" : r.toString() })
+              }
+              aria-pressed={minRating === r.toString()}
+              aria-label={`Filtrar por valoración ${r} estrellas o más`}
+              className={`flex items-center gap-1 rounded-full px-3.5 py-1.5 text-sm font-medium transition-all duration-150 ${
+                minRating === r.toString()
+                  ? "bg-amber-500 text-white"
+                  : "border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-600 dark:text-stone-400 hover:border-amber-300 hover:text-amber-600"
+              }`}
+            >
+              <Star className="h-3.5 w-3.5 fill-current" />
+              {r}+
+            </button>
+          ))}
+
+          {hasActiveFilters && (
+            <button
+              onClick={() => updateParams({ minRating: "" })}
+              className="flex items-center gap-1 rounded-full border border-stone-200 dark:border-stone-700 px-3 py-1.5 text-sm text-stone-500 hover:text-stone-700 dark:text-stone-500 dark:hover:text-stone-300 transition-colors"
+            >
+              <X className="h-3.5 w-3.5" />
               Limpiar
-            </Button>
+            </button>
           )}
-        </motion.div>
-      )}
+        </div>
+
+        {/* Sort pills (desktop) */}
+        <div className="hidden sm:flex items-center gap-1.5">
+          <span className="text-xs text-stone-400 mr-1">Ordenar:</span>
+          {SORT_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => updateParams({ sort: opt.value })}
+              className={`rounded-full px-3.5 py-1.5 text-sm font-medium transition-all duration-150 ${
+                sortBy === opt.value
+                  ? "bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900"
+                  : "bg-stone-100 text-stone-600 hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-400 dark:hover:bg-stone-700"
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* Results count */}
-      <p className="mt-6 text-sm text-muted-foreground">
-        {total} profesional
-        {total !== 1 ? "es" : ""} encontrado
-        {total !== 1 ? "s" : ""}
+      <p className="mt-6 text-sm text-stone-500 dark:text-stone-400">
+        {total} profesional{total !== 1 ? "es" : ""} encontrado{total !== 1 ? "s" : ""}
       </p>
 
       {/* Loading */}
-      {loading && (
-        <div className="mt-16 flex justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </div>
-      )}
+      {loading && <ExploreSkeleton />}
 
       {/* Grid */}
       {!loading && (
-        <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {professionals.map((pro, i) => (
-            <motion.div
-              key={pro.id}
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{
-                duration: 0.4,
-                delay: i * 0.05,
-                ease: [0.21, 0.47, 0.32, 0.98],
-              }}
-            >
-              <Link
-                href={`/professional/${pro.id}`}
-                className="group block"
-              >
-                <div className="glass overflow-hidden rounded-2xl transition-all hover:shadow-xl hover:-translate-y-1">
-                  <div className="flex gap-4 p-5">
-                    {/* Avatar */}
-                    <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl">
-                      <Image
-                        src={pro.image || "/placeholder-avatar.png"}
-                        alt={pro.name}
-                        fill
-                        className="object-cover"
-                        sizes="80px"
-                      />
+        <div
+          ref={gridRef}
+          className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+        >
+          {professionals.map((pro) => {
+            const nextSlot = getNextAvailability(pro.availability);
+            // Deterministic language assignment from name seed
+            const langCount = (pro.name.charCodeAt(0) % 2) + 1;
+            const langs = LANGUAGES.slice(0, langCount);
+
+            const coverColor = getCoverColor(pro.name);
+            const initials = getInitials(pro.name);
+            const isAvailableToday = nextSlot?.startsWith("Hoy");
+
+            return (
+              <div key={pro.id} data-pro-card style={{ opacity: 0 }}>
+                <Link href={`/professional/${pro.id}`} className="group block h-full">
+                  <div className="h-full overflow-hidden rounded-2xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 transition-all duration-300 group-hover:shadow-xl group-hover:-translate-y-1.5">
+
+                    {/* Cover band */}
+                    <div className={`relative h-20 ${coverColor} transition-all duration-300 group-hover:brightness-95`}>
+                      <svg
+                        className="absolute inset-0 h-full w-full opacity-20"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <defs>
+                          <pattern
+                            id={`dots-${pro.id}`}
+                            x="0"
+                            y="0"
+                            width="16"
+                            height="16"
+                            patternUnits="userSpaceOnUse"
+                          >
+                            <circle cx="2" cy="2" r="1.5" fill="currentColor" className="text-stone-600" />
+                          </pattern>
+                        </defs>
+                        <rect width="100%" height="100%" fill={`url(#dots-${pro.id})`} />
+                      </svg>
+
+                      {/* "Disponible hoy" badge */}
+                      {isAvailableToday && (
+                        <span className="absolute right-3 top-3 rounded-full bg-green-500 px-2 py-0.5 text-[10px] font-semibold text-white">
+                          Disponible hoy
+                        </span>
+                      )}
                     </div>
 
-                    {/* Info */}
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-1.5">
-                            <h3 className="truncate font-heading text-base font-semibold group-hover:text-primary transition-colors">
-                              {pro.name}
-                            </h3>
-                            {pro.verified && (
-                              <CheckCircle2 className="h-4 w-4 shrink-0 text-green-600" />
-                            )}
+                    {/* Circular photo — overlaps cover */}
+                    <div className="flex flex-col items-center px-5 pb-4">
+                      <div className="relative -mt-11 h-[88px] w-[88px] shrink-0 overflow-hidden rounded-full ring-4 ring-white dark:ring-stone-900 bg-stone-100 dark:bg-stone-800">
+                        {pro.image ? (
+                          <Image
+                            src={pro.image}
+                            alt={pro.name}
+                            fill
+                            className="object-cover"
+                            sizes="88px"
+                          />
+                        ) : (
+                          <div className={`flex h-full w-full items-center justify-center ${coverColor} text-lg font-bold text-stone-700`}>
+                            {initials}
                           </div>
-                          <p className="mt-0.5 truncate text-sm text-muted-foreground">
-                            {pro.headline}
-                          </p>
-                        </div>
+                        )}
                       </div>
 
-                      <div className="mt-2 flex items-center gap-3">
-                        <Badge variant="secondary" className="text-xs">
-                          {pro.categoryName}
-                        </Badge>
-                        <div className="flex items-center gap-1">
-                          <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
-                          <span className="text-xs font-medium">
-                            {pro.rating.toFixed(1)}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            ({pro.reviewCount})
-                          </span>
-                        </div>
+                      {/* Name + verified */}
+                      <div className="mt-3 flex items-center gap-1.5">
+                        <h3 className="text-center font-display text-base font-semibold text-stone-900 dark:text-stone-50 group-hover:text-teal-700 dark:group-hover:text-teal-400 transition-colors">
+                          {pro.name}
+                        </h3>
+                        {pro.verified && (
+                          <CheckCircle2 className="h-4 w-4 shrink-0 text-teal-600 dark:text-teal-400" />
+                        )}
+                      </div>
+
+                      {/* Specialty */}
+                      <p className="mt-0.5 text-center text-xs font-medium text-teal-600 dark:text-teal-400">
+                        {pro.categoryName}
+                      </p>
+
+                      {/* Rating */}
+                      <div className="mt-1.5 flex items-center justify-center gap-1">
+                        <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                        <span className="text-sm font-semibold text-stone-800 dark:text-stone-200">
+                          {pro.rating.toFixed(1)}
+                        </span>
+                        <span className="text-xs text-stone-400 dark:text-stone-500">
+                          ({pro.reviewCount} reseñas)
+                        </span>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Bio preview */}
-                  <div className="border-t px-5 py-3">
-                    <p className="line-clamp-2 text-sm text-muted-foreground">
-                      {pro.bio}
-                    </p>
-                  </div>
+                    {/* Bio */}
+                    <div className="border-t border-stone-100 dark:border-stone-800 px-5 py-3">
+                      <p className="line-clamp-2 text-center text-sm text-stone-500 dark:text-stone-400 leading-relaxed">
+                        {pro.bio}
+                      </p>
+                    </div>
 
-                  {/* Footer */}
-                  <div className="flex items-center justify-between border-t px-5 py-3">
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-green-100 px-3 py-1 text-sm font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                      Gratuito
-                    </span>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      className="pointer-events-none"
-                    >
-                      Ver perfil
-                    </Button>
+                    {/* Tags */}
+                    {pro.headline && (
+                      <div className="px-5 py-2 flex flex-wrap justify-center gap-1.5">
+                        {pro.headline
+                          .split("·")
+                          .slice(1)
+                          .flatMap((s) => s.split("&").map((t) => t.trim()))
+                          .slice(0, 3)
+                          .map((tag) => (
+                            <span
+                              key={tag}
+                              className="rounded-full bg-stone-100 dark:bg-stone-800 px-2.5 py-0.5 text-[11px] text-stone-500 dark:text-stone-400"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                      </div>
+                    )}
+
+                    {/* Meta row */}
+                    <div className="border-t border-stone-100 dark:border-stone-800 px-5 py-2.5 flex items-center justify-center gap-4 text-xs text-stone-400 dark:text-stone-500">
+                      <span className="flex items-center gap-1.5">
+                        <MessageSquare className="h-3.5 w-3.5 shrink-0" />
+                        {langs.join(", ")}
+                      </span>
+                      {nextSlot && (
+                        <span className="flex items-center gap-1.5">
+                          <Clock className="h-3.5 w-3.5 shrink-0 text-teal-500" />
+                          <span className="text-teal-600 dark:text-teal-400 font-medium">
+                            {nextSlot}
+                          </span>
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Footer */}
+                    <div className="flex items-center justify-between border-t border-stone-100 dark:border-stone-800 px-5 py-3">
+                      <span className="text-sm font-semibold text-stone-900 dark:text-stone-50">
+                        Gratis · 3/mes
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="pointer-events-none border-teal-200 text-teal-700 hover:bg-teal-50 dark:border-teal-800 dark:text-teal-400 font-display text-xs"
+                      >
+                        Ver perfil →
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              </Link>
-            </motion.div>
-          ))}
+                </Link>
+              </div>
+            );
+          })}
         </div>
       )}
 
       {/* Empty state */}
       {!loading && professionals.length === 0 && (
         <div className="mt-16 text-center">
-          <Search className="mx-auto h-12 w-12 text-muted-foreground/40" />
-          <h3 className="mt-4 font-heading text-lg font-semibold">
+          <Search className="mx-auto h-12 w-12 text-stone-300 dark:text-stone-700" />
+          <h3 className="mt-4 font-display text-lg font-semibold text-stone-900 dark:text-stone-50">
             No se encontraron resultados
           </h3>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <p className="mt-2 text-sm text-stone-500 dark:text-stone-400">
             Prueba a cambiar los filtros o el término de búsqueda.
           </p>
           <Button
             variant="outline"
-            className="mt-4"
+            className="mt-4 border-stone-200 dark:border-stone-700"
             onClick={() => {
               setLocalSearch("");
               router.push("/explore");

@@ -4,6 +4,34 @@ Todos los cambios notables del proyecto se documentan en este archivo.
 
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 
+## [0.5.0] - 2026-04-09
+
+### Added
+- Landing page rediseñada con hero Apple-style (layout centrado, tipografia fluida, fondo aurora animado)
+- Componentes `AnimatedGradientBg` y `RotatingWords` para la seccion hero
+- Seccion `TrustBar` con logos de confianza y contadores animados
+- Seccion `Testimonials` con carrusel y avatares
+- Seccion `Waitlist` para captura de emails pre-lanzamiento
+- `BetaFeedbackModal` para recoger feedback estructurado de usuarios beta
+- Chat directo entre usuarios (modelo `DirectMessage` + `Conversation` + API + UI `ChatWidget`)
+- `ConversationList` y `ConversationChat` para mensajeria in-app
+- `PhotoUpload` con integracion Cloudinary para fotos de perfil
+- `ReferralPanel` con estadisticas de referidos y generacion de codigo
+- `ProfileCompleteness` — indicador de completitud de perfil con acciones sugeridas
+- `BlockedDatesManager` — gestion visual de fechas bloqueadas en el calendario
+- `SessionChat` — chat en tiempo real vinculado a sesion activa
+- `Pagination` — componente reutilizable de paginacion con cursor
+- Paginas de categoria SEO: `/categoria/[slug]` con `generateMetadata` dinamico
+- Pagina de historial de notificaciones `/notifications`
+- Pagina de onboarding `/onboarding/professional` (wizard paso a paso)
+- Paginas legales: `/legal/privacidad` y `/legal/terminos`
+- `NotificationBell` con badge y dropdown en el navbar
+
+### Changed
+- Hero reemplazado: de estilo minimalista a Apple-style con aurora de fondo y tipografia fluida (clamp)
+- Navbar actualizado con `NotificationBell` y acceso a conversaciones
+- Footer ampliado con enlaces legales y categorias
+
 ## [0.4.0] - 2026-03-15
 
 ### Added
@@ -13,7 +41,7 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 - Vercel Analytics + Speed Insights
 - Security headers (CSP, HSTS, X-Frame-Options, Permissions-Policy)
 - Middleware RBAC con next-auth `withAuth`
-- Componentes EmptyState y DashboardSkeleton reutilizables
+- Componentes `EmptyState` y `DashboardSkeleton` reutilizables
 - Estrategia de errores unificada (`api-error.ts` + `PageError` component)
 - Open Graph + Twitter Cards completas
 - Sitemap dinamico + robots.txt

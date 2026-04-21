@@ -15,16 +15,16 @@ const COMPANIES = [
 export function TrustBar() {
   return (
     <FadeIn>
-      <div className="border-y border-border/40 py-8">
+      <div className="bg-stone-100 dark:bg-stone-900/60 border-y border-stone-200 dark:border-stone-800 py-8">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <p className="mb-6 text-center text-xs font-medium uppercase tracking-widest text-muted-foreground/60">
-            Profesionales de empresas como
+          <p className="mb-6 text-center text-xs font-medium uppercase tracking-widest text-stone-400 dark:text-stone-500">
+            Profesionales verificados de:
           </p>
           <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
             {COMPANIES.map((name) => (
               <span
                 key={name}
-                className="text-base font-semibold text-muted-foreground/40 select-none sm:text-lg"
+                className="text-base font-semibold text-stone-400 dark:text-stone-500 select-none sm:text-lg"
               >
                 {name}
               </span>

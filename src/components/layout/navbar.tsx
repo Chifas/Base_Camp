@@ -73,6 +73,18 @@ export function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Close menus on Escape key
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setProfileOpen(false);
+        setMobileOpen(false);
+      }
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   return (
     <header
       ref={headerRef}
@@ -89,7 +101,7 @@ export function Navbar() {
             height={40}
             className="h-10 w-auto brightness-150 saturate-150 transition-transform group-hover:scale-110 dark:brightness-200 dark:saturate-200"
           />
-          <span className="font-heading text-xl font-bold tracking-tight">
+          <span className="font-display text-xl font-bold tracking-tight">
             GuidePath
           </span>
         </Link>
@@ -121,8 +133,10 @@ export function Navbar() {
             <div className="relative ml-2" ref={profileRef}>
               <button
                 onClick={() => setProfileOpen(!profileOpen)}
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-semibold transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                aria-expanded={profileOpen}
+                aria-haspopup="menu"
                 aria-label="Menú de perfil"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-semibold transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
               >
                 {initials}
               </button>
@@ -134,6 +148,8 @@ export function Navbar() {
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: -4 }}
                     transition={{ duration: 0.15 }}
+                    role="menu"
+                    aria-label="Opciones de perfil"
                     className="absolute right-0 top-full mt-2 w-52 rounded-xl border bg-popover shadow-lg ring-1 ring-black/5 overflow-hidden"
                   >
                     <div className="px-4 py-3 border-b">
@@ -147,6 +163,7 @@ export function Navbar() {
                     <div className="py-1">
                       <Link
                         href={dashboardHref}
+                        role="menuitem"
                         onClick={() => setProfileOpen(false)}
                         className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-accent transition-colors"
                       >
@@ -154,6 +171,7 @@ export function Navbar() {
                         Mi panel
                       </Link>
                       <button
+                        role="menuitem"
                         onClick={() => {
                           setProfileOpen(false);
                           signOut({ redirect: false }).then(() => {
@@ -180,6 +198,7 @@ export function Navbar() {
             variant="ghost"
             size="icon"
             onClick={() => setMobileOpen(!mobileOpen)}
+            aria-expanded={mobileOpen}
             aria-label="Menú"
           >
             {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}

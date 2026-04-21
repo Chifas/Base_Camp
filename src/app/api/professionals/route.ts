@@ -15,8 +15,8 @@ export async function GET(req: Request) {
     const language = searchParams.get("language") || "";
     const available = searchParams.get("available") === "true";
     const sort = searchParams.get("sort") || "relevance";
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = Math.min(parseInt(searchParams.get("limit") || "12"), 100);
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1") || 1);
+    const limit = Math.min(Math.max(1, parseInt(searchParams.get("limit") || "12") || 12), 100);
 
     // Build where clause — only show professionals who completed onboarding
     const where: Prisma.ProfessionalProfileWhereInput = {
