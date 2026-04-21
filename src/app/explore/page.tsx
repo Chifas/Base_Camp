@@ -8,7 +8,6 @@ import {
   Search,
   Star,
   CheckCircle2,
-  Loader2,
   X,
   MessageSquare,
   Clock,
@@ -17,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Pagination } from "@/components/shared/pagination";
 import { ExploreSkeleton } from "@/components/shared/explore-skeleton";
 import { gsap } from "@/lib/gsap-config";
-import type { Category, Professional } from "@/types";
+import type { Professional } from "@/types";
 
 const CATEGORY_PILLS = [
   { value: "ALL", label: "Todos" },
