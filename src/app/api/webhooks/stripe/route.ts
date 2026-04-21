@@ -78,7 +78,14 @@ export async function POST(req: Request) {
         logger.info("Sesión confirmada", { sessionId, paymentIntentId: updatedSession.stripePaymentIntentId });
 
         // Send confirmation emails to both parties (fire-and-forget)
-        sendBookingEmails(updatedSession as unknown as EmailSessionData).catch(() => {});
+        const emailData: EmailSessionData = {
+          id: updatedSession.id,
+          scheduledAt: updatedSession.scheduledAt,
+          price: updatedSession.price,
+          client: updatedSession.client,
+          professional: updatedSession.professional,
+        };
+        sendBookingEmails(emailData).catch(() => {});
 
         // In-app notifications for both parties
         void createNotifications([
