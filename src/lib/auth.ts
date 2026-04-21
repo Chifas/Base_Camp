@@ -62,7 +62,7 @@ export const authOptions: NextAuthOptions = {
       // Only read role from DB at login or when session is explicitly updated
       if (user) {
         token.id = user.id;
-        token.role = (user as unknown as { role: string }).role;
+        token.role = "role" in user && typeof user.role === "string" ? user.role : "";
       } else if (trigger === "update" && token.id) {
         const fresh = await prisma.user.findUnique({
           where: { id: token.id as string },

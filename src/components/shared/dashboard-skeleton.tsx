@@ -28,19 +28,29 @@ export function DashboardSkeleton() {
         <Skeleton className="h-10 w-64" />
         <div className="mt-6 space-y-4">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div
-              key={i}
-              className="flex items-center gap-4 rounded-xl border bg-card p-5"
-            >
-              <Skeleton className="h-14 w-14 rounded-xl" />
-              <div className="flex-1">
-                <Skeleton className="h-5 w-36" />
-                <Skeleton className="mt-2 h-3 w-48" />
-              </div>
-              <Skeleton className="h-8 w-20" />
-            </div>
+            <SessionRowSkeleton key={i} />
           ))}
         </div>
+      </div>
+    </div>
+  );
+}
+
+export function SessionRowSkeleton() {
+  return (
+    <div className="flex items-center gap-4 rounded-xl border bg-card p-5">
+      <Skeleton className="h-14 w-14 shrink-0 rounded-xl" />
+      <div className="min-w-0 flex-1 space-y-2">
+        <Skeleton className="h-5 w-36" />
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-3 w-24" />
+          <Skeleton className="h-3 w-16" />
+        </div>
+        <Skeleton className="h-3 w-48" />
+      </div>
+      <div className="flex shrink-0 flex-col items-end gap-2">
+        <Skeleton className="h-6 w-20 rounded-full" />
+        <Skeleton className="h-8 w-20 rounded-lg" />
       </div>
     </div>
   );

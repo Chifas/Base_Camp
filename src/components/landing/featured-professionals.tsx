@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useRef } from "react";
+import { memo, useRef } from "react";
 import { Star, ArrowRight, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { gsap, ScrollTrigger, useGSAP } from "@/lib/gsap-config";
@@ -91,7 +91,7 @@ interface FeaturedProfessionalsProps {
   professionals: Professional[];
 }
 
-export function FeaturedProfessionals({ professionals }: FeaturedProfessionalsProps) {
+export const FeaturedProfessionals = memo(function FeaturedProfessionals({ professionals }: FeaturedProfessionalsProps) {
   const displayProfessionals =
     professionals.length > 0 ? professionals : MOCK_PROFESSIONALS;
   const featured = displayProfessionals[0];
@@ -282,4 +282,4 @@ export function FeaturedProfessionals({ professionals }: FeaturedProfessionalsPr
       </div>
     </section>
   );
-}
+});

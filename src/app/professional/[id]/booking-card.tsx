@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { memo, useMemo, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Calendar, Clock, MessageSquare, Video, Sparkles } from "lucide-react";
@@ -36,7 +36,7 @@ interface BookingCardProps {
   socialImpactScore?: number;
 }
 
-export function BookingCard({ professionalId, availability, socialImpactScore }: BookingCardProps) {
+export const BookingCard = memo(function BookingCard({ professionalId, availability, socialImpactScore }: BookingCardProps) {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
 
@@ -164,4 +164,4 @@ export function BookingCard({ professionalId, availability, socialImpactScore }:
       </div>
     </motion.div>
   );
-}
+});
