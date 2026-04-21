@@ -154,10 +154,13 @@ export default async function ProfessionalProfilePage({
             {/* Bio */}
             <FadeIn delay={0.1}>
               <div>
-                <h2 className="font-display text-xl font-bold text-stone-900 dark:text-stone-50 border-l-4 border-teal-500 pl-4">
-                  Sobre mí
-                </h2>
-                <p className="mt-4 text-base leading-relaxed text-stone-600 dark:text-stone-400">
+                <div className="flex items-center gap-2.5 mb-4">
+                  <span className="h-4 w-0.5 rounded-full bg-teal-500 shrink-0" />
+                  <h2 className="font-display text-xl font-bold text-stone-900 dark:text-stone-50">
+                    Sobre mí
+                  </h2>
+                </div>
+                <p className="text-base leading-relaxed text-stone-600 dark:text-stone-400">
                   {bio}
                 </p>
               </div>
@@ -174,7 +177,7 @@ export default async function ProfessionalProfilePage({
                     .map((tag) => (
                       <span
                         key={tag}
-                        className="rounded-full border border-teal-200 bg-teal-50 px-3 py-1 text-sm font-medium text-teal-700 dark:border-teal-800 dark:bg-teal-900/20 dark:text-teal-300"
+                        className="rounded-full bg-teal-50 dark:bg-teal-900/20 px-3 py-1 text-sm font-medium text-teal-700 dark:text-teal-300"
                       >
                         {tag}
                       </span>
@@ -187,14 +190,17 @@ export default async function ProfessionalProfilePage({
             {professional.certifications.length > 0 && (
               <FadeIn delay={0.14}>
                 <div>
-                  <h2 className="font-display text-xl font-bold text-stone-900 dark:text-stone-50 border-l-4 border-teal-500 pl-4">
-                    Certificaciones
-                  </h2>
-                  <div className="mt-4 space-y-3">
+                  <div className="flex items-center gap-2.5 mb-4">
+                    <span className="h-4 w-0.5 rounded-full bg-teal-500 shrink-0" />
+                    <h2 className="font-display text-xl font-bold text-stone-900 dark:text-stone-50">
+                      Certificaciones
+                    </h2>
+                  </div>
+                  <div className="space-y-3">
                     {professional.certifications.map((cert) => (
                       <div
                         key={cert.id}
-                        className="flex items-start gap-4 rounded-xl border-l-4 border-teal-400 bg-stone-50 p-4 dark:bg-stone-800/50"
+                        className="flex items-start gap-4 rounded-xl bg-stone-50 dark:bg-stone-800/50 border border-stone-200 dark:border-stone-700 p-4"
                       >
                         <GraduationCap className="mt-0.5 h-5 w-5 shrink-0 text-teal-600 dark:text-teal-400" />
                         <div>
@@ -216,10 +222,13 @@ export default async function ProfessionalProfilePage({
             {/* Availability */}
             <FadeIn delay={0.15}>
               <div>
-                <h2 className="font-display text-xl font-bold text-stone-900 dark:text-stone-50 border-l-4 border-teal-500 pl-4">
-                  Disponibilidad semanal
-                </h2>
-                <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-7">
+                <div className="flex items-center gap-2.5 mb-4">
+                  <span className="h-4 w-0.5 rounded-full bg-teal-500 shrink-0" />
+                  <h2 className="font-display text-xl font-bold text-stone-900 dark:text-stone-50">
+                    Disponibilidad semanal
+                  </h2>
+                </div>
+                <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
                   {DAYS.map((day, dayIndex) => {
                     const slot = professional.availability.find(
                       (a) => a.dayOfWeek === dayIndex
@@ -230,7 +239,7 @@ export default async function ProfessionalProfilePage({
                       return (
                         <div
                           key={dayIndex}
-                          className="relative rounded-xl border border-teal-100 bg-teal-50 p-3 text-center dark:border-teal-900 dark:bg-teal-900/20"
+                          className="relative shrink-0 min-w-[72px] rounded-xl border border-teal-100 bg-teal-50 p-3 text-center dark:border-teal-900 dark:bg-teal-900/20"
                         >
                           {isToday && (
                             <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 rounded-full bg-green-500 px-2 py-0.5 text-[10px] font-semibold text-white whitespace-nowrap">
@@ -253,7 +262,7 @@ export default async function ProfessionalProfilePage({
                     return (
                       <div
                         key={dayIndex}
-                        className="rounded-xl border border-stone-100 bg-stone-100 p-3 text-center opacity-40 dark:border-stone-800 dark:bg-stone-800"
+                        className="shrink-0 min-w-[72px] rounded-xl border border-stone-100 bg-stone-100 p-3 text-center opacity-40 dark:border-stone-800 dark:bg-stone-800"
                       >
                         <p className="font-display text-xs font-semibold text-stone-400 dark:text-stone-500">
                           {day.slice(0, 3)}
@@ -269,10 +278,13 @@ export default async function ProfessionalProfilePage({
             {/* Reviews */}
             <FadeIn delay={0.2}>
               <div>
-                <h2 className="font-display text-xl font-bold text-stone-900 dark:text-stone-50 border-l-4 border-teal-500 pl-4">
-                  Reseñas
-                </h2>
-                <div className="mt-6">
+                <div className="flex items-center gap-2.5 mb-4">
+                  <span className="h-4 w-0.5 rounded-full bg-teal-500 shrink-0" />
+                  <h2 className="font-display text-xl font-bold text-stone-900 dark:text-stone-50">
+                    Reseñas
+                  </h2>
+                </div>
+                <div>
                   <ReviewsSection
                     reviews={reviews}
                     rating={professional.rating}
