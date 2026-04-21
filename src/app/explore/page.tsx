@@ -193,8 +193,12 @@ export default function ExplorePage() {
       <div className="mt-8 space-y-4">
         {/* Search */}
         <div className="relative max-w-xl">
-          <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
+          <label htmlFor="search-professionals" className="sr-only">
+            Buscar profesionales por nombre o especialidad
+          </label>
+          <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" aria-hidden="true" />
           <input
+            id="search-professionals"
             type="search"
             placeholder="Buscar por nombre o especialidad..."
             value={localSearch}
@@ -209,6 +213,7 @@ export default function ExplorePage() {
             <button
               key={pill.value}
               onClick={() => updateParams({ category: pill.value })}
+              aria-pressed={selectedCat === pill.value}
               className={`rounded-full px-4 py-1.5 text-sm font-display font-medium transition-all duration-150 ${
                 selectedCat === pill.value
                   ? "bg-teal-700 text-white shadow-sm shadow-teal-700/20"
@@ -225,6 +230,8 @@ export default function ExplorePage() {
               onClick={() =>
                 updateParams({ minRating: minRating === r.toString() ? "" : r.toString() })
               }
+              aria-pressed={minRating === r.toString()}
+              aria-label={`Filtrar por valoración ${r} estrellas o más`}
               className={`flex items-center gap-1 rounded-full px-3.5 py-1.5 text-sm font-medium transition-all duration-150 ${
                 minRating === r.toString()
                   ? "bg-amber-500 text-white"
