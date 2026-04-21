@@ -1,9 +1,9 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 
 const CLIENT_EMAIL = "cliente@guidepath.dev";
 const CLIENT_PASSWORD = "password123";
 
-async function loginAsClient(page: Parameters<Parameters<typeof test>[1]>[0]) {
+async function loginAsClient(page: Page) {
   await page.goto("/auth/login");
   await page.getByLabel(/email/i).fill(CLIENT_EMAIL);
   await page.getByLabel(/contraseña/i).fill(CLIENT_PASSWORD);

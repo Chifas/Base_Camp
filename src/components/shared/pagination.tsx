@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 interface PaginationProps {
   page: number;
   totalPages: number;
-  onPageChange: (p: number) => void;
+  onPageChange: (_page: number) => void;
 }
 
 export function Pagination({ page, totalPages, onPageChange }: PaginationProps) {
