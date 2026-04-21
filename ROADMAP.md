@@ -1,7 +1,41 @@
 # GuidePath — Roadmap de Mejoras
 
-> Actualizado: Abril 2026
+> **Última actualización:** 2026-04-21
 > Modelo: Freemium (3 sesiones gratis/mes, impact points para profesionales)
+>
+> Para marcar un ítem como completado, cambia `[ ]` por `[x]` y haz commit.
+
+---
+
+## Auditoría de calidad — Completada (2026-04-21)
+
+Mejoras identificadas y completadas durante la auditoría del codebase.
+
+### Quick wins
+- [x] `ExploreSkeleton` — 12 tarjetas pulsantes en lugar del spinner genérico
+- [x] `BookingCard` — `aria-label` en cada botón de fecha y hora (WCAG 2.1 AA)
+- [x] Selector de fecha — `snap-x snap-mandatory` + `snap-center` para scroll táctil
+- [x] Grid de horas — `grid-cols-2 sm:grid-cols-3` (target táctil ≥ 48 px en móvil)
+- [x] URL encoding — `URLSearchParams` reemplaza string interpolation en booking URL
+- [x] CSRF middleware — matcher ampliado a 12 rutas de API mutation
+
+### Accesibilidad (WCAG 2.1 AA)
+- [x] Explore — `<label sr-only>` en campo de búsqueda, `aria-pressed` en filtros de categoría y rating
+- [x] Navbar — `aria-expanded`, `aria-haspopup="menu"`, `role="menu"`, `role="menuitem"`, Escape key
+- [x] BookingCard — `aria-label` descriptivo en slots de fecha y hora, `aria-pressed` en selección
+
+### Tests
+- [x] `e2e/booking.spec.ts` — 12 tests E2E (filtros, navegación, flujo de reserva, protección de rutas)
+- [x] `dashboard-skeleton.test.tsx` — tests de render y estructura
+- [x] `explore-skeleton.test.tsx` — tests de render y cantidad de tarjetas
+- [x] `/api/professionals` — 4 casos nuevos (page negativo, limit > 100, búsqueda, categoría)
+
+### Performance y type safety
+- [x] `React.memo` en `BookingCard` y `FeaturedProfessionals`
+- [x] `auth.ts` — `'role' in user` type guard reemplaza doble cast inseguro
+- [x] Stripe webhook — adapter explícito `EmailSessionData` en lugar de `as unknown as`
+- [x] `SessionRowSkeleton` — exportado con layout completo (avatar, chips, badge, botón de acción)
+- [x] `/api/professionals` — paginación con `Math.max`/`Math.min` para rechazar valores negativos
 
 ---
 
