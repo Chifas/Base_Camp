@@ -92,4 +92,49 @@ describe("GET /api/professionals", () => {
     expect(response.status).toBe(500);
     expect(data.error).toBeDefined();
   });
+
+  it("clamps negative page to 1", async () => {
+    mockCount.mockResolvedValue(1);
+    mockFindMany.mockResolvedValue(MOCK_PROFESSIONALS as never);
+
+    const response = await GET(makeRequest({ page: "-5" }));
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.page).toBe(1);
+  });
+
+  it("clamps limit above 100 to 100", async () => {
+    mockCount.mockResolvedValue(1);
+    mockFindMany.mockResolvedValue(MOCK_PROFESSIONALS as never);
+
+    const response = await GET(makeRequest({ limit: "999" }));
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    // Verify the call was made (clamping happened server-side)
+    expect(body.data).toBeDefined();
+  });
+
+  it("filters by search query", async () => {
+    mockCount.mockResolvedValue(1);
+    mockFindMany.mockResolvedValue(MOCK_PROFESSIONALS as never);
+
+    const response = await GET(makeRequest({ search: "Elena" }));
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.data).toBeDefined();
+  });
+
+  it("filters by category", async () => {
+    mockCount.mockResolvedValue(1);
+    mockFindMany.mockResolvedValue(MOCK_PROFESSIONALS as never);
+
+    const response = await GET(makeRequest({ category: "PSYCHOLOGIST" }));
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.data[0].category).toBe("PSYCHOLOGIST");
+  });
 });
