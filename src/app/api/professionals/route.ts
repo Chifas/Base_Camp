@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { CATEGORY_LABELS } from "@/types";
 import type { Prisma } from "@prisma/client";
 
 export async function GET(req: Request) {
@@ -25,7 +24,7 @@ export async function GET(req: Request) {
     };
 
     if (category) {
-      where.category = category as Prisma.EnumProfessionalCategoryFilter;
+      where.category = category;
     }
 
     if (minRating > 0) {
@@ -53,6 +52,10 @@ export async function GET(req: Request) {
         { user: { bio: { contains: search, mode: "insensitive" } } },
       ];
     }
+
+    // Build category name map from DB
+    const categoryRows = await prisma.category.findMany({ select: { id: true, name: true } });
+    const categoryMap = Object.fromEntries(categoryRows.map((c) => [c.id, c.name]));
 
     // Get total count
     const total = await prisma.professionalProfile.count({ where });
@@ -87,7 +90,7 @@ export async function GET(req: Request) {
       bio: p.user.bio ?? "",
       headline: p.headline ?? "",
       category: p.category,
-      categoryName: CATEGORY_LABELS[p.category] ?? p.category,
+      categoryName: categoryMap[p.category] ?? p.category,
       hourlyRate: p.hourlyRate,
       rating: p.rating,
       reviewCount: p.reviewCount,

@@ -14,11 +14,11 @@ enum UserRole {
   ADMIN
 }
 
-enum ProfessionalCategory {
-  PSYCHOLOGIST
-  COACH
-  CAREER_MENTOR
-  NUTRITIONIST
+// Task 14: subscriptionTier converted from String to enum
+enum SubscriptionTier {
+  FREE
+  PREMIUM
+  ENTERPRISE
 }
 
 enum SessionStatus {
@@ -42,20 +42,26 @@ enum RescheduleStatus {
   REJECTED
 }
 
+// Task 4: RedemptionType converted from String to enum
+enum RedemptionType {
+  CERTIFICATION
+  DONATION
+}
+
 model User {
-  id               String    @id @default(cuid())
+  id               String            @id @default(cuid())
   name             String?
-  email            String    @unique
+  email            String            @unique
   emailVerified    DateTime?
   password         String?
   image            String?
   bio              String?
-  role             UserRole  @default(CLIENT)
-  freeCreditsUsed  Int       @default(0)
+  role             UserRole          @default(CLIENT)
+  freeCreditsUsed  Int               @default(0)
   creditsResetAt   DateTime?
-  subscriptionTier String    @default("free")
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  subscriptionTier SubscriptionTier  @default(FREE)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
 
   accounts             Account[]
   sessions             AuthSession[]
@@ -114,27 +120,36 @@ model VerificationToken {
   @@map("verification_tokens")
 }
 
+// Task 5: Dynamic categories — replaces ProfessionalCategory enum
+model Category {
+  id   String @id // e.g., "CAREER_MENTOR"
+  name String
+  slug String @unique
+
+  @@map("categories")
+}
+
 model ProfessionalProfile {
-  id                     String               @id @default(cuid())
-  userId                 String               @unique
-  category               ProfessionalCategory
+  id                     String   @id @default(cuid())
+  userId                 String   @unique
+  category               String   // FK by convention to categories.id
   headline               String?
-  hourlyRate             Float                @default(0)
+  hourlyRate             Float    @default(0)
   stripeAccountId        String?
-  stripeConnected        Boolean              @default(false)
-  rating                 Float                @default(0)
-  reviewCount            Int                  @default(0)
-  verified               Boolean              @default(false)
+  stripeConnected        Boolean  @default(false)
+  rating                 Float    @default(0)
+  reviewCount            Int      @default(0)
+  verified               Boolean  @default(false)
   verifiedAt             DateTime?
-  languages              String[]             @default(["es"])
+  languages              String[] @default(["es"])
   yearsExperience        Int?
-  impactPoints           Int                  @default(0)
-  totalSessionsCompleted Int                  @default(0)
-  socialImpactScore      Float                @default(0)
-  onboardingDone         Boolean              @default(false)
-  onboardingEmailStep    Int                  @default(0)
-  createdAt              DateTime             @default(now())
-  updatedAt              DateTime             @updatedAt
+  impactPoints           Int      @default(0)
+  totalSessionsCompleted Int      @default(0)
+  socialImpactScore      Float    @default(0)
+  onboardingDone         Boolean  @default(false)
+  onboardingEmailStep    Int      @default(0)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
 
   user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   availability    Availability[]
@@ -153,7 +168,7 @@ model Session {
   clientId              String
   professionalId        String
   scheduledAt           DateTime
-  duration              Int           @default(60) // minutes
+  duration              Int           @default(60)
   status                SessionStatus @default(PENDING)
   dailyRoomUrl          String?
   stripePaymentIntentId String?
@@ -173,6 +188,7 @@ model Session {
   review              Review?
   rescheduleRequests  RescheduleRequest[]
   messages            Message[]
+  betaFeedbacks       BetaFeedback[]
 
   @@index([clientId])
   @@index([professionalId])
@@ -185,11 +201,11 @@ model Review {
   id                    String    @id @default(cuid())
   sessionId             String    @unique
   userId                String
-  rating                Int       // 1-5 overall
-  ratingPunctuality     Int?      // 1-5
-  ratingKnowledge       Int?      // 1-5
-  ratingCommunication   Int?      // 1-5
-  ratingValue           Int?      // 1-5
+  rating                Int
+  ratingPunctuality     Int?
+  ratingKnowledge       Int?
+  ratingCommunication   Int?
+  ratingValue           Int?
   comment               String?
   professionalResponse  String?
   respondedAt           DateTime?
@@ -201,17 +217,20 @@ model Review {
   session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   user    User    @relation(fields: [userId], references: [id])
 
+  // Task 8: indexes for faster queries
+  @@index([userId])
+  @@index([createdAt])
   @@map("reviews")
 }
 
 model Certification {
-  id              String              @id @default(cuid())
+  id              String   @id @default(cuid())
   professionalId  String
   title           String
   institution     String
   year            Int?
   documentUrl     String?
-  createdAt       DateTime            @default(now())
+  createdAt       DateTime @default(now())
 
   professional ProfessionalProfile @relation(fields: [professionalId], references: [id], onDelete: Cascade)
 
@@ -220,11 +239,13 @@ model Certification {
 }
 
 model Availability {
-  id              String @id @default(cuid())
+  id              String   @id @default(cuid())
   professionalId  String
-  dayOfWeek       Int    // 0=Sunday, 6=Saturday
-  startTime       String // "09:00" format
-  endTime         String // "17:00" format
+  dayOfWeek       Int
+  startTime       String
+  endTime         String
+  // Task 8: track when availability was last modified
+  updatedAt       DateTime @updatedAt
 
   professional ProfessionalProfile @relation(fields: [professionalId], references: [id], onDelete: Cascade)
 
@@ -278,14 +299,12 @@ model RescheduleRequest {
   @@map("reschedule_requests")
 }
 
-// ── Chat Messages ─────────────────────────────────────────────────────────
-
 model Message {
   id        String   @id @default(cuid())
   sessionId String
   userId    String
   content   String
-  type      String   @default("text") // "text" | "file"
+  type      String   @default("text")
   fileUrl   String?
   fileName  String?
   read      Boolean  @default(false)
@@ -299,8 +318,7 @@ model Message {
   @@map("messages")
 }
 
-// ── Beta Feedback ──────────────────────────────────────────────────────────
-
+// Task 12: added session FK relation
 model BetaFeedback {
   id        String   @id @default(cuid())
   userId    String
@@ -309,13 +327,12 @@ model BetaFeedback {
   feedback  String
   createdAt DateTime @default(now())
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  session Session? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
 
   @@index([userId])
   @@map("beta_feedbacks")
 }
-
-// ── Referrals ──────────────────────────────────────────────────────────────
 
 enum ReferralType {
   PROFESSIONAL_TO_PROFESSIONAL
@@ -348,23 +365,20 @@ model Referral {
   @@map("referrals")
 }
 
-// ── Reward Redemptions ────────────────────────────────────────────────────
-
+// Task 4: type field converted to RedemptionType enum
 model RewardRedemption {
-  id              String              @id @default(cuid())
+  id              String          @id @default(cuid())
   professionalId  String
-  type            String              // "CERTIFICATION" | "DONATION"
+  type            RedemptionType
   pointsSpent     Int
   description     String
-  createdAt       DateTime            @default(now())
+  createdAt       DateTime        @default(now())
 
   professional ProfessionalProfile @relation(fields: [professionalId], references: [id], onDelete: Cascade)
 
   @@index([professionalId])
   @@map("reward_redemptions")
 }
-
-// ── Waitlist ───────────────────────────────────────────────────────────────
 
 model WaitlistEntry {
   id        String   @id @default(cuid())
@@ -375,8 +389,6 @@ model WaitlistEntry {
 
   @@map("waitlist_entries")
 }
-
-// ── Direct Messaging ──────────────────────────────────────────────────────
 
 model Conversation {
   id              String   @id @default(cuid())

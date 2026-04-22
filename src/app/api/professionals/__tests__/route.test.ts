@@ -7,6 +7,14 @@ vi.mock("@/lib/prisma", () => ({
       findMany: vi.fn(),
       count: vi.fn(),
     },
+    category: {
+      findMany: vi.fn().mockResolvedValue([
+        { id: "PSYCHOLOGIST", name: "Psicólogo/a Laboral" },
+        { id: "COACH", name: "Coach Ejecutivo" },
+        { id: "CAREER_MENTOR", name: "Mentor de Carrera" },
+        { id: "NUTRITIONIST", name: "Nutricionista" },
+      ]),
+    },
   },
 }));
 

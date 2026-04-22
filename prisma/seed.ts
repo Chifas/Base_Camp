@@ -1,5 +1,5 @@
 /// <reference types="node" />
-import { PrismaClient, ProfessionalCategory } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
@@ -17,6 +17,17 @@ async function main() {
   await prisma.authSession.deleteMany();
   await prisma.notification.deleteMany();
   await prisma.user.deleteMany();
+
+  // ── Categories (Task 5: dynamic categories) ──────────────────────────────
+  await prisma.category.deleteMany();
+  await prisma.category.createMany({
+    data: [
+      { id: "CAREER_MENTOR", name: "Mentor de Carrera",   slug: "career-mentor" },
+      { id: "COACH",         name: "Coach Ejecutivo",     slug: "coach" },
+      { id: "PSYCHOLOGIST",  name: "Psicólogo/a Laboral", slug: "psychologist" },
+      { id: "NUTRITIONIST",  name: "Nutricionista",       slug: "nutritionist" },
+    ],
+  });
 
   const hashedPassword = await bcrypt.hash("guidepath123", 10);
 
@@ -45,7 +56,7 @@ async function main() {
         bio: "Psicóloga organizacional con más de 15 años acompañando a profesionales en entornos de alta exigencia. Especializada en burnout, estrés laboral y bienestar en el trabajo.",
       },
       profile: {
-        category: ProfessionalCategory.PSYCHOLOGIST,
+        category: "PSYCHOLOGIST",
         headline: "Psicóloga Organizacional · Burnout y Bienestar Laboral",
         hourlyRate: 65,
         rating: 4.9,
@@ -73,7 +84,7 @@ async function main() {
         bio: "Coach ejecutivo certificado por ICF con más de 500 sesiones. Trabajo con profesionales que quieren acelerar su carrera y dar el salto a puestos de liderazgo.",
       },
       profile: {
-        category: ProfessionalCategory.COACH,
+        category: "COACH",
         headline: "Coach Ejecutivo Certificado ICF · Liderazgo y Potencial Directivo",
         hourlyRate: 80,
         rating: 4.8,
@@ -99,7 +110,7 @@ async function main() {
         bio: "Mentora de carrera con experiencia en RRHH en empresas del IBEX 35. Te ayudo a preparar entrevistas, negociar salarios y planificar tu transición profesional.",
       },
       profile: {
-        category: ProfessionalCategory.CAREER_MENTOR,
+        category: "CAREER_MENTOR",
         headline: "Mentora de Carrera · Ex-RRHH IBEX 35",
         hourlyRate: 70,
         rating: 4.7,
@@ -124,7 +135,7 @@ async function main() {
         bio: "Ex-Head of Product en tres startups fintech. Experto en Product Management, estrategia de producto y metodologías ágiles.",
       },
       profile: {
-        category: ProfessionalCategory.CAREER_MENTOR,
+        category: "CAREER_MENTOR",
         headline: "Experto en Product Management · Startups y Fintech",
         hourlyRate: 95,
         rating: 4.9,
@@ -151,7 +162,7 @@ async function main() {
         bio: "Psicóloga laboral especializada en dinámicas de equipo, gestión de conflictos en el trabajo y acompañamiento en procesos de cambio organizacional.",
       },
       profile: {
-        category: ProfessionalCategory.PSYCHOLOGIST,
+        category: "PSYCHOLOGIST",
         headline: "Psicóloga Laboral · Equipos y Gestión del Cambio",
         hourlyRate: 60,
         rating: 4.8,
@@ -177,7 +188,7 @@ async function main() {
         bio: "Coach ejecutivo y de liderazgo con más de 200 directivos acompañados. Trabajo con managers y C-level que quieren mejorar su estilo de liderazgo.",
       },
       profile: {
-        category: ProfessionalCategory.COACH,
+        category: "COACH",
         headline: "Coach Ejecutivo · Directivos y Alta Dirección",
         hourlyRate: 110,
         rating: 4.6,

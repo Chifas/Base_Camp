@@ -3,6 +3,7 @@
 import { useMemo, useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
@@ -91,7 +92,14 @@ const CATEGORY_LABELS_REVIEW = {
   ratingValue: "Satisfacción general",
 } as const;
 
+const CLIENT_TABS = ["upcoming", "history", "referrals"] as const;
+type ClientTab = typeof CLIENT_TABS[number];
+
 export default function ClientDashboard() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const activeTab = (CLIENT_TABS.includes(searchParams.get("tab") as ClientTab) ? searchParams.get("tab") : "upcoming") as ClientTab;
+
   const { data: authSession } = useSession();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loadingSessions, setLoadingSessions] = useState(true);
@@ -252,7 +260,11 @@ export default function ClientDashboard() {
 
       {/* Sessions tabs */}
       <FadeIn delay={0.2}>
-        <Tabs defaultValue="upcoming" className="mt-8">
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => router.replace(`?tab=${v}`, { scroll: false })}
+          className="mt-8"
+        >
           <div data-tour="dashboard-tabs" className="overflow-x-auto">
             <TabsList className="w-max">
               <TabsTrigger value="upcoming">

@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { CATEGORY_LABELS } from "@/types";
 
 export async function GET(
   _req: Request,
@@ -57,6 +56,8 @@ export async function GET(
         createdAt: s.review!.createdAt.toISOString(),
       }));
 
+    const catRow = await prisma.category.findUnique({ where: { id: professional.category }, select: { name: true } });
+
     return NextResponse.json({
       id: professional.id,
       userId: professional.userId,
@@ -65,7 +66,7 @@ export async function GET(
       bio: professional.user.bio ?? "",
       headline: professional.headline ?? "",
       category: professional.category,
-      categoryName: CATEGORY_LABELS[professional.category] ?? professional.category,
+      categoryName: catRow?.name ?? professional.category,
       hourlyRate: professional.hourlyRate,
       rating: professional.rating,
       reviewCount: professional.reviewCount,
