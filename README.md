@@ -1,6 +1,6 @@
 # GuidePath
 
-> Plataforma freemium que conecta a profesionales en busqueda de orientacion laboral con expertos certificados: mentores de carrera, coaches ejecutivos, psicologos laborales y especialistas sectoriales.
+> Plataforma freemium que conecta a profesionales en busqueda de orientacion laboral con expertos certificados
 
 ## Modelo de negocio
 
