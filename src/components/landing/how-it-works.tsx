@@ -74,7 +74,7 @@ export function HowItWorks() {
 
         <div className="relative mt-16">
           {/* Dashed connector — desktop */}
-          <div className="hidden md:block absolute top-[44px] left-[calc(16.66%+24px)] right-[calc(16.66%+24px)] border-t-2 border-dashed border-stone-200 dark:border-stone-700" />
+          <div className="hidden md:block absolute top-[44px] left-[calc(16.66%+24px)] right-[calc(16.66%+24px)] border-t-2 border-dashed border-stone-300 dark:border-stone-600" />
 
           <div className="grid gap-8 md:grid-cols-3 md:gap-12">
             {steps.map((step) => (

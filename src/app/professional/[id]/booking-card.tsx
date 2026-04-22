@@ -3,7 +3,7 @@
 import { memo, useMemo, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Calendar, Clock, MessageSquare, Video, Sparkles } from "lucide-react";
+import { Calendar, Clock, MessageSquare, Video, Sparkles, CalendarOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -84,6 +84,20 @@ export const BookingCard = memo(function BookingCard({ professionalId, availabil
 
         <Separator className="my-6" />
 
+        {availableDays.length === 0 ? (
+          <div className="flex flex-col items-center gap-3 py-6 text-center">
+            <CalendarOff className="h-10 w-10 text-stone-300 dark:text-stone-600" />
+            <div>
+              <p className="text-sm font-medium text-stone-700 dark:text-stone-300">
+                Sin disponibilidad configurada
+              </p>
+              <p className="mt-1 text-xs text-stone-500 dark:text-stone-400">
+                Este profesional aún no ha publicado su horario. Puedes enviarle un mensaje directo.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <>
         <h3 className="flex items-center gap-2 text-sm font-semibold">
           <Calendar className="h-4 w-4" />
           Selecciona fecha
@@ -161,6 +175,8 @@ export const BookingCard = memo(function BookingCard({ professionalId, availabil
             Videollamada integrada en la plataforma
           </div>
         </div>
+          </>
+        )}
       </div>
     </motion.div>
   );

@@ -213,7 +213,7 @@ export default function ExplorePage() {
               key={pill.value}
               onClick={() => updateParams({ category: pill.value })}
               aria-pressed={selectedCat === pill.value}
-              className={`rounded-full px-4 py-1.5 text-sm font-display font-medium transition-all duration-150 ${
+              className={`rounded-full px-4 py-1.5 text-sm font-display font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-1 ${
                 selectedCat === pill.value
                   ? "bg-teal-700 text-white shadow-sm shadow-teal-700/20"
                   : "border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-600 dark:text-stone-400 hover:border-teal-300 hover:text-teal-700 dark:hover:border-teal-700 dark:hover:text-teal-400"
@@ -231,7 +231,7 @@ export default function ExplorePage() {
               }
               aria-pressed={minRating === r.toString()}
               aria-label={`Filtrar por valoración ${r} estrellas o más`}
-              className={`flex items-center gap-1 rounded-full px-3.5 py-1.5 text-sm font-medium transition-all duration-150 ${
+              className={`flex items-center gap-1 rounded-full px-3.5 py-1.5 text-sm font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-1 ${
                 minRating === r.toString()
                   ? "bg-amber-500 text-white"
                   : "border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-600 dark:text-stone-400 hover:border-amber-300 hover:text-amber-600"
