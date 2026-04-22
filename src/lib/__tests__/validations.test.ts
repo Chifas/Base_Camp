@@ -113,9 +113,9 @@ describe("createProfessionalProfileSchema", () => {
     expect(result.success).toBe(true);
   });
 
-  it("rejects invalid category", () => {
+  it("rejects empty category", () => {
     const result = createProfessionalProfileSchema.safeParse({
-      category: "INVALID",
+      category: "",
       headline: "Expert",
       hourlyRate: 65,
     });

@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { stripHtml } from "@/lib/sanitize";
 import { logger } from "@/lib/logger";
+import { sendMessageSchema } from "@/lib/validations";
 
 /**
  * GET /api/messages?sessionId=xxx&limit=50&before=cursorId
@@ -87,11 +88,11 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
-    const { sessionId, content, type = "text", fileUrl, fileName } = body;
-
-    if (!sessionId || !content?.trim()) {
-      return NextResponse.json({ error: "sessionId y content son obligatorios" }, { status: 400 });
+    const parsed = sendMessageSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 });
     }
+    const { sessionId, content, type, fileUrl, fileName } = parsed.data;
 
     // Verify user is participant
     const dbSession = await prisma.session.findUnique({
@@ -128,10 +129,10 @@ export async function POST(req: Request) {
       data: {
         sessionId,
         userId: session.user.id,
-        content: stripHtml(content.trim()),
+        content: stripHtml(content),
         type,
-        fileUrl: fileUrl || null,
-        fileName: fileName || null,
+        fileUrl: fileUrl ?? null,
+        fileName: fileName ?? null,
       },
       include: {
         user: { select: { id: true, name: true, image: true } },

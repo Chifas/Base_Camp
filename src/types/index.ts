@@ -1,10 +1,7 @@
 export type UserRole = "CLIENT" | "PROFESSIONAL" | "ADMIN";
 
-export type ProfessionalCategory =
-  | "PSYCHOLOGIST"
-  | "COACH"
-  | "CAREER_MENTOR"
-  | "NUTRITIONIST";
+// Category IDs are now stored in the DB (categories table) — kept as string for compatibility
+export type ProfessionalCategory = string;
 
 export type SessionStatus =
   | "PENDING"
@@ -94,7 +91,7 @@ export interface Review {
   createdAt: string;
 }
 
-export const CATEGORY_LABELS: Record<ProfessionalCategory, string> = {
+export const CATEGORY_LABELS: Record<string, string> = {
   CAREER_MENTOR: "Mentor de Carrera",
   COACH: "Coach Ejecutivo",
   PSYCHOLOGIST: "Psicólogo/a Laboral",

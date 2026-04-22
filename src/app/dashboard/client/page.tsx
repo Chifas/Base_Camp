@@ -3,6 +3,7 @@
 import { useMemo, useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
@@ -91,7 +92,14 @@ const CATEGORY_LABELS_REVIEW = {
   ratingValue: "Satisfacción general",
 } as const;
 
+const CLIENT_TABS = ["upcoming", "history", "referrals"] as const;
+type ClientTab = typeof CLIENT_TABS[number];
+
 export default function ClientDashboard() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const activeTab = (CLIENT_TABS.includes(searchParams.get("tab") as ClientTab) ? searchParams.get("tab") : "upcoming") as ClientTab;
+
   const { data: authSession } = useSession();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loadingSessions, setLoadingSessions] = useState(true);
@@ -231,7 +239,7 @@ export default function ClientDashboard() {
             { label: "Sesiones disponibles", value: credits ? `${credits.remaining}/${credits.limit}` : `—/${CREDITS_CONFIG.FREE_SESSIONS_PER_MONTH}`, icon: Calendar, tourAttr: "credits-stat", accent: "text-teal-600 dark:text-teal-400", iconBg: "bg-teal-100 dark:bg-teal-900/30" },
             { label: "Sesiones completadas", value: pastSessions.filter((s) => s.status === "COMPLETED").length.toString(), icon: Clock, tourAttr: undefined, accent: "text-stone-700 dark:text-stone-300", iconBg: "bg-stone-100 dark:bg-stone-800" },
             { label: "Próximas sesiones", value: upcomingSessions.length.toString(), icon: Star, tourAttr: undefined, accent: "text-amber-600 dark:text-amber-400", iconBg: "bg-amber-100 dark:bg-amber-900/30" },
-            { label: "Reseñas dejadas", value: "2", icon: MessageSquare, tourAttr: undefined, accent: "text-stone-700 dark:text-stone-300", iconBg: "bg-stone-100 dark:bg-stone-800" },
+            { label: "Reseñas dejadas", value: reviewedSessionIds.size.toString(), icon: MessageSquare, tourAttr: undefined, accent: "text-stone-700 dark:text-stone-300", iconBg: "bg-stone-100 dark:bg-stone-800" },
           ].map((stat) => (
             <div
               key={stat.label}
@@ -252,18 +260,22 @@ export default function ClientDashboard() {
 
       {/* Sessions tabs */}
       <FadeIn delay={0.2}>
-        <Tabs defaultValue="upcoming" className="mt-8">
-          <div data-tour="dashboard-tabs">
-          <TabsList className="overflow-x-auto">
-            <TabsTrigger value="upcoming">
-              Próximas ({upcomingSessions.length})
-            </TabsTrigger>
-            <TabsTrigger value="past">
-              Historial ({pastSessions.length})
-            </TabsTrigger>
-            <TabsTrigger value="referrals">Referidos</TabsTrigger>
-            <TabsTrigger value="profile">Mi perfil</TabsTrigger>
-          </TabsList>
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => router.replace(`?tab=${v}`, { scroll: false })}
+          className="mt-8"
+        >
+          <div data-tour="dashboard-tabs" className="overflow-x-auto">
+            <TabsList className="w-max">
+              <TabsTrigger value="upcoming">
+                Próximas ({upcomingSessions.length})
+              </TabsTrigger>
+              <TabsTrigger value="past">
+                Historial ({pastSessions.length})
+              </TabsTrigger>
+              <TabsTrigger value="referrals">Referidos</TabsTrigger>
+              <TabsTrigger value="profile">Mi perfil</TabsTrigger>
+            </TabsList>
           </div>
 
           <TabsContent value="upcoming" className="mt-6">
@@ -551,6 +563,9 @@ export default function ClientDashboard() {
                 onChange={(e) => setReviewComment(e.target.value)}
                 maxLength={500}
               />
+              <p className="mt-1 text-right text-xs text-muted-foreground">
+                {reviewComment.length}/500
+              </p>
             </div>
 
             {/* Submit */}

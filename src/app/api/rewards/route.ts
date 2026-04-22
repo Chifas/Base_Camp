@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { CREDITS_CONFIG } from "@/lib/credits-config";
 import { logger } from "@/lib/logger";
+import { redeemRewardSchema } from "@/lib/validations";
 
 /**
  * GET /api/rewards — returns the professional's impact points and redemption history.
@@ -60,14 +61,14 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
-    const { type, description } = body;
-
-    if (!type || !["CERTIFICATION", "DONATION"].includes(type)) {
+    const parsed = redeemRewardSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: "Tipo debe ser CERTIFICATION o DONATION" },
+        { error: parsed.error.errors[0].message },
         { status: 400 }
       );
     }
+    const { type, description } = parsed.data;
 
     const pointsCost =
       type === "CERTIFICATION"
