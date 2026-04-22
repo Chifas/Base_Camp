@@ -121,7 +121,7 @@ export default function BookingPage() {
         Confirmar reserva
       </h1>
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-5">
+      <div className="mt-8 grid gap-4 sm:gap-6 lg:gap-8 lg:grid-cols-5">
         {/* Left - Details */}
         <div className="lg:col-span-3 space-y-6">
           <motion.div
@@ -219,7 +219,7 @@ export default function BookingPage() {
 
         {/* Right - Summary */}
         <div className="lg:col-span-2">
-          <div className="sticky top-24 rounded-xl border bg-card p-6">
+          <div className="lg:sticky lg:top-24 rounded-xl border bg-card p-6">
             <h3 className="font-heading text-lg font-semibold">Resumen</h3>
 
             <div className="mt-4 flex items-center gap-3">

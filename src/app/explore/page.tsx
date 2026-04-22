@@ -180,10 +180,10 @@ export default function ExplorePage() {
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
       {/* Header */}
       <div>
-        <h1 className="font-display text-3xl font-bold tracking-tight sm:text-4xl text-stone-900 dark:text-stone-50">
+        <h1 className="font-display text-2xl font-bold tracking-tight sm:text-3xl lg:text-4xl text-stone-900 dark:text-stone-50">
           Explorar profesionales
         </h1>
-        <p className="mt-2 text-lg text-stone-600 dark:text-stone-400">
+        <p className="mt-2 text-base sm:text-lg text-stone-600 dark:text-stone-400">
           Encuentra al profesional perfecto para ti entre nuestros expertos verificados.
         </p>
       </div>
@@ -253,14 +253,26 @@ export default function ExplorePage() {
           )}
         </div>
 
-        {/* Sort pills (desktop) */}
-        <div className="hidden sm:flex items-center gap-1.5">
-          <span className="text-xs text-stone-400 mr-1">Ordenar:</span>
+        {/* Sort — pills on sm+, native select on mobile */}
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs text-stone-400 mr-1 hidden sm:inline">Ordenar:</span>
+          {/* Mobile select */}
+          <select
+            value={sortBy}
+            onChange={(e) => updateParams({ sort: e.target.value })}
+            className="sm:hidden rounded-full border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 px-3 py-1.5 text-sm text-stone-700 dark:text-stone-300 focus:outline-none focus:ring-2 focus:ring-teal-500"
+            aria-label="Ordenar resultados"
+          >
+            {SORT_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+          {/* Desktop pills */}
           {SORT_OPTIONS.map((opt) => (
             <button
               key={opt.value}
               onClick={() => updateParams({ sort: opt.value })}
-              className={`rounded-full px-3.5 py-1.5 text-sm font-medium transition-all duration-150 ${
+              className={`hidden sm:inline-flex rounded-full px-3.5 py-1.5 text-sm font-medium transition-all duration-150 ${
                 sortBy === opt.value
                   ? "bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900"
                   : "bg-stone-100 text-stone-600 hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-400 dark:hover:bg-stone-700"
