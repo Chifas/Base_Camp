@@ -60,10 +60,10 @@ export function Hero() {
       {/* Subtle dot grid */}
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,#0d737718_1px,transparent_1px)] [background-size:28px_28px]" />
 
-      <div className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-12 px-4 py-20 sm:px-6 lg:grid-cols-5 lg:gap-8 lg:px-8 lg:py-28">
+      <div className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-12 px-4 py-20 sm:px-6 md:grid-cols-5 md:gap-8 lg:px-8 lg:py-28">
 
         {/* ── Left column ── */}
-        <div className="lg:col-span-3">
+        <div className="md:col-span-3">
           {/* Badge */}
           <div data-badge style={{ opacity: 0 }}>
             <span className="mb-6 inline-flex items-center gap-2 rounded-full bg-teal-100 px-4 py-1.5 text-sm font-medium text-teal-700 dark:bg-teal-900/40 dark:text-teal-300">
@@ -157,7 +157,7 @@ export function Hero() {
         <div
           ref={cardsRef}
           style={{ opacity: 0 }}
-          className="relative hidden lg:col-span-2 lg:flex lg:items-center lg:justify-center"
+          className="relative hidden md:col-span-2 md:flex md:items-center md:justify-center"
         >
           {/* Back card */}
           <div

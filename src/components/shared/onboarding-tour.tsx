@@ -26,7 +26,7 @@ interface TargetRect {
   height: number;
 }
 
-const PAD = 8; // padding del anillo alrededor del target
+const PAD = 8;
 
 export function OnboardingTour({
   storageKey,
@@ -61,7 +61,7 @@ export function OnboardingTour({
       }
       const r = el.getBoundingClientRect();
       setTargetRect({
-        top: r.top + window.scrollY,
+        top: r.top,      // viewport-relative (correct for position:fixed)
         left: r.left,
         width: r.width,
         height: r.height,
@@ -99,39 +99,33 @@ export function OnboardingTour({
   const isLast = index === steps.length - 1;
   const isCentered = !step.target || !targetRect;
 
-  // Calcular posición de la tarjeta tooltip
-  let cardStyle: React.CSSProperties = {};
-  if (!isCentered && targetRect) {
-    const CARD_HEIGHT = 220;
-    const GAP = 16;
-    const viewportHeight = typeof window !== "undefined" ? window.innerHeight : 800;
-    const scrollY = typeof window !== "undefined" ? window.scrollY : 0;
+  // Compute card position for all cases in explicit pixels.
+  // Framer Motion overwrites the CSS `transform` property, so Tailwind translate
+  // classes (-translate-x-1/2) would be silently removed during animation.
+  // We always use a computed left/top instead.
+  const vw = typeof window !== "undefined" ? window.innerWidth : 375;
+  const vh = typeof window !== "undefined" ? window.innerHeight : 800;
+  const CARD_W = Math.min(vw - 32, 384);
+  const cardLeft = Math.max(16, (vw - CARD_W) / 2);
 
-    const spaceBelow = viewportHeight - (targetRect.top - scrollY + targetRect.height);
-    const spaceAbove = targetRect.top - scrollY;
+  let cardStyle: React.CSSProperties;
+  if (isCentered) {
+    cardStyle = { left: cardLeft, top: Math.max(16, (vh - 260) / 2) };
+  } else if (targetRect) {
+    const CARD_HEIGHT = 280;
+    const GAP = 16;
+    const spaceBelow = vh - (targetRect.top + targetRect.height);
+    const spaceAbove = targetRect.top;
 
     if (spaceBelow >= CARD_HEIGHT + GAP) {
-      // Mostrar debajo
-      cardStyle = {
-        top: targetRect.top + targetRect.height + GAP,
-        left: "50%",
-        transform: "translateX(-50%)",
-      };
+      cardStyle = { top: targetRect.top + targetRect.height + GAP, left: cardLeft };
     } else if (spaceAbove >= CARD_HEIGHT + GAP) {
-      // Mostrar arriba
-      cardStyle = {
-        top: targetRect.top - CARD_HEIGHT - GAP,
-        left: "50%",
-        transform: "translateX(-50%)",
-      };
+      cardStyle = { top: targetRect.top - CARD_HEIGHT - GAP, left: cardLeft };
     } else {
-      // Fallback: parte baja de la pantalla
-      cardStyle = {
-        bottom: 24,
-        left: "50%",
-        transform: "translateX(-50%)",
-      };
+      cardStyle = { bottom: 24, left: cardLeft };
     }
+  } else {
+    cardStyle = { left: cardLeft, top: Math.max(16, (vh - 260) / 2) };
   }
 
   return (
@@ -154,7 +148,7 @@ export function OnboardingTour({
             className="pointer-events-none fixed z-[81] rounded-xl ring-2 ring-teal-500 ring-offset-1"
             style={{
               top: targetRect.top - PAD,
-              left: targetRect.left - PAD,
+              left: Math.max(0, targetRect.left - PAD),
               width: targetRect.width + PAD * 2,
               height: targetRect.height + PAD * 2,
               boxShadow:
@@ -172,11 +166,8 @@ export function OnboardingTour({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -8, scale: 0.97 }}
           transition={{ duration: 0.22, ease: "easeOut" }}
-          className={[
-            "fixed z-[82] w-[calc(100vw-32px)] max-w-sm rounded-2xl border border-stone-200 bg-white px-5 py-5 shadow-2xl dark:border-stone-700 dark:bg-stone-900",
-            isCentered ? "left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" : "",
-          ].join(" ")}
-          style={isCentered ? {} : cardStyle}
+          className="fixed z-[82] w-[calc(100vw-32px)] max-w-sm rounded-2xl border border-stone-200 bg-white px-5 py-5 shadow-2xl dark:border-stone-700 dark:bg-stone-900"
+          style={cardStyle}
         >
           {/* Cabecera: contador + botón cerrar */}
           <div className="mb-3 flex items-center justify-between">

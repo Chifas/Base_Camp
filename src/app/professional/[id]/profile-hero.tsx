@@ -98,7 +98,7 @@ export function ProfileHero({
   return (
     <div ref={heroRef}>
       {/* Cover band */}
-      <div className={`relative h-48 overflow-hidden sm:h-56 ${coverColor}`}>
+      <div className={`relative h-36 overflow-hidden sm:h-48 md:h-56 ${coverColor}`}>
         <svg
           className="absolute inset-0 h-full w-full opacity-20"
           xmlns="http://www.w3.org/2000/svg"
@@ -137,10 +137,10 @@ export function ProfileHero({
 
       {/* Profile info */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="-mt-[60px] relative flex flex-col items-center sm:flex-row sm:items-end sm:gap-6">
+        <div className="-mt-[52px] sm:-mt-[60px] relative flex flex-col items-center sm:flex-row sm:items-end sm:gap-6">
           {/* Photo */}
           <div ref={photoRef} className="shrink-0">
-            <div className="relative h-[120px] w-[120px] overflow-hidden rounded-2xl bg-stone-100 ring-4 ring-white dark:bg-stone-800 dark:ring-stone-900">
+            <div className="relative h-[96px] w-[96px] overflow-hidden rounded-2xl bg-stone-100 ring-4 ring-white dark:bg-stone-800 dark:ring-stone-900 sm:h-[120px] sm:w-[120px]">
               {image ? (
                 <Image
                   src={image}

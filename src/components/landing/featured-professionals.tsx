@@ -131,7 +131,7 @@ export const FeaturedProfessionals = memo(function FeaturedProfessionals({ profe
             <p className="text-sm font-display font-semibold uppercase tracking-widest text-teal-600 dark:text-teal-400 mb-1">
               Comunidad
             </p>
-            <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl text-stone-900 dark:text-stone-50">
+            <h2 className="font-display text-2xl font-bold tracking-tight sm:text-3xl lg:text-4xl text-stone-900 dark:text-stone-50">
               Profesionales destacados
             </h2>
             <p className="mt-2 text-stone-600 dark:text-stone-400">
@@ -156,9 +156,9 @@ export const FeaturedProfessionals = memo(function FeaturedProfessionals({ profe
           <div data-pro-card style={{ opacity: 0 }} className="sm:col-span-2">
             <Link href={`/professional/${featured.id}`} className="group block h-full">
               <div className="h-full rounded-2xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 p-6 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5">
-                <div className="flex items-start gap-5">
+                <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
                   {/* Photo */}
-                  <div className="relative h-[120px] w-[120px] shrink-0 overflow-hidden rounded-2xl bg-stone-100 dark:bg-stone-800">
+                  <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-2xl bg-stone-100 dark:bg-stone-800 sm:h-[120px] sm:w-[120px]">
                     <Image
                       src={featured.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${featured.name}`}
                       alt={featured.name}

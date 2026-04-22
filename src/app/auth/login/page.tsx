@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense, useState } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import Image from "next/image";
 import { Mail, Lock, Eye, EyeOff, Loader2, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -43,6 +43,7 @@ export default function LoginPage() {
 
 function LoginContent() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const searchParams = useSearchParams();
   const oauthError = searchParams.get("error");
   const [showPassword, setShowPassword] = useState(false);
@@ -59,6 +60,21 @@ function LoginContent() {
     resolver: zodResolver(loginSchema),
     mode: "onBlur",
   });
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      const role = (session?.user as { role?: string })?.role;
+      router.replace(role === "PROFESSIONAL" ? "/dashboard/professional" : "/dashboard/client");
+    }
+  }, [status, session, router]);
+
+  if (status === "loading" || status === "authenticated") {
+    return (
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-teal-600" />
+      </div>
+    );
+  }
 
   async function onSubmit(data: LoginFormData) {
     setServerError("");
@@ -83,7 +99,7 @@ function LoginContent() {
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)]">
+    <div className="flex min-h-[calc(100vh-4rem)] overflow-x-hidden">
       {/* ── Brand panel (desktop only) ── */}
       <div className="hidden lg:flex lg:w-[45%] flex-col justify-between bg-teal-700 p-12 xl:p-16">
         <Link href="/" className="flex items-center gap-2">
@@ -117,7 +133,7 @@ function LoginContent() {
       </div>
 
       {/* ── Form panel ── */}
-      <div className="flex flex-1 flex-col items-center justify-center px-6 py-12 sm:px-12 lg:px-16">
+      <div className="flex flex-1 flex-col items-center justify-center px-4 py-10 sm:px-8 lg:px-16">
         <div className="w-full max-w-sm">
           {/* Mobile logo */}
           <div className="mb-8 lg:hidden text-center">
