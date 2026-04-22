@@ -150,7 +150,7 @@ export function Navbar() {
                     transition={{ duration: 0.15 }}
                     role="menu"
                     aria-label="Opciones de perfil"
-                    className="absolute right-0 top-full mt-2 w-52 rounded-xl border bg-popover shadow-lg ring-1 ring-black/5 overflow-hidden"
+                    className="absolute right-0 top-full mt-2 w-[min(13rem,calc(100vw-2rem))] rounded-xl border bg-popover shadow-lg ring-1 ring-black/5 overflow-hidden"
                   >
                     <div className="px-4 py-3 border-b">
                       <p className="text-sm font-semibold truncate">{user?.name ?? ""}</p>

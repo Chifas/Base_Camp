@@ -425,13 +425,13 @@ export default function ProfessionalOnboardingPage() {
                   {availability.map((slot, i) => (
                     <div
                       key={i}
-                      className={`flex items-center gap-3 rounded-lg border p-3 transition-colors ${
+                      className={`flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border p-3 transition-colors ${
                         slot.enabled
                           ? "border-primary/30 bg-primary/5"
                           : "border-muted opacity-60"
                       }`}
                     >
-                      <label className="flex cursor-pointer items-center gap-2">
+                      <label className="flex min-w-[7rem] cursor-pointer items-center gap-2">
                         <input
                           type="checkbox"
                           checked={slot.enabled}
@@ -440,28 +440,28 @@ export default function ProfessionalOnboardingPage() {
                           }
                           className="h-4 w-4 rounded border-input accent-primary"
                         />
-                        <span className="w-24 text-sm font-medium">
+                        <span className="text-sm font-medium">
                           {DAYS[i]}
                         </span>
                       </label>
                       {slot.enabled && (
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-1 items-center gap-2 min-w-0">
                           <Input
                             type="time"
                             value={slot.startTime}
                             onChange={(e) =>
                               updateSlot(i, "startTime", e.target.value)
                             }
-                            className="h-8 w-28 text-xs"
+                            className="h-8 min-w-0 flex-1 text-xs"
                           />
-                          <span className="text-muted-foreground">—</span>
+                          <span className="shrink-0 text-muted-foreground">—</span>
                           <Input
                             type="time"
                             value={slot.endTime}
                             onChange={(e) =>
                               updateSlot(i, "endTime", e.target.value)
                             }
-                            className="h-8 w-28 text-xs"
+                            className="h-8 min-w-0 flex-1 text-xs"
                           />
                         </div>
                       )}

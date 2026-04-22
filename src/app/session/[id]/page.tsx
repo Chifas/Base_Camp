@@ -316,7 +316,7 @@ export default function VideoSessionPage() {
             <ChevronLeft className="h-5 w-5" />
           </Link>
           <div>
-            <h1 className="text-sm font-semibold text-white">
+            <h1 className="max-w-[160px] truncate text-sm font-semibold text-white sm:max-w-none">
               Sesión con{" "}
               {(authSession?.user as { role?: string })?.role === "PROFESSIONAL"
                 ? roomData?.session.clientName
@@ -348,12 +348,12 @@ export default function VideoSessionPage() {
               Se ha perdido la conexión con la videollamada. Comprueba tu
               conexión a internet e inténtalo de nuevo.
             </p>
-            <div className="mt-6 flex items-center justify-center gap-3">
-              <Button variant="default" onClick={handleRetry}>
+            <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+              <Button variant="default" onClick={handleRetry} className="w-full sm:w-auto">
                 <RefreshCw className="mr-2 h-4 w-4" />
                 Reintentar conexión
               </Button>
-              <Button variant="outline" asChild>
+              <Button variant="outline" asChild className="w-full sm:w-auto">
                 <Link href={dashboardHref}>Volver al dashboard</Link>
               </Button>
             </div>

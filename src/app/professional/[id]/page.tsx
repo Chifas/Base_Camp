@@ -146,7 +146,7 @@ export default async function ProfessionalProfilePage({
 
       {/* Content grid */}
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-        <div className="grid gap-8 lg:grid-cols-3">
+        <div className="grid gap-6 lg:gap-8 lg:grid-cols-3">
 
           {/* ── Left column ── */}
           <div className="lg:col-span-2 space-y-10">
@@ -297,7 +297,7 @@ export default async function ProfessionalProfilePage({
 
           {/* ── Right column — sticky ── */}
           <div className="lg:col-span-1">
-            <div className="sticky top-6 space-y-4">
+            <div className="lg:sticky lg:top-6 space-y-4">
               <BookingCard
                 professionalId={professional.id}
                 availability={professional.availability.map((a) => ({
