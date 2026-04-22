@@ -523,16 +523,18 @@ export default function ProfessionalDashboard() {
       {/* Tabs */}
       <FadeIn delay={0.2}>
         <Tabs defaultValue="sessions" className="mt-8">
-          <TabsList className="overflow-x-auto">
-            <TabsTrigger value="sessions" data-tour="prof-sessions">
-              Sesiones ({confirmedSessions.length + pendingSessions.length})
-            </TabsTrigger>
-            <TabsTrigger value="availability" data-tour="prof-availability">Disponibilidad</TabsTrigger>
-            <TabsTrigger value="profile">Perfil</TabsTrigger>
-            <TabsTrigger value="reviews">Reseñas ({reviews.length})</TabsTrigger>
-            <TabsTrigger value="referrals">Referidos</TabsTrigger>
-            <TabsTrigger value="impact" data-tour="prof-impact">Impacto Social</TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto">
+            <TabsList className="w-max">
+              <TabsTrigger value="sessions" data-tour="prof-sessions">
+                Sesiones ({confirmedSessions.length + pendingSessions.length})
+              </TabsTrigger>
+              <TabsTrigger value="availability" data-tour="prof-availability">Disponibilidad</TabsTrigger>
+              <TabsTrigger value="profile">Perfil</TabsTrigger>
+              <TabsTrigger value="reviews">Reseñas ({reviews.length})</TabsTrigger>
+              <TabsTrigger value="referrals">Referidos</TabsTrigger>
+              <TabsTrigger value="impact" data-tour="prof-impact">Impacto Social</TabsTrigger>
+            </TabsList>
+          </div>
 
           {/* ===== Sessions ===== */}
           <TabsContent value="sessions" className="mt-6 space-y-6">

@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import Image from "next/image";
 import { Mail, Lock, Eye, EyeOff, User, Loader2, Briefcase, HeartHandshake } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState<"CLIENT" | "PROFESSIONAL">("CLIENT");
   const [loading, setLoading] = useState(false);
@@ -30,6 +31,21 @@ export default function RegisterPage() {
     resolver: zodResolver(registerSchema),
     mode: "onBlur",
   });
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      const role = (session?.user as { role?: string })?.role;
+      router.replace(role === "PROFESSIONAL" ? "/dashboard/professional" : "/dashboard/client");
+    }
+  }, [status, session, router]);
+
+  if (status === "loading" || status === "authenticated") {
+    return (
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-teal-600" />
+      </div>
+    );
+  }
 
   async function onSubmit(data: RegisterFormData) {
     setServerError("");

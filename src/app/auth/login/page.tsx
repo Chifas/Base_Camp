@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense, useState } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import Image from "next/image";
 import { Mail, Lock, Eye, EyeOff, Loader2, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -43,6 +43,7 @@ export default function LoginPage() {
 
 function LoginContent() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const searchParams = useSearchParams();
   const oauthError = searchParams.get("error");
   const [showPassword, setShowPassword] = useState(false);
@@ -59,6 +60,21 @@ function LoginContent() {
     resolver: zodResolver(loginSchema),
     mode: "onBlur",
   });
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      const role = (session?.user as { role?: string })?.role;
+      router.replace(role === "PROFESSIONAL" ? "/dashboard/professional" : "/dashboard/client");
+    }
+  }, [status, session, router]);
+
+  if (status === "loading" || status === "authenticated") {
+    return (
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-teal-600" />
+      </div>
+    );
+  }
 
   async function onSubmit(data: LoginFormData) {
     setServerError("");

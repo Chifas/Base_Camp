@@ -26,7 +26,7 @@ interface TargetRect {
   height: number;
 }
 
-const PAD = 8; // padding del anillo alrededor del target
+const PAD = 8;
 
 export function OnboardingTour({
   storageKey,
@@ -102,35 +102,23 @@ export function OnboardingTour({
   // Calcular posición de la tarjeta tooltip
   let cardStyle: React.CSSProperties = {};
   if (!isCentered && targetRect) {
-    const CARD_HEIGHT = 220;
+    const CARD_HEIGHT = 280;
     const GAP = 16;
+    const viewportWidth = typeof window !== "undefined" ? window.innerWidth : 375;
     const viewportHeight = typeof window !== "undefined" ? window.innerHeight : 800;
     const scrollY = typeof window !== "undefined" ? window.scrollY : 0;
+    const cardW = Math.min(viewportWidth - 32, 384);
+    const cardLeft = Math.max(16, Math.min(viewportWidth / 2 - cardW / 2, viewportWidth - cardW - 16));
 
     const spaceBelow = viewportHeight - (targetRect.top - scrollY + targetRect.height);
     const spaceAbove = targetRect.top - scrollY;
 
     if (spaceBelow >= CARD_HEIGHT + GAP) {
-      // Mostrar debajo
-      cardStyle = {
-        top: targetRect.top + targetRect.height + GAP,
-        left: "50%",
-        transform: "translateX(-50%)",
-      };
+      cardStyle = { top: targetRect.top + targetRect.height + GAP, left: cardLeft };
     } else if (spaceAbove >= CARD_HEIGHT + GAP) {
-      // Mostrar arriba
-      cardStyle = {
-        top: targetRect.top - CARD_HEIGHT - GAP,
-        left: "50%",
-        transform: "translateX(-50%)",
-      };
+      cardStyle = { top: targetRect.top - CARD_HEIGHT - GAP, left: cardLeft };
     } else {
-      // Fallback: parte baja de la pantalla
-      cardStyle = {
-        bottom: 24,
-        left: "50%",
-        transform: "translateX(-50%)",
-      };
+      cardStyle = { bottom: 24, left: cardLeft };
     }
   }
 
@@ -154,7 +142,7 @@ export function OnboardingTour({
             className="pointer-events-none fixed z-[81] rounded-xl ring-2 ring-teal-500 ring-offset-1"
             style={{
               top: targetRect.top - PAD,
-              left: targetRect.left - PAD,
+              left: Math.max(0, targetRect.left - PAD),
               width: targetRect.width + PAD * 2,
               height: targetRect.height + PAD * 2,
               boxShadow:
