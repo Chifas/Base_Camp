@@ -44,10 +44,16 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "No tienes acceso a esta conversación" }, { status: 403 });
     }
 
+    let beforeAt: Date | undefined;
+    if (before) {
+      const beforeMsg = await prisma.message.findUnique({ where: { id: before } });
+      beforeAt = beforeMsg?.createdAt;
+    }
+
     const messages = await prisma.message.findMany({
       where: {
         sessionId,
-        ...(before ? { createdAt: { lt: (await prisma.message.findUnique({ where: { id: before } }))?.createdAt } } : {}),
+        ...(beforeAt !== undefined ? { createdAt: { lt: beforeAt } } : {}),
       },
       orderBy: { createdAt: "desc" },
       take: limit,
@@ -90,7 +96,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const parsed = sendMessageSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: parsed.error.errors[0].message }, { status: 400 });
+      return NextResponse.json({ error: parsed.error.errors[0]?.message ?? "Error de validación" }, { status: 400 });
     }
     const { sessionId, content, type, fileUrl, fileName } = parsed.data;
 

@@ -75,21 +75,24 @@ export default async function ProfessionalProfilePage({
 
   const reviews: Review[] = professional.sessions
     .filter((s) => s.review)
-    .map((s) => ({
-      id: s.review!.id,
-      sessionId: s.id,
-      userName: s.review!.user.name ?? "Usuario",
-      userImage: s.review!.user.image ?? "",
-      rating: s.review!.rating,
-      ratingPunctuality: s.review!.ratingPunctuality ?? undefined,
-      ratingKnowledge: s.review!.ratingKnowledge ?? undefined,
-      ratingCommunication: s.review!.ratingCommunication ?? undefined,
-      ratingValue: s.review!.ratingValue ?? undefined,
-      comment: s.review!.comment ?? "",
-      professionalResponse: s.review!.professionalResponse ?? undefined,
-      respondedAt: s.review!.respondedAt?.toISOString(),
-      createdAt: s.review!.createdAt.toISOString(),
-    }));
+    .map((s) => {
+      const r = s.review!;
+      return {
+        id: r.id,
+        sessionId: s.id,
+        userName: r.user.name ?? "Usuario",
+        userImage: r.user.image ?? "",
+        rating: r.rating,
+        ...(r.ratingPunctuality !== null ? { ratingPunctuality: r.ratingPunctuality } : {}),
+        ...(r.ratingKnowledge !== null ? { ratingKnowledge: r.ratingKnowledge } : {}),
+        ...(r.ratingCommunication !== null ? { ratingCommunication: r.ratingCommunication } : {}),
+        ...(r.ratingValue !== null ? { ratingValue: r.ratingValue } : {}),
+        comment: r.comment ?? "",
+        ...(r.professionalResponse !== null ? { professionalResponse: r.professionalResponse } : {}),
+        ...(r.respondedAt ? { respondedAt: r.respondedAt.toISOString() } : {}),
+        createdAt: r.createdAt.toISOString(),
+      };
+    });
 
   // JSON-LD structured data
   const jsonLd = {
@@ -138,8 +141,8 @@ export default async function ProfessionalProfilePage({
         rating={professional.rating}
         reviewCount={professional.reviewCount}
         verified={professional.verified}
-        categoryLabel={CATEGORY_LABELS[category]}
-        yearsExperience={professional.yearsExperience ?? undefined}
+        categoryLabel={CATEGORY_LABELS[category] ?? category}
+        {...(professional.yearsExperience !== null ? { yearsExperience: professional.yearsExperience } : {})}
         languages={professional.languages}
         hasAvailability={professional.availability.length > 0}
       />

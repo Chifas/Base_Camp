@@ -22,7 +22,7 @@ import type { Professional } from "@/types";
 import { CREDITS_CONFIG } from "@/lib/credits-config";
 
 function addHour(time: string): string {
-  const [h, m] = time.split(":").map(Number);
+  const [h = 0, m = 0] = time.split(":").map(Number);
   return `${String(h + 1).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 

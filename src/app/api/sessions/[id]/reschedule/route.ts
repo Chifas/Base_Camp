@@ -23,7 +23,7 @@ export async function POST(
     const parsed = rescheduleRequestSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: parsed.error.errors[0].message },
+        { error: parsed.error.errors[0]?.message ?? "Error de validación" },
         { status: 400 }
       );
     }
@@ -130,7 +130,7 @@ export async function PATCH(
     const parsed = rescheduleResponseSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: parsed.error.errors[0].message },
+        { error: parsed.error.errors[0]?.message ?? "Error de validación" },
         { status: 400 }
       );
     }

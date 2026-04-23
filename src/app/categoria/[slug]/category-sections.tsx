@@ -22,11 +22,12 @@ import {
 
 // ── Icon map ────────────────────────────────────────────────────────────────
 
-const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-  Compass,
-  Target,
-  Brain,
-  Apple,
+type IconComponent = React.ComponentType<{ className?: string }>;
+const iconMap: Record<string, IconComponent> = {
+  Compass: Compass as IconComponent,
+  Target: Target as IconComponent,
+  Brain: Brain as IconComponent,
+  Apple: Apple as IconComponent,
 };
 
 // ── Color utility maps ──────────────────────────────────────────────────────

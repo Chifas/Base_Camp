@@ -83,7 +83,7 @@ export default function AvailabilityTab({ initialAvailability, onSaved }: Props)
                   type="button"
                   onClick={() => {
                     const updated = [...availability];
-                    updated[idx] = { ...updated[idx], enabled: !updated[idx].enabled };
+                    updated[idx] = { ...slot, enabled: !slot.enabled };
                     setAvailability(updated);
                   }}
                   className={`h-5 w-5 rounded border transition-colors ${
@@ -95,7 +95,7 @@ export default function AvailabilityTab({ initialAvailability, onSaved }: Props)
                   )}
                 </button>
                 <span className={`text-sm font-medium ${!slot.enabled ? "text-muted-foreground" : ""}`}>
-                  {DAYS[slot.dayOfWeek]}
+                  {DAYS[slot.dayOfWeek] ?? ""}
                 </span>
               </div>
 
@@ -106,7 +106,7 @@ export default function AvailabilityTab({ initialAvailability, onSaved }: Props)
                     value={slot.startTime}
                     onChange={(e) => {
                       const updated = [...availability];
-                      updated[idx] = { ...updated[idx], startTime: e.target.value };
+                      updated[idx] = { ...slot, startTime: e.target.value };
                       setAvailability(updated);
                     }}
                     className="rounded-lg border bg-background px-3 py-1.5 text-sm"
@@ -117,7 +117,7 @@ export default function AvailabilityTab({ initialAvailability, onSaved }: Props)
                     value={slot.endTime}
                     onChange={(e) => {
                       const updated = [...availability];
-                      updated[idx] = { ...updated[idx], endTime: e.target.value };
+                      updated[idx] = { ...slot, endTime: e.target.value };
                       setAvailability(updated);
                     }}
                     className="rounded-lg border bg-background px-3 py-1.5 text-sm"

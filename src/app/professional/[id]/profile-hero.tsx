@@ -28,7 +28,7 @@ function getCoverColor(name: string): string {
   const index =
     name.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0) %
     colors.length;
-  return colors[index];
+  return colors[index] ?? "bg-indigo-100";
 }
 
 interface ProfileHeroProps {

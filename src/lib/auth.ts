@@ -7,7 +7,7 @@ import bcrypt from "bcryptjs";
 import { env } from "@/lib/env";
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma) as NextAuthOptions["adapter"],
+  adapter: PrismaAdapter(prisma) as Exclude<NextAuthOptions["adapter"], undefined>,
   session: { strategy: "jwt", maxAge: 24 * 60 * 60 /* 24 hours */ },
   secret: env.NEXTAUTH_SECRET,
   pages: {

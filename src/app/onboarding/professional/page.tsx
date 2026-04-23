@@ -207,7 +207,8 @@ export default function ProfessionalOnboardingPage() {
   function updateSlot(index: number, field: keyof AvailabilitySlot, value: string | boolean) {
     setAvailability((prev) => {
       const copy = [...prev];
-      copy[index] = { ...copy[index], [field]: value };
+      const current = copy[index];
+      if (current) copy[index] = { ...current, [field]: value };
       return copy;
     });
   }
@@ -282,7 +283,7 @@ export default function ProfessionalOnboardingPage() {
           })}
         </div>
         <p className="mt-2 text-center text-sm text-muted-foreground">
-          Paso {step + 1} de {STEPS.length}: {STEPS[step].title}
+          Paso {step + 1} de {STEPS.length}: {STEPS[step]?.title}
         </p>
 
         {/* Error */}

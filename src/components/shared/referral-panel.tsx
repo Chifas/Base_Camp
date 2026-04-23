@@ -187,7 +187,7 @@ export function ReferralPanel({ referrals, stats, userRole, onRefresh }: Referra
         ) : (
           <div className="mt-4 space-y-3">
             {referrals.map((r, i) => {
-              const st = statusLabels[r.status] ?? statusLabels.PENDING;
+              const st = statusLabels[r.status] ?? { label: "Pendiente", color: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-300" };
               return (
                 <motion.div
                   key={r.id}

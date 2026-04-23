@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, type MotionStyle } from "framer-motion";
 import { ChevronLeft, ChevronRight, X, Sparkles } from "lucide-react";
 
 export interface TourStep {
@@ -43,7 +43,7 @@ export function OnboardingTour({
     if (!localStorage.getItem(storageKey)) setActive(true);
   }, [storageKey]);
 
-  const step = steps[index];
+  const step = steps[index]!;
 
   // Medir posición del target en cada paso
   useEffect(() => {
@@ -108,7 +108,7 @@ export function OnboardingTour({
   const CARD_W = Math.min(vw - 32, 384);
   const cardLeft = Math.max(16, (vw - CARD_W) / 2);
 
-  let cardStyle: React.CSSProperties;
+  let cardStyle: MotionStyle;
   if (isCentered) {
     cardStyle = { left: cardLeft, top: Math.max(16, (vh - 260) / 2) };
   } else if (targetRect) {

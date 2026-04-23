@@ -86,7 +86,7 @@ export function AvailabilityEditor({
                 type="button"
                 onClick={() => {
                   const updated = [...availability];
-                  updated[idx] = { ...updated[idx], enabled: !updated[idx].enabled };
+                  updated[idx] = { ...slot, enabled: !slot.enabled };
                   setAvailability(updated);
                 }}
                 className={`h-5 w-5 rounded border transition-colors ${
@@ -102,7 +102,7 @@ export function AvailabilityEditor({
                   !slot.enabled ? "text-muted-foreground" : ""
                 }`}
               >
-                {DAYS[slot.dayOfWeek]}
+                {DAYS[slot.dayOfWeek] ?? ""}
               </span>
             </div>
 
@@ -113,7 +113,7 @@ export function AvailabilityEditor({
                   value={slot.startTime}
                   onChange={(e) => {
                     const updated = [...availability];
-                    updated[idx] = { ...updated[idx], startTime: e.target.value };
+                    updated[idx] = { ...slot, startTime: e.target.value };
                     setAvailability(updated);
                   }}
                   className="rounded-lg border bg-background px-3 py-1.5 text-sm"
@@ -124,7 +124,7 @@ export function AvailabilityEditor({
                   value={slot.endTime}
                   onChange={(e) => {
                     const updated = [...availability];
-                    updated[idx] = { ...updated[idx], endTime: e.target.value };
+                    updated[idx] = { ...slot, endTime: e.target.value };
                     setAvailability(updated);
                   }}
                   className="rounded-lg border bg-background px-3 py-1.5 text-sm"

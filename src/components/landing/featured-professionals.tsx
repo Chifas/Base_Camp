@@ -94,7 +94,7 @@ interface FeaturedProfessionalsProps {
 export const FeaturedProfessionals = memo(function FeaturedProfessionals({ professionals }: FeaturedProfessionalsProps) {
   const displayProfessionals =
     professionals.length > 0 ? professionals : MOCK_PROFESSIONALS;
-  const featured = displayProfessionals[0];
+  const featured = displayProfessionals[0]!;
   const rest = displayProfessionals.slice(1, 4);
 
   const sectionRef = useRef<HTMLElement>(null);

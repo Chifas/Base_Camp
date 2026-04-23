@@ -64,7 +64,7 @@ export async function POST(req: Request) {
     const parsed = redeemRewardSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: parsed.error.errors[0].message },
+        { error: parsed.error.errors[0]?.message ?? "Error de validación" },
         { status: 400 }
       );
     }

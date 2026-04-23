@@ -79,8 +79,8 @@ export async function GET(req: Request) {
             _count: { select: { messages: true } },
           },
           orderBy: { scheduledAt: "desc" },
-          skip,
-          take,
+          ...(skip !== undefined ? { skip } : {}),
+          ...(take !== undefined ? { take } : {}),
         }),
         usePagination ? prisma.session.count({ where }) : Promise.resolve(0),
       ]);
@@ -130,8 +130,8 @@ export async function GET(req: Request) {
           },
         },
         orderBy: { scheduledAt: "desc" },
-        skip,
-        take,
+        ...(skip !== undefined ? { skip } : {}),
+        ...(take !== undefined ? { take } : {}),
       }),
       usePagination ? prisma.session.count({ where }) : Promise.resolve(0),
     ]);
