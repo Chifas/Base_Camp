@@ -23,7 +23,7 @@ Toda la configuracion de limites y puntos esta centralizada en `src/lib/credits-
 | Frontend | Next.js 14 (App Router) + TypeScript + Tailwind CSS |
 | Animaciones | Framer Motion |
 | UI Components | shadcn/ui (Radix primitives) |
-| Base de datos | PostgreSQL (Supabase) + Prisma ORM |
+| Base de datos | PostgreSQL (Supabase) + Prisma ORM (20 modelos, 8 enums) |
 | Autenticacion | NextAuth.js v4 (email/password + Google OAuth) |
 | Sistema de creditos | Custom (`src/lib/credits-config.ts`) |
 | Videollamadas | Daily.co SDK (`@daily-co/daily-js`) |
@@ -73,6 +73,7 @@ src/
 │   ├── notifications.ts         # Sistema de notificaciones in-app
 │   ├── rate-limit.ts            # Rate limiting con Upstash Redis
 │   ├── cloudinary.ts            # Integracion con Cloudinary
+│   ├── languages.ts             # Lista ISO 639-1 + getLanguageLabel()
 │   ├── logger.ts                # Logger estructurado JSON
 │   └── utils.ts                 # cn, formatDate, formatTime, etc.
 ├── data/
@@ -80,8 +81,8 @@ src/
 └── types/
     └── index.ts                 # Tipos TypeScript compartidos
 prisma/
-├── schema.prisma                # Esquema de la base de datos (19 modelos)
-└── seed.ts                      # Seed con usuarios de prueba
+├── schema.prisma                # Esquema de la base de datos (20 modelos, 8 enums)
+└── seed.ts                      # Seed: categorias + 1 cliente + 6 profesionales + 1 sesion
 ```
 
 ## Instalacion y puesta en marcha
@@ -139,12 +140,19 @@ Consulta `.env.example` para ver todas las variables. Las principales:
 
 ## Usuarios de prueba
 
-Disponibles tras ejecutar `npm run db:seed`:
+Disponibles tras ejecutar `npm run db:seed`. Contrasena para todos: `guidepath123`.
 
-| Email | Contrasena | Rol |
-|-------|------------|-----|
-| `cliente@guidepath.dev` | `password123` | CLIENT |
-| `profesional@guidepath.dev` | `password123` | PROFESSIONAL |
+| Email | Rol | Notas |
+|-------|-----|-------|
+| `cliente@guidepath.com` | CLIENT | Ana Lopez |
+| `elena@guidepath.com` | PROFESSIONAL | Psicologa organizacional (PSYCHOLOGIST) |
+| `carlos@guidepath.com` | PROFESSIONAL | Coach ejecutivo ICF (COACH) |
+| `ana.garcia@guidepath.com` | PROFESSIONAL | Mentora de carrera ex-RRHH (CAREER_MENTOR) |
+| `miguel@guidepath.com` | PROFESSIONAL | Product Management (CAREER_MENTOR) |
+| `laura@guidepath.com` | PROFESSIONAL | Psicologa laboral (PSYCHOLOGIST) |
+| `pablo@guidepath.com` | PROFESSIONAL | Coach directivos (COACH) |
+
+El seed tambien inserta las 4 categorias (CAREER_MENTOR, COACH, PSYCHOLOGIST, NUTRITIONIST) y una sesion CONFIRMED de ejemplo entre `cliente` y `elena`.
 
 ## Flujo de reserva (end-to-end)
 

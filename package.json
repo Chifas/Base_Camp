@@ -1,8 +1,8 @@
 {
   "name": "guidepath",
-  "version": "0.1.0",
+  "version": "0.6.0",
   "private": true,
-  "description": "Benign change",
+  "description": "GuidePath — freemium platform connecting professionals with certified career mentors, executive coaches, and work psychologists",
   "engines": {
     "node": ">=18.17.0"
   },

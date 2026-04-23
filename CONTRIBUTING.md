@@ -114,9 +114,16 @@ npm run db:seed      # Insertar usuarios de prueba
 
 ## Usuarios de prueba
 
-Tras ejecutar `npm run db:seed`:
+Tras ejecutar `npm run db:seed`. Contrasena para todos: `guidepath123`.
 
-| Email | Contrasena | Rol |
-|-------|------------|-----|
-| `cliente@guidepath.dev` | `password123` | CLIENT |
-| `profesional@guidepath.dev` | `password123` | PROFESSIONAL |
+| Email | Rol |
+|-------|-----|
+| `cliente@guidepath.com` | CLIENT |
+| `elena@guidepath.com` | PROFESSIONAL |
+| `carlos@guidepath.com` | PROFESSIONAL |
+| `ana.garcia@guidepath.com` | PROFESSIONAL |
+| `miguel@guidepath.com` | PROFESSIONAL |
+| `laura@guidepath.com` | PROFESSIONAL |
+| `pablo@guidepath.com` | PROFESSIONAL |
+
+Ver el bloque completo (especialidades + disponibilidad) en [README.md](README.md).

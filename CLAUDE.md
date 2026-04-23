@@ -11,7 +11,7 @@ GuidePath is a **freemium platform** connecting professionals seeking career and
 | Frontend | Next.js 14 (App Router) + TypeScript + Tailwind CSS |
 | Animations | Framer Motion |
 | UI Components | shadcn/ui (Radix primitives) |
-| Database | PostgreSQL (Supabase) + Prisma ORM (19 models) |
+| Database | PostgreSQL (Supabase) + Prisma ORM (20 models, 8 enums) |
 | Auth | NextAuth.js v4 (email/password + Google OAuth) |
 | Credits System | Custom (configurable via `src/lib/credits-config.ts`) |
 | Video Calls | Daily.co embedded SDK (`@daily-co/daily-js`) |
@@ -20,7 +20,7 @@ GuidePath is a **freemium platform** connecting professionals seeking career and
 | Rate limiting | Upstash Redis (`src/lib/rate-limit.ts`) |
 | Payments (legacy) | Stripe (kept for future premium tier) |
 
-## Current State (as of `develop`, April 2026)
+## Current State (as of `develop`, 23 April 2026 — v0.6.0)
 
 The app is **fully functional end-to-end**. All major layers are wired and production-ready:
 
@@ -49,10 +49,18 @@ The app is **fully functional end-to-end**. All major layers are wired and produ
 | Certifications management for professionals | ✅ Done |
 | Waitlist capture + beta feedback modal | ✅ Done |
 | PWA (manifest + service worker) | ✅ Done |
-| CI/CD GitHub Actions (lint, build, types, tests) | ✅ Done |
-| Unit + integration tests (Vitest) + E2E (Playwright) | ✅ Done |
+| CI/CD GitHub Actions (lint, build, types, tests — triggers on `main` + `develop`) | ✅ Done |
+| Unit + integration tests (Vitest) + E2E (Playwright — `e2e/booking.spec.ts`) | ✅ Done |
 | Apple-style landing (aurora hero, trust bar, testimonials, waitlist) | ✅ Done |
 | Legal pages (privacy + terms) | ✅ Done |
+| Prettier + `eslint-config-prettier` (`npm run format`) | ✅ Done |
+| Dependabot (npm weekly + GitHub Actions monthly, max 5 PRs) | ✅ Done |
+| `SECURITY.md` — vulnerability disclosure policy (GitHub private advisories) | ✅ Done |
+| Professional dashboard — 6 tabs with `React.lazy` + URL-synced active tab | ✅ Done |
+| Dynamic `Category` model (migrated from enum) | ✅ Done |
+| ISO 639-1 language selector (`src/lib/languages.ts`) | ✅ Done |
+| `tsconfig` strict: `noUncheckedIndexedAccess` + `exactOptionalPropertyTypes` | ✅ Done |
+| Rate limiting middleware (in-memory `Map`, Edge-compatible) | ✅ Done |
 | Stripe payment flow (legacy, for future premium tier) | ⏳ Paused |
 
 ## Project Structure
@@ -108,9 +116,11 @@ src/
 │       ├── feedback/            # POST — beta feedback
 │       ├── waitlist/            # POST — waitlist signup
 │       ├── health/              # GET — health check
-│       ├── payments/            # (Legacy) Stripe PaymentIntent
-│       ├── webhooks/stripe/     # (Legacy) Stripe webhook
-│       ├── stripe/              # (Legacy) Stripe Connect
+│       ├── payments/create-intent/ # (Legacy) Stripe PaymentIntent
+│       ├── checkout/             # (Legacy) Stripe Checkout Session
+│       ├── webhooks/stripe/      # (Legacy) Stripe webhook
+│       ├── stripe/connect/       # (Legacy) Stripe Connect onboarding
+│       ├── stripe/transfers/     # (Legacy) Stripe Connect transfers
 │       └── cron/
 │           ├── session-reminders/   # POST — send session reminder emails
 │           ├── session-cleanup/     # POST — cancel expired sessions
@@ -123,8 +133,10 @@ src/
 │   └── shared/                  # AvailabilityEditor, BlockedDatesManager, ChatWidget,
 │                                 # ConversationList, ConversationChat, SessionChat,
 │                                 # ProfileCompleteness, ReferralPanel, PhotoUpload,
-│                                 # DashboardSkeleton, EmptyState, Pagination,
-│                                 # BetaFeedbackModal, MotionWrapper, PageError
+│                                 # DashboardSkeleton, ExploreSkeleton, EmptyState,
+│                                 # Pagination, BetaFeedbackModal, MotionWrapper,
+│                                 # PageError, AnimatedCounter, AnimatedGradientBg,
+│                                 # RotatingWords, OnboardingTour
 ├── lib/
 │   ├── auth.ts                  # NextAuth config (CredentialsProvider + PrismaAdapter)
 │   ├── prisma.ts                # Prisma client singleton
@@ -145,6 +157,8 @@ src/
 │   ├── cancellation.ts          # Cancellation logic
 │   ├── stripe.ts                # Stripe server-side singleton (legacy)
 │   ├── resend.ts                # Resend client singleton
+│   ├── languages.ts             # ISO 639-1 language list + `getLanguageLabel()`
+│   ├── gsap-config.ts           # GSAP plugin registration
 │   └── utils.ts                 # cn, formatDate, formatTime, etc.
 ├── data/
 │   └── mock.ts                  # Mock data (used in explore/profile UI)
@@ -153,8 +167,8 @@ src/
     ├── next-auth.d.ts           # NextAuth session type extensions (id, role)
     └── sessions.ts              # Session-specific types
 prisma/
-├── schema.prisma                # Database schema (19 models, 6 enums)
-└── seed.ts                      # Seeds 2 test users
+├── schema.prisma                # Database schema (20 models, 8 enums)
+└── seed.ts                      # Seeds 4 categories + 1 client + 6 professionals + 1 sample session
 ```
 
 ## Architecture Decisions
@@ -174,8 +188,10 @@ prisma/
 14. **Env validation at startup** — `src/lib/env.ts` uses Zod to validate all required env vars; build fails if any are missing
 15. **Cron protection** — all cron endpoints validate `Authorization: Bearer $CRON_SECRET` header
 16. **XSS prevention** — `sanitize-html` applied in `src/lib/sanitize.ts` on all free-text fields (bio, notes, feedback)
-17. **Rate limiting** — Upstash Redis via `src/lib/rate-limit.ts`; active on register, login, reviews, and professionals list
+17. **Rate limiting** — two layers: Upstash Redis (`src/lib/rate-limit.ts`) for register/login/reviews/professionals; in-memory `Map` in `src/middleware.ts` (Edge-compatible) for auth (5 req/60s) and mutations (20 req/10s) per IP
 18. **Structured logging** — `src/lib/logger.ts` outputs JSON; used in all API routes; `log` alias removed
+19. **Dynamic categories** — `ProfessionalCategory` migrated from Prisma enum to `Category` model (admin-manageable); seeded with 4 categories (CAREER_MENTOR, COACH, PSYCHOLOGIST, NUTRITIONIST)
+20. **Strict TS** — `noUncheckedIndexedAccess` + `exactOptionalPropertyTypes` enabled across the codebase
 
 ## How to Run
 ```bash
@@ -183,7 +199,7 @@ npm install
 cp .env.example .env        # fill in real keys
 npm run db:generate          # generate Prisma client
 npm run db:push              # sync schema to DB (dev — no migration history)
-npm run db:seed              # seed 2 test users
+npm run db:seed              # seed categories + 1 client + 6 professionals + 1 sample session
 npm run dev                  # start dev server at http://localhost:3000
 ```
 
@@ -218,10 +234,20 @@ See `.env.example` for all keys. Validated at startup by `src/lib/env.ts`.
 | `STRIPE_WEBHOOK_SECRET` | (Optional) Only for premium tier |
 
 ## Test Users (seeded via `npm run db:seed`)
-| Email | Password | Role |
-|-------|----------|------|
-| `cliente@guidepath.dev` | `password123` | CLIENT |
-| `profesional@guidepath.dev` | `password123` | PROFESSIONAL |
+
+Password for all accounts: `guidepath123`
+
+| Email | Role | Notes |
+|-------|------|-------|
+| `cliente@guidepath.com` | CLIENT | Ana López |
+| `elena@guidepath.com` | PROFESSIONAL | Psicóloga organizacional (PSYCHOLOGIST) |
+| `carlos@guidepath.com` | PROFESSIONAL | Coach ejecutivo ICF (COACH) |
+| `ana.garcia@guidepath.com` | PROFESSIONAL | Mentora de carrera ex-RRHH (CAREER_MENTOR) |
+| `miguel@guidepath.com` | PROFESSIONAL | Product Management (CAREER_MENTOR) |
+| `laura@guidepath.com` | PROFESSIONAL | Psicóloga laboral (PSYCHOLOGIST) |
+| `pablo@guidepath.com` | PROFESSIONAL | Coach directivos (COACH) |
+
+Also seeds 4 categories (CAREER_MENTOR, COACH, PSYCHOLOGIST, NUTRITIONIST) and one future CONFIRMED session between `cliente` and `elena`.
 
 ## API Routes Reference
 
