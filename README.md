@@ -1,5 +1,10 @@
 # GuidePath
 
+[![CI](https://github.com/chifas/base_camp/actions/workflows/ci.yml/badge.svg)](https://github.com/chifas/base_camp/actions/workflows/ci.yml)
+[![Node.js](https://img.shields.io/badge/node-%3E%3D18.17.0-brightgreen)](https://nodejs.org)
+[![Built with Next.js](https://img.shields.io/badge/built%20with-Next.js-000?logo=nextdotjs)](https://nextjs.org)
+[![Deployed on Vercel](https://img.shields.io/badge/deployed%20on-Vercel-000?logo=vercel)](https://vercel.com)
+
 > Plataforma freemium que conecta a profesionales en busqueda de orientacion laboral con expertos certificados
 
 ## Modelo de negocio
