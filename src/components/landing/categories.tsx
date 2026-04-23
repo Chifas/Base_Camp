@@ -86,7 +86,7 @@ export function Categories() {
 
         <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {categories.map((cat) => (
-            <div key={cat.slug} data-cat-card style={{ opacity: 0 }}>
+            <div key={cat.slug} data-cat-card>
               <Link href={`/explore?category=${cat.slug}`} className="group block h-full">
                 <div className="relative h-full rounded-2xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
                   {/* Icon */}

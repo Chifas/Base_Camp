@@ -79,7 +79,6 @@ export function Testimonials() {
             <div
               key={testimonial.id}
               data-testimonial-card
-              style={{ opacity: 0 }}
               className="relative rounded-2xl border border-stone-800 bg-stone-800/60 p-7 transition-all duration-300 hover:border-stone-700 hover:bg-stone-800/80"
             >
               {/* Decorative quote mark */}

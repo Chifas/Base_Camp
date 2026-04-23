@@ -310,7 +310,7 @@ export default function ExplorePage() {
             const isAvailableToday = nextSlot?.startsWith("Hoy");
 
             return (
-              <div key={pro.id} data-pro-card style={{ opacity: 0 }}>
+              <div key={pro.id} data-pro-card>
                 <Link href={`/professional/${pro.id}`} className="group block h-full">
                   <div className="h-full overflow-hidden rounded-2xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 transition-all duration-300 group-hover:shadow-xl group-hover:-translate-y-1.5">
 

@@ -153,7 +153,7 @@ export const FeaturedProfessionals = memo(function FeaturedProfessionals({ profe
         {/* Asymmetric grid */}
         <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {/* Featured card — col-span-2 */}
-          <div data-pro-card style={{ opacity: 0 }} className="sm:col-span-2">
+          <div data-pro-card className="sm:col-span-2">
             <Link href={`/professional/${featured.id}`} className="group block h-full">
               <div className="h-full rounded-2xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 p-6 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5">
                 <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
@@ -229,7 +229,7 @@ export const FeaturedProfessionals = memo(function FeaturedProfessionals({ profe
 
           {/* Regular cards */}
           {rest.map((pro) => (
-            <div key={pro.id} data-pro-card style={{ opacity: 0 }}>
+            <div key={pro.id} data-pro-card>
               <Link href={`/professional/${pro.id}`} className="group block h-full">
                 <div className="h-full rounded-2xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 p-5 transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 flex flex-col items-center text-center">
                   {/* Circular photo */}

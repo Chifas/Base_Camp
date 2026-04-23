@@ -49,7 +49,7 @@ export function FadeIn({
   }, { scope: ref });
 
   return (
-    <div ref={ref} className={className} style={{ opacity: 0 }}>
+    <div ref={ref} className={className}>
       {children}
     </div>
   );
@@ -72,23 +72,21 @@ export function StaggerContainer({
     const items = gsap.utils.toArray<HTMLElement>("[data-stagger-item]", ref.current!);
     if (!items.length) return;
 
+    gsap.set(items, { opacity: 0, y: 36, scale: 0.96 });
+
     ScrollTrigger.batch(items, {
       start: "top 86%",
       once: true,
       onEnter: (els) => {
-        gsap.fromTo(
-          els,
-          { opacity: 0, y: 36, scale: 0.96 },
-          {
-            opacity: 1,
-            y: 0,
-            scale: 1,
-            duration: 0.7,
-            ease: "expo.out",
-            stagger: 0.1,
-            delay,
-          }
-        );
+        gsap.to(els, {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          duration: 0.7,
+          ease: "expo.out",
+          stagger: 0.1,
+          delay,
+        });
       },
     });
   }, { scope: ref });
@@ -108,7 +106,7 @@ export function StaggerItem({
   className?: string;
 }) {
   return (
-    <div data-stagger-item className={className} style={{ opacity: 0 }}>
+    <div data-stagger-item className={className}>
       {children}
     </div>
   );
@@ -143,7 +141,7 @@ export function ScaleIn({
   }, { scope: ref });
 
   return (
-    <div ref={ref} className={className} style={{ opacity: 0 }}>
+    <div ref={ref} className={className}>
       {children}
     </div>
   );

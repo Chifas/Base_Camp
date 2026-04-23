@@ -45,12 +45,10 @@ export function CTA() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div
           ref={boxRef}
-          style={{ opacity: 0, clipPath: "inset(0 0 100% 0 round 24px)" }}
           className="rounded-3xl bg-teal-700 px-8 py-16 text-center sm:px-16 sm:py-24"
         >
           <h2
             data-cta-headline
-            style={{ opacity: 0 }}
             className="font-display text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl"
           >
             ¿Listo para dar el siguiente
@@ -59,7 +57,6 @@ export function CTA() {
 
           <p
             data-cta-sub
-            style={{ opacity: 0 }}
             className="mx-auto mt-5 max-w-xl text-lg text-white/80 leading-relaxed"
           >
             Conecta con el mentor o coach que necesitas. Reserva tu primera sesión hoy
@@ -68,7 +65,6 @@ export function CTA() {
 
           <div
             data-cta-btns
-            style={{ opacity: 0 }}
             className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row"
           >
             <Button
