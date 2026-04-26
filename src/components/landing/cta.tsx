@@ -17,7 +17,8 @@ export function CTA() {
       const box = boxRef.current;
       if (!box) return;
 
-      gsap.set(box, { clipPath: "inset(0 0 100% 0 round 24px)", opacity: 0 });
+      // Clip-path wipe reveal — no opacity hiding so content is always visible
+      gsap.set(box, { clipPath: "inset(0 0 100% 0 round 24px)" });
 
       const headline = box.querySelector<HTMLElement>("[data-cta-headline]");
       const sub      = box.querySelector<HTMLElement>("[data-cta-sub]");
@@ -29,13 +30,12 @@ export function CTA() {
 
       tl.to(box, {
           clipPath: "inset(0 0 0% 0 round 24px)",
-          opacity: 1,
           duration: 0.9,
           ease: "expo.out",
         })
-        .fromTo(headline, { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.65, ease: "power3.out" }, "-=0.4")
-        .fromTo(sub,      { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.55, ease: "power3.out" }, "-=0.35")
-        .fromTo(btns,     { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.5,  ease: "power3.out" }, "-=0.3");
+        .fromTo(headline, { y: 24 }, { y: 0, duration: 0.65, ease: "power3.out" }, "-=0.4")
+        .fromTo(sub,      { y: 16 }, { y: 0, duration: 0.55, ease: "power3.out" }, "-=0.35")
+        .fromTo(btns,     { y: 12 }, { y: 0, duration: 0.5,  ease: "power3.out" }, "-=0.3");
     },
     { scope: sectionRef }
   );

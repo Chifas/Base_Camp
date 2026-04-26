@@ -31,23 +31,25 @@ export function Hero() {
       const trust   = s.querySelector<HTMLElement>("[data-trust]");
       const cards   = cardsRef.current;
 
-      gsap.set([badge, heading, sub, btns, social, trust], { opacity: 0 });
+      // CSS (@keyframes hero-fade-in in globals.css) handles opacity so the
+      // hero is always visible even if GSAP fails.  GSAP drives only the
+      // Y / X slide-in transforms — a polish layer on top.
       gsap.set(badge,   { y: -10 });
       gsap.set(heading, { y: 40 });
       gsap.set(sub,     { y: 20 });
       gsap.set(btns,    { y: 20 });
       gsap.set(social,  { y: 16 });
       gsap.set(trust,   { y: 12 });
-      if (cards) gsap.set(cards, { opacity: 0, x: 40 });
+      if (cards) gsap.set(cards, { x: 40 });
 
       const tl = gsap.timeline();
-      tl.to(badge,   { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" })
-        .to(heading, { opacity: 1, y: 0, duration: 0.8, ease: "power3.out" }, "-=0.25")
-        .to(sub,     { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, "-=0.5")
-        .to(btns,    { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, "-=0.45")
-        .to(social,  { opacity: 1, y: 0, duration: 0.55, ease: "power3.out" }, "-=0.4")
-        .to(trust,   { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, "-=0.35")
-        .to(cards ?? [], { opacity: 1, x: 0, duration: 0.9, ease: "power3.out" }, "-=0.65");
+      tl.to(badge,       { y: 0, duration: 0.5,  ease: "power3.out" })
+        .to(heading,     { y: 0, duration: 0.8,  ease: "power3.out" }, "-=0.25")
+        .to(sub,         { y: 0, duration: 0.6,  ease: "power3.out" }, "-=0.5")
+        .to(btns,        { y: 0, duration: 0.6,  ease: "power3.out" }, "-=0.45")
+        .to(social,      { y: 0, duration: 0.55, ease: "power3.out" }, "-=0.4")
+        .to(trust,       { y: 0, duration: 0.5,  ease: "power3.out" }, "-=0.35")
+        .to(cards ?? [], { x: 0, duration: 0.9,  ease: "power3.out" }, "-=0.65");
     },
     { scope: sectionRef }
   );
@@ -55,7 +57,7 @@ export function Hero() {
   return (
     <section
       ref={sectionRef}
-      className="relative min-h-[90vh] overflow-hidden bg-gradient-to-br from-stone-50 via-white to-teal-50/30 dark:from-stone-950 dark:via-stone-900 dark:to-teal-950/20"
+      className="hero-section relative min-h-[90vh] overflow-hidden bg-gradient-to-br from-stone-50 via-white to-teal-50/30 dark:from-stone-950 dark:via-stone-900 dark:to-teal-950/20"
     >
       {/* Subtle dot grid */}
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,#0d737718_1px,transparent_1px)] [background-size:28px_28px]" />
@@ -154,7 +156,7 @@ export function Hero() {
         {/* ── Right column — mock floating cards ── */}
         <div
           ref={cardsRef}
-          className="relative hidden md:col-span-2 md:flex md:items-center md:justify-center"
+          className="hero-cards relative hidden md:col-span-2 md:flex md:items-center md:justify-center"
         >
           {/* Back card */}
           <div

@@ -34,14 +34,13 @@ export function HowItWorks() {
 
       const cards = gsap.utils.toArray<HTMLElement>("[data-step-card]", sectionRef.current!);
 
-      gsap.set(cards, { opacity: 0, y: 30 });
+      gsap.set(cards, { y: 30 });
 
       ScrollTrigger.batch(cards, {
         start: "top 86%",
         once: true,
         onEnter: (els) => {
           gsap.to(els, {
-            opacity: 1,
             y: 0,
             duration: 0.7,
             ease: "power3.out",

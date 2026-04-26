@@ -50,14 +50,13 @@ export function Categories() {
 
       const cards = gsap.utils.toArray<HTMLElement>("[data-cat-card]", sectionRef.current!);
 
-      gsap.set(cards, { opacity: 0, y: 24 });
+      gsap.set(cards, { y: 24 });
 
       ScrollTrigger.batch(cards, {
         start: "top 88%",
         once: true,
         onEnter: (els) => {
           gsap.to(els, {
-            opacity: 1,
             y: 0,
             duration: 0.7,
             ease: "power3.out",
