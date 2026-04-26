@@ -104,14 +104,14 @@ export const FeaturedProfessionals = memo(function FeaturedProfessionals({ profe
       if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
       const cards = gsap.utils.toArray<HTMLElement>("[data-pro-card]", sectionRef.current!);
-      gsap.set(cards, { opacity: 0, y: 28 });
+      gsap.set(cards, { y: 28 });
 
       ScrollTrigger.batch(cards, {
         start: "top 88%",
         once: true,
         onEnter: (els) => {
           gsap.to(els, {
-            opacity: 1,
+
             y: 0,
             duration: 0.65,
             ease: "power3.out",
