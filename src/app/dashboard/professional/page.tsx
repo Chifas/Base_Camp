@@ -4,7 +4,7 @@ import { lazy, Suspense, useMemo, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Calendar, TrendingUp, Users, Sparkles } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FadeIn } from "@/components/shared/motion-wrapper";
+import { FadeIn, StaggerContainer, StaggerItem } from "@/components/shared/motion-wrapper";
 import { DashboardSkeleton } from "@/components/shared/dashboard-skeleton";
 import { OnboardingTour, type TourStep } from "@/components/shared/onboarding-tour";
 import ProfileCompleteness from "@/components/shared/ProfileCompleteness";
@@ -86,19 +86,19 @@ export default function ProfessionalDashboard() {
         </p>
       </FadeIn>
 
-      <FadeIn delay={0.1}>
-        <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
-          {STATS.map((stat) => (
-            <div key={stat.label} className="rounded-xl border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900">
+      <StaggerContainer className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4" delay={0.1}>
+        {STATS.map((stat) => (
+          <StaggerItem key={stat.label}>
+            <div className="rounded-xl border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900">
               <div className={`inline-flex h-9 w-9 items-center justify-center rounded-lg ${stat.iconBg}`}>
                 <stat.icon className={`h-4 w-4 ${stat.accent}`} />
               </div>
               <p className={`mt-2 font-display text-2xl font-bold ${stat.accent}`}>{stat.value}</p>
               <p className="mt-0.5 text-xs text-stone-500 dark:text-stone-400">{stat.label}</p>
             </div>
-          ))}
-        </div>
-      </FadeIn>
+          </StaggerItem>
+        ))}
+      </StaggerContainer>
 
       {profile && (
         <FadeIn delay={0.15}>

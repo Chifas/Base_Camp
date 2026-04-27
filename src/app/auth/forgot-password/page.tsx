@@ -1,17 +1,39 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { Mail, ArrowLeft, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { gsap, useGSAP } from "@/lib/gsap-config";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const successRef = useRef<HTMLDivElement>(null);
+
+  useGSAP(
+    () => {
+      const root = rootRef.current;
+      if (!root) return;
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      const card = root.querySelector<HTMLElement>("[data-card]");
+      if (card) gsap.from(card, { y: 20, duration: 0.6, ease: "power3.out" });
+    },
+    { scope: rootRef }
+  );
+
+  // Animate success card when it mounts
+  useEffect(() => {
+    if (!submitted) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const node = successRef.current;
+    if (!node) return;
+    gsap.from(node, { scale: 0.95, duration: 0.45, ease: "back.out(1.6)" });
+  }, [submitted]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,13 +46,8 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-12">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-md"
-      >
+    <div ref={rootRef} className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-12">
+      <div data-card className="w-full max-w-md">
         {/* Header */}
         <div className="text-center">
           <div className="mx-auto mb-4">
@@ -47,9 +64,8 @@ export default function ForgotPasswordPage() {
         <div className="mt-8">
           {submitted ? (
             // Success state
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
+            <div
+              ref={successRef}
               className="rounded-xl border bg-card p-6 text-center"
             >
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/20">
@@ -66,7 +82,7 @@ export default function ForgotPasswordPage() {
               <Button className="mt-6 w-full" asChild>
                 <Link href="/auth/login">Volver al inicio de sesión</Link>
               </Button>
-            </motion.div>
+            </div>
           ) : (
             <form className="space-y-5" onSubmit={handleSubmit}>
               <div className="space-y-2">
@@ -114,7 +130,7 @@ export default function ForgotPasswordPage() {
             </div>
           )}
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }

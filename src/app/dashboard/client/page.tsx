@@ -20,7 +20,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FadeIn } from "@/components/shared/motion-wrapper";
+import { FadeIn, StaggerContainer, StaggerItem } from "@/components/shared/motion-wrapper";
 import { DashboardSkeleton } from "@/components/shared/dashboard-skeleton";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PhotoUpload } from "@/components/shared/photo-upload";
@@ -233,16 +233,15 @@ export default function ClientDashboard() {
       </FadeIn>
 
       {/* Stats */}
-      <FadeIn delay={0.1}>
-        <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
-          {[
-            { label: "Sesiones disponibles", value: credits ? `${credits.remaining}/${credits.limit}` : `—/${CREDITS_CONFIG.FREE_SESSIONS_PER_MONTH}`, icon: Calendar, tourAttr: "credits-stat", accent: "text-teal-600 dark:text-teal-400", iconBg: "bg-teal-100 dark:bg-teal-900/30" },
-            { label: "Sesiones completadas", value: pastSessions.filter((s) => s.status === "COMPLETED").length.toString(), icon: Clock, tourAttr: undefined, accent: "text-stone-700 dark:text-stone-300", iconBg: "bg-stone-100 dark:bg-stone-800" },
-            { label: "Próximas sesiones", value: upcomingSessions.length.toString(), icon: Star, tourAttr: undefined, accent: "text-amber-600 dark:text-amber-400", iconBg: "bg-amber-100 dark:bg-amber-900/30" },
-            { label: "Reseñas dejadas", value: reviewedSessionIds.size.toString(), icon: MessageSquare, tourAttr: undefined, accent: "text-stone-700 dark:text-stone-300", iconBg: "bg-stone-100 dark:bg-stone-800" },
-          ].map((stat) => (
+      <StaggerContainer className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4" delay={0.1}>
+        {[
+          { label: "Sesiones disponibles", value: credits ? `${credits.remaining}/${credits.limit}` : `—/${CREDITS_CONFIG.FREE_SESSIONS_PER_MONTH}`, icon: Calendar, tourAttr: "credits-stat", accent: "text-teal-600 dark:text-teal-400", iconBg: "bg-teal-100 dark:bg-teal-900/30" },
+          { label: "Sesiones completadas", value: pastSessions.filter((s) => s.status === "COMPLETED").length.toString(), icon: Clock, tourAttr: undefined, accent: "text-stone-700 dark:text-stone-300", iconBg: "bg-stone-100 dark:bg-stone-800" },
+          { label: "Próximas sesiones", value: upcomingSessions.length.toString(), icon: Star, tourAttr: undefined, accent: "text-amber-600 dark:text-amber-400", iconBg: "bg-amber-100 dark:bg-amber-900/30" },
+          { label: "Reseñas dejadas", value: reviewedSessionIds.size.toString(), icon: MessageSquare, tourAttr: undefined, accent: "text-stone-700 dark:text-stone-300", iconBg: "bg-stone-100 dark:bg-stone-800" },
+        ].map((stat) => (
+          <StaggerItem key={stat.label}>
             <div
-              key={stat.label}
               className="rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 p-4"
               {...(stat.tourAttr ? { "data-tour": stat.tourAttr } : {})}
             >
@@ -254,9 +253,9 @@ export default function ClientDashboard() {
               </p>
               <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">{stat.label}</p>
             </div>
-          ))}
-        </div>
-      </FadeIn>
+          </StaggerItem>
+        ))}
+      </StaggerContainer>
 
       {/* Sessions tabs */}
       <FadeIn delay={0.2}>

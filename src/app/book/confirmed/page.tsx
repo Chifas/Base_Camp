@@ -1,12 +1,12 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useState, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { motion } from "framer-motion";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { gsap, useGSAP } from "@/lib/gsap-config";
 
 interface SessionInfo {
   id: string;
@@ -31,6 +31,21 @@ function BookingConfirmedContent() {
   const sessionId = searchParams.get("session_id");
   const [sessionInfo, setSessionInfo] = useState<SessionInfo | null>(null);
   const [loading, setLoading] = useState(true);
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useGSAP(
+    () => {
+      const root = rootRef.current;
+      if (!root) return;
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      const card = root.querySelector<HTMLElement>("[data-card]");
+      const icon = root.querySelector<HTMLElement>("[data-icon]");
+      const tl = gsap.timeline();
+      if (card) tl.from(card, { y: 16, duration: 0.6, ease: "power3.out" }, 0);
+      if (icon) tl.from(icon, { scale: 0.6, duration: 0.55, ease: "back.out(1.8)" }, 0.1);
+    },
+    { scope: rootRef, dependencies: [loading] }
+  );
 
   useEffect(() => {
     if (!sessionId) {
@@ -73,13 +88,9 @@ function BookingConfirmedContent() {
     : "";
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-20 text-center">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5 }}
-      >
-        <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/20">
+    <div ref={rootRef} className="mx-auto max-w-2xl px-4 py-20 text-center">
+      <div data-card>
+        <div data-icon className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/20">
           <CheckCircle2 className="h-10 w-10 text-green-600" />
         </div>
         <h1 className="mt-6 font-heading text-3xl font-bold">
@@ -126,7 +137,7 @@ function BookingConfirmedContent() {
             <Link href="/explore">Seguir explorando</Link>
           </Button>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }
