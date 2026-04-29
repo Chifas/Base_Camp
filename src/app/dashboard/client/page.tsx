@@ -94,13 +94,19 @@ const CATEGORY_LABELS_REVIEW = {
   ratingValue: "Satisfacción general",
 } as const;
 
-const CLIENT_TABS = ["upcoming", "history", "referrals"] as const;
+// Must mirror the TabsTrigger values rendered below.
+// "past" was previously misspelled as "history" and "profile" was missing,
+// which silently bounced the URL back to "upcoming" → tabs felt broken.
+const CLIENT_TABS = ["upcoming", "past", "referrals", "profile"] as const;
 type ClientTab = typeof CLIENT_TABS[number];
 
 export default function ClientDashboard() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const activeTab = (CLIENT_TABS.includes(searchParams.get("tab") as ClientTab) ? searchParams.get("tab") : "upcoming") as ClientTab;
+  const rawTab = searchParams.get("tab");
+  const activeTab: ClientTab = (CLIENT_TABS as readonly string[]).includes(rawTab ?? "")
+    ? (rawTab as ClientTab)
+    : "upcoming";
 
   const { data: authSession } = useSession();
   const [sessions, setSessions] = useState<Session[]>([]);
