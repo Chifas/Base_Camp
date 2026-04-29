@@ -49,7 +49,7 @@ export async function sendNewReviewEmail(data: {
         professionalName: data.professionalName,
         clientName:       data.clientName,
         rating:           data.rating,
-        comment:          data.comment,
+        comment:          data.comment ?? null,
       }),
     });
   } catch (error) {

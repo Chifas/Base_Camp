@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import { motion } from "framer-motion";
 import {
   Calendar,
   Clock,
@@ -20,9 +19,10 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import type { Professional } from "@/types";
 import { CREDITS_CONFIG } from "@/lib/credits-config";
+import { gsap, useGSAP } from "@/lib/gsap-config";
 
 function addHour(time: string): string {
-  const [h, m] = time.split(":").map(Number);
+  const [h = 0, m = 0] = time.split(":").map(Number);
   return `${String(h + 1).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
@@ -37,6 +37,24 @@ export default function BookingPage() {
   const professionalId = searchParams.get("professional");
   const dateParam = searchParams.get("date");
   const timeParam = searchParams.get("time");
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useGSAP(
+    () => {
+      const root = rootRef.current;
+      if (!root) return;
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      const left = root.querySelector<HTMLElement>("[data-left]");
+      const right = root.querySelector<HTMLElement>("[data-right]");
+      const heading = root.querySelector<HTMLElement>("[data-heading]");
+
+      const tl = gsap.timeline();
+      if (heading) tl.from(heading, { y: 14, duration: 0.5, ease: "power3.out" }, 0);
+      if (left) tl.from(left, { x: -16, duration: 0.6, ease: "power3.out" }, 0.05);
+      if (right) tl.from(right, { x: 16, duration: 0.6, ease: "power3.out" }, 0.1);
+    },
+    { scope: rootRef, dependencies: [professional?.id] }
+  );
 
   useEffect(() => {
     if (!professionalId) return;
@@ -107,7 +125,7 @@ export default function BookingPage() {
   };
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+    <div ref={rootRef} className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
       {/* Back */}
       <Link
         href={`/professional/${professional.id}`}
@@ -117,18 +135,14 @@ export default function BookingPage() {
         Volver al perfil
       </Link>
 
-      <h1 className="mt-6 font-heading text-2xl font-bold sm:text-3xl">
+      <h1 data-heading className="mt-6 font-heading text-2xl font-bold sm:text-3xl">
         Confirmar reserva
       </h1>
 
       <div className="mt-8 grid gap-4 sm:gap-6 lg:gap-8 lg:grid-cols-5">
         {/* Left - Details */}
-        <div className="lg:col-span-3 space-y-6">
-          <motion.div
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="space-y-6"
-          >
+        <div data-left className="lg:col-span-3 space-y-6">
+          <div className="space-y-6">
             <div className="rounded-xl border bg-card p-6">
               <h2 className="font-heading text-lg font-semibold">
                 Detalles de la sesión
@@ -214,11 +228,11 @@ export default function BookingPage() {
                 </p>
               </div>
             )}
-          </motion.div>
+          </div>
         </div>
 
         {/* Right - Summary */}
-        <div className="lg:col-span-2">
+        <div data-right className="lg:col-span-2">
           <div className="lg:sticky lg:top-24 rounded-xl border bg-card p-6">
             <h3 className="font-heading text-lg font-semibold">Resumen</h3>
 

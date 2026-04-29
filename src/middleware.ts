@@ -2,13 +2,46 @@ import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
 import { validateOrigin } from "@/lib/csrf";
 
+// In-memory rate limiter (Edge-compatible, resets on cold start)
+type RateBucket = { count: number; resetAt: number };
+const rateBuckets = new Map<string, RateBucket>();
+
+function isRateLimited(key: string, limit: number, windowMs: number): boolean {
+  const now = Date.now();
+  const bucket = rateBuckets.get(key);
+  if (!bucket || now > bucket.resetAt) {
+    rateBuckets.set(key, { count: 1, resetAt: now + windowMs });
+    return false;
+  }
+  if (bucket.count >= limit) return true;
+  bucket.count++;
+  return false;
+}
+
+const AUTH_PATHS = ["/api/auth/register", "/api/auth/login"];
+const MUTATION_PATHS = ["/api/messages", "/api/rewards", "/api/sessions"];
+
 export default withAuth(
   function middleware(req) {
     const token = req.nextauth.token;
     const path = req.nextUrl.pathname;
+    const method = req.method.toUpperCase();
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+
+    // Rate limiting — applied before CSRF to fail fast
+    if (method === "POST") {
+      if (AUTH_PATHS.some((p) => path.startsWith(p))) {
+        if (isRateLimited(`auth:${ip}`, 5, 60_000)) {
+          return NextResponse.json({ error: "Demasiados intentos. Espera un momento." }, { status: 429 });
+        }
+      } else if (MUTATION_PATHS.some((p) => path.startsWith(p))) {
+        if (isRateLimited(`mut:${ip}`, 20, 10_000)) {
+          return NextResponse.json({ error: "Demasiadas peticiones. Espera un momento." }, { status: 429 });
+        }
+      }
+    }
 
     // CSRF protection for mutation requests on protected routes
-    const method = req.method.toUpperCase();
     if (["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
       if (!validateOrigin(req)) {
         return NextResponse.json(
@@ -36,8 +69,6 @@ export default withAuth(
   {
     callbacks: {
       authorized({ token, req }) {
-        // API routes: let middleware run for CSRF validation;
-        // each route handler manages its own auth independently
         if (req.nextUrl.pathname.startsWith("/api/")) return true;
         return !!token;
       },

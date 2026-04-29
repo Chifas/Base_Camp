@@ -33,14 +33,14 @@ export function Testimonials() {
         sectionRef.current!
       );
 
-      gsap.set(cards, { opacity: 0, y: 30 });
+      gsap.set(cards, { y: 30 });
 
       ScrollTrigger.batch(cards, {
         start: "top 88%",
         once: true,
         onEnter: (els) => {
           gsap.to(els, {
-            opacity: 1,
+
             y: 0,
             duration: 0.65,
             ease: "power3.out",
@@ -79,7 +79,6 @@ export function Testimonials() {
             <div
               key={testimonial.id}
               data-testimonial-card
-              style={{ opacity: 0 }}
               className="relative rounded-2xl border border-stone-800 bg-stone-800/60 p-7 transition-all duration-300 hover:border-stone-700 hover:bg-stone-800/80"
             >
               {/* Decorative quote mark */}

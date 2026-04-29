@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { signIn, useSession } from "next-auth/react";
 import Image from "next/image";
@@ -12,6 +12,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { registerSchema } from "@/lib/validations";
 import type { z } from "zod";
+import { gsap, useGSAP } from "@/lib/gsap-config";
 
 type RegisterFormData = z.infer<typeof registerSchema>;
 
@@ -22,6 +23,22 @@ export default function RegisterPage() {
   const [role, setRole] = useState<"CLIENT" | "PROFESSIONAL">("CLIENT");
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState("");
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useGSAP(
+    () => {
+      const root = rootRef.current;
+      if (!root) return;
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      const brand = root.querySelector<HTMLElement>("[data-brand]");
+      const form = root.querySelector<HTMLElement>("[data-form]");
+
+      const tl = gsap.timeline();
+      if (brand) tl.from(brand, { x: -32, duration: 0.7, ease: "power3.out" }, 0);
+      if (form) tl.from(form, { y: 20, duration: 0.6, ease: "power3.out" }, 0.1);
+    },
+    { scope: rootRef, dependencies: [status] }
+  );
 
   const {
     register,
@@ -85,9 +102,9 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] overflow-x-hidden">
+    <div ref={rootRef} className="flex min-h-[calc(100vh-4rem)] overflow-x-hidden">
       {/* ── Brand panel (desktop only) ── */}
-      <div className="hidden lg:flex lg:w-[45%] flex-col justify-between bg-teal-700 p-12 xl:p-16">
+      <div data-brand className="hidden lg:flex lg:w-[45%] flex-col justify-between bg-teal-700 p-12 xl:p-16">
         <Link href="/" className="flex items-center gap-2">
           <Image src="/logo.svg" alt="GuidePath" width={36} height={32} className="h-8 w-auto brightness-[10]" />
           <span className="font-display text-xl font-bold text-white">GuidePath</span>
@@ -120,7 +137,7 @@ export default function RegisterPage() {
       </div>
 
       {/* ── Form panel ── */}
-      <div className="flex flex-1 flex-col items-center justify-center px-4 py-10 sm:px-8 lg:px-16">
+      <div data-form className="flex flex-1 flex-col items-center justify-center px-4 py-10 sm:px-8 lg:px-16">
         <div className="w-full max-w-sm">
           {/* Mobile logo */}
           <div className="mb-8 lg:hidden text-center">

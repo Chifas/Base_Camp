@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { GraduationCap } from "lucide-react";
+import { GraduationCap, Target, Briefcase, Heart, Compass, Lightbulb, Quote } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { FadeIn } from "@/components/shared/motion-wrapper";
 import { prisma } from "@/lib/prisma";
 import { CATEGORY_LABELS } from "@/types";
@@ -13,6 +14,21 @@ import { ProfileHero } from "./profile-hero";
 const DAYS = [
   "Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado",
 ];
+
+const SPECIALTY_ICONS: ReadonlyArray<LucideIcon> = [Target, Briefcase, Heart, Compass, Lightbulb];
+
+function pickSpecialtyIcon(label: string): LucideIcon {
+  const idx = label.split("").reduce((acc, ch) => acc + ch.charCodeAt(0), 0) % SPECIALTY_ICONS.length;
+  return SPECIALTY_ICONS[idx] ?? Target;
+}
+
+function splitBio(bio: string): { lead: string; rest: string } {
+  const trimmed = bio.trim();
+  // Take first sentence (until first . ! ?), keep the rest. [\s\S] matches newlines too.
+  const match = trimmed.match(/^([^.!?]+[.!?])([\s\S]*)$/);
+  if (!match || !match[1]) return { lead: trimmed, rest: "" };
+  return { lead: match[1].trim(), rest: (match[2] ?? "").trim() };
+}
 
 async function getProfessional(id: string) {
   return prisma.professionalProfile.findUnique({
@@ -75,21 +91,24 @@ export default async function ProfessionalProfilePage({
 
   const reviews: Review[] = professional.sessions
     .filter((s) => s.review)
-    .map((s) => ({
-      id: s.review!.id,
-      sessionId: s.id,
-      userName: s.review!.user.name ?? "Usuario",
-      userImage: s.review!.user.image ?? "",
-      rating: s.review!.rating,
-      ratingPunctuality: s.review!.ratingPunctuality ?? undefined,
-      ratingKnowledge: s.review!.ratingKnowledge ?? undefined,
-      ratingCommunication: s.review!.ratingCommunication ?? undefined,
-      ratingValue: s.review!.ratingValue ?? undefined,
-      comment: s.review!.comment ?? "",
-      professionalResponse: s.review!.professionalResponse ?? undefined,
-      respondedAt: s.review!.respondedAt?.toISOString(),
-      createdAt: s.review!.createdAt.toISOString(),
-    }));
+    .map((s) => {
+      const r = s.review!;
+      return {
+        id: r.id,
+        sessionId: s.id,
+        userName: r.user.name ?? "Usuario",
+        userImage: r.user.image ?? "",
+        rating: r.rating,
+        ...(r.ratingPunctuality !== null ? { ratingPunctuality: r.ratingPunctuality } : {}),
+        ...(r.ratingKnowledge !== null ? { ratingKnowledge: r.ratingKnowledge } : {}),
+        ...(r.ratingCommunication !== null ? { ratingCommunication: r.ratingCommunication } : {}),
+        ...(r.ratingValue !== null ? { ratingValue: r.ratingValue } : {}),
+        comment: r.comment ?? "",
+        ...(r.professionalResponse !== null ? { professionalResponse: r.professionalResponse } : {}),
+        ...(r.respondedAt ? { respondedAt: r.respondedAt.toISOString() } : {}),
+        createdAt: r.createdAt.toISOString(),
+      };
+    });
 
   // JSON-LD structured data
   const jsonLd = {
@@ -134,15 +153,27 @@ export default async function ProfessionalProfilePage({
       <ProfileHero
         name={name}
         image={image}
+        coverImage={professional.coverImage}
         headline={headline}
         rating={professional.rating}
         reviewCount={professional.reviewCount}
         verified={professional.verified}
-        categoryLabel={CATEGORY_LABELS[category]}
-        yearsExperience={professional.yearsExperience ?? undefined}
+        categoryLabel={CATEGORY_LABELS[category] ?? category}
+        {...(professional.yearsExperience !== null ? { yearsExperience: professional.yearsExperience } : {})}
         languages={professional.languages}
         hasAvailability={professional.availability.length > 0}
       />
+
+      {/* Sticky anchor nav */}
+      <nav className="sticky top-0 z-30 -mx-4 mt-4 border-b border-stone-200 bg-background/85 px-4 py-2.5 backdrop-blur dark:border-stone-800 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+        <div className="mx-auto flex max-w-7xl gap-5 overflow-x-auto text-sm font-medium text-stone-600 dark:text-stone-400 no-scrollbar">
+          <a href="#about" className="shrink-0 hover:text-teal-600 dark:hover:text-teal-400">Sobre mí</a>
+          {headline ? <a href="#specialties" className="shrink-0 hover:text-teal-600 dark:hover:text-teal-400">Especialidades</a> : null}
+          {professional.certifications.length > 0 ? <a href="#certifications" className="shrink-0 hover:text-teal-600 dark:hover:text-teal-400">Certificaciones</a> : null}
+          <a href="#availability" className="shrink-0 hover:text-teal-600 dark:hover:text-teal-400">Disponibilidad</a>
+          <a href="#reviews" className="shrink-0 hover:text-teal-600 dark:hover:text-teal-400">Reseñas</a>
+        </div>
+      </nav>
 
       {/* Content grid */}
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
@@ -151,63 +182,105 @@ export default async function ProfessionalProfilePage({
           {/* ── Left column ── */}
           <div className="lg:col-span-2 space-y-10">
 
-            {/* Bio */}
+            {/* Bio — pull-quote style */}
             <FadeIn delay={0.1}>
-              <div>
+              <section id="about" className="scroll-mt-20">
                 <div className="flex items-center gap-2.5 mb-4">
                   <span className="h-4 w-0.5 rounded-full bg-teal-500 shrink-0" />
                   <h2 className="font-display text-xl font-bold text-stone-900 dark:text-stone-50">
                     Sobre mí
                   </h2>
                 </div>
-                <p className="text-base leading-relaxed text-stone-600 dark:text-stone-400">
-                  {bio}
-                </p>
-              </div>
+                {bio ? (
+                  (() => {
+                    const { lead, rest } = splitBio(bio);
+                    return (
+                      <div className="space-y-4">
+                        <blockquote className="relative rounded-2xl border-l-4 border-teal-500 bg-stone-50 px-5 py-4 dark:border-teal-400 dark:bg-stone-800/50">
+                          <Quote className="absolute -top-3 left-4 h-5 w-5 rounded-full bg-teal-500 p-1 text-white" aria-hidden="true" />
+                          <p className="font-display text-lg italic leading-snug text-stone-800 dark:text-stone-100 sm:text-xl">
+                            {lead}
+                          </p>
+                        </blockquote>
+                        {rest && (
+                          <p className="text-base leading-relaxed text-stone-600 dark:text-stone-400">
+                            {rest}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })()
+                ) : (
+                  <p className="text-base leading-relaxed text-stone-500 italic dark:text-stone-500">
+                    Este profesional aún no ha añadido una biografía.
+                  </p>
+                )}
+              </section>
             </FadeIn>
 
-            {/* Specialties — extracted from headline */}
-            {headline && (
-              <FadeIn delay={0.12}>
-                <div className="flex flex-wrap gap-2">
-                  {headline
-                    .split("·")
-                    .map((tag) => tag.trim())
-                    .filter(Boolean)
-                    .map((tag) => (
-                      <span
-                        key={tag}
-                        className="rounded-full bg-teal-50 dark:bg-teal-900/20 px-3 py-1 text-sm font-medium text-teal-700 dark:text-teal-300"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                </div>
-              </FadeIn>
-            )}
+            {/* Specialties — visual cards */}
+            {headline && (() => {
+              const specialties = headline
+                .split("·")
+                .map((tag) => tag.trim())
+                .filter(Boolean);
+              if (specialties.length === 0) return null;
+              return (
+                <FadeIn delay={0.12}>
+                  <section id="specialties" className="scroll-mt-20">
+                    <div className="flex items-center gap-2.5 mb-4">
+                      <span className="h-4 w-0.5 rounded-full bg-teal-500 shrink-0" />
+                      <h2 className="font-display text-xl font-bold text-stone-900 dark:text-stone-50">
+                        Especialidades
+                      </h2>
+                    </div>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      {specialties.map((tag) => {
+                        const Icon = pickSpecialtyIcon(tag);
+                        return (
+                          <div
+                            key={tag}
+                            className="group flex items-start gap-3 rounded-2xl border border-stone-200 bg-white p-4 transition-colors hover:border-teal-300 hover:bg-teal-50/40 dark:border-stone-700 dark:bg-stone-900 dark:hover:border-teal-700 dark:hover:bg-teal-900/10"
+                          >
+                            <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-100 text-teal-700 transition-colors group-hover:bg-teal-200 dark:bg-teal-900/40 dark:text-teal-300">
+                              <Icon className="h-5 w-5" />
+                            </span>
+                            <p className="mt-1 font-display font-semibold leading-tight text-stone-900 dark:text-stone-50">
+                              {tag}
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </section>
+                </FadeIn>
+              );
+            })()}
 
-            {/* Certifications */}
+            {/* Certifications — horizontal carousel */}
             {professional.certifications.length > 0 && (
               <FadeIn delay={0.14}>
-                <div>
+                <section id="certifications" className="scroll-mt-20">
                   <div className="flex items-center gap-2.5 mb-4">
                     <span className="h-4 w-0.5 rounded-full bg-teal-500 shrink-0" />
                     <h2 className="font-display text-xl font-bold text-stone-900 dark:text-stone-50">
                       Certificaciones
                     </h2>
                   </div>
-                  <div className="space-y-3">
+                  <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 no-scrollbar sm:mx-0 sm:px-0">
                     {professional.certifications.map((cert) => (
                       <div
                         key={cert.id}
-                        className="flex items-start gap-4 rounded-xl bg-stone-50 dark:bg-stone-800/50 border border-stone-200 dark:border-stone-700 p-4"
+                        className="flex w-[260px] shrink-0 snap-start items-start gap-3 rounded-2xl border border-stone-200 bg-white p-4 dark:border-stone-700 dark:bg-stone-900 sm:w-[280px]"
                       >
-                        <GraduationCap className="mt-0.5 h-5 w-5 shrink-0 text-teal-600 dark:text-teal-400" />
-                        <div>
-                          <p className="font-display font-semibold text-stone-900 dark:text-stone-50">
+                        <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300">
+                          <GraduationCap className="h-5 w-5" />
+                        </span>
+                        <div className="min-w-0">
+                          <p className="font-display font-semibold leading-tight text-stone-900 dark:text-stone-50">
                             {cert.title}
                           </p>
-                          <p className="mt-0.5 text-sm text-stone-500 dark:text-stone-400">
+                          <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">
                             {cert.institution}
                             {cert.year ? ` · ${cert.year}` : ""}
                           </p>
@@ -215,13 +288,13 @@ export default async function ProfessionalProfilePage({
                       </div>
                     ))}
                   </div>
-                </div>
+                </section>
               </FadeIn>
             )}
 
             {/* Availability */}
             <FadeIn delay={0.15}>
-              <div>
+              <section id="availability" className="scroll-mt-20">
                 <div className="flex items-center gap-2.5 mb-4">
                   <span className="h-4 w-0.5 rounded-full bg-teal-500 shrink-0" />
                   <h2 className="font-display text-xl font-bold text-stone-900 dark:text-stone-50">
@@ -272,26 +345,18 @@ export default async function ProfessionalProfilePage({
                     );
                   })}
                 </div>
-              </div>
+              </section>
             </FadeIn>
 
-            {/* Reviews */}
+            {/* Reviews — ReviewsSection provides its own header + rating summary */}
             <FadeIn delay={0.2}>
-              <div>
-                <div className="flex items-center gap-2.5 mb-4">
-                  <span className="h-4 w-0.5 rounded-full bg-teal-500 shrink-0" />
-                  <h2 className="font-display text-xl font-bold text-stone-900 dark:text-stone-50">
-                    Reseñas
-                  </h2>
-                </div>
-                <div>
-                  <ReviewsSection
-                    reviews={reviews}
-                    rating={professional.rating}
-                    reviewCount={professional.reviewCount}
-                  />
-                </div>
-              </div>
+              <section id="reviews" className="scroll-mt-20">
+                <ReviewsSection
+                  reviews={reviews}
+                  rating={professional.rating}
+                  reviewCount={professional.reviewCount}
+                />
+              </section>
             </FadeIn>
           </div>
 

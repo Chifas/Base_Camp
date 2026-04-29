@@ -3,6 +3,7 @@
 import { useMemo, useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
@@ -19,7 +20,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FadeIn } from "@/components/shared/motion-wrapper";
+import { FadeIn, StaggerContainer, StaggerItem } from "@/components/shared/motion-wrapper";
+import { DashboardHero } from "@/components/shared/dashboard-hero";
+import { Compass, CalendarClock } from "lucide-react";
 import { DashboardSkeleton } from "@/components/shared/dashboard-skeleton";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PhotoUpload } from "@/components/shared/photo-upload";
@@ -91,7 +94,14 @@ const CATEGORY_LABELS_REVIEW = {
   ratingValue: "Satisfacción general",
 } as const;
 
+const CLIENT_TABS = ["upcoming", "history", "referrals"] as const;
+type ClientTab = typeof CLIENT_TABS[number];
+
 export default function ClientDashboard() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const activeTab = (CLIENT_TABS.includes(searchParams.get("tab") as ClientTab) ? searchParams.get("tab") : "upcoming") as ClientTab;
+
   const { data: authSession } = useSession();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loadingSessions, setLoadingSessions] = useState(true);
@@ -206,35 +216,55 @@ export default function ClientDashboard() {
       <OnboardingTour storageKey="guidepath_tour_client_v1" steps={CLIENT_TOUR_STEPS} />
 
       <FadeIn>
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="font-display text-2xl font-bold sm:text-3xl text-stone-900 dark:text-stone-50">
-              Mi Panel
-            </h1>
-            <p className="mt-1 text-stone-500 dark:text-stone-400">
-              Gestiona tus sesiones y revisa tu historial.
-            </p>
-          </div>
-          <Button asChild data-tour="new-session-btn">
-            <Link href="/explore">
-              Nueva sesión
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
-          </Button>
-        </div>
+        {(() => {
+          // Skip honorific titles like "Dra.", "Dr.", "Sr.", "Sra." when picking the first name.
+          const tokens = (authSession?.user?.name ?? "").split(" ").filter(Boolean);
+          const firstName = (tokens.find((t) => !t.endsWith(".")) ?? tokens[0] ?? "");
+          const remaining = credits?.remaining ?? CREDITS_CONFIG.FREE_SESSIONS_PER_MONTH;
+          const limit = credits?.limit ?? CREDITS_CONFIG.FREE_SESSIONS_PER_MONTH;
+          const next = upcomingSessions
+            .slice()
+            .sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime())[0];
+          const nextLabel = next
+            ? new Date(next.scheduledAt).toLocaleDateString("es-ES", {
+                day: "numeric",
+                month: "short",
+                hour: "2-digit",
+                minute: "2-digit",
+              })
+            : "Sin sesiones";
+          return (
+            <DashboardHero
+              name={authSession?.user?.name ?? "Cliente"}
+              avatar={authSession?.user?.image ?? null}
+              greeting={firstName ? `Hola, ${firstName} 👋` : "Hola 👋"}
+              subtitle={
+                remaining > 0
+                  ? `Tienes ${remaining} de ${limit} sesiones gratuitas disponibles este mes.`
+                  : `Has usado tus ${limit} sesiones de este mes. Se renuevan el 1 del próximo mes.`
+              }
+              primaryAction={{ label: "Explorar profesionales", href: "/explore", icon: Compass }}
+              featuredMetric={{
+                label: "Próxima sesión",
+                value: nextLabel,
+                icon: CalendarClock,
+                accent: "teal",
+              }}
+            />
+          );
+        })()}
       </FadeIn>
 
       {/* Stats */}
-      <FadeIn delay={0.1}>
-        <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
-          {[
-            { label: "Sesiones disponibles", value: credits ? `${credits.remaining}/${credits.limit}` : `—/${CREDITS_CONFIG.FREE_SESSIONS_PER_MONTH}`, icon: Calendar, tourAttr: "credits-stat", accent: "text-teal-600 dark:text-teal-400", iconBg: "bg-teal-100 dark:bg-teal-900/30" },
-            { label: "Sesiones completadas", value: pastSessions.filter((s) => s.status === "COMPLETED").length.toString(), icon: Clock, tourAttr: undefined, accent: "text-stone-700 dark:text-stone-300", iconBg: "bg-stone-100 dark:bg-stone-800" },
-            { label: "Próximas sesiones", value: upcomingSessions.length.toString(), icon: Star, tourAttr: undefined, accent: "text-amber-600 dark:text-amber-400", iconBg: "bg-amber-100 dark:bg-amber-900/30" },
-            { label: "Reseñas dejadas", value: reviewedSessionIds.size.toString(), icon: MessageSquare, tourAttr: undefined, accent: "text-stone-700 dark:text-stone-300", iconBg: "bg-stone-100 dark:bg-stone-800" },
-          ].map((stat) => (
+      <StaggerContainer className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4" delay={0.1}>
+        {[
+          { label: "Sesiones disponibles", value: credits ? `${credits.remaining}/${credits.limit}` : `—/${CREDITS_CONFIG.FREE_SESSIONS_PER_MONTH}`, icon: Calendar, tourAttr: "credits-stat", accent: "text-teal-600 dark:text-teal-400", iconBg: "bg-teal-100 dark:bg-teal-900/30" },
+          { label: "Sesiones completadas", value: pastSessions.filter((s) => s.status === "COMPLETED").length.toString(), icon: Clock, tourAttr: undefined, accent: "text-stone-700 dark:text-stone-300", iconBg: "bg-stone-100 dark:bg-stone-800" },
+          { label: "Próximas sesiones", value: upcomingSessions.length.toString(), icon: Star, tourAttr: undefined, accent: "text-amber-600 dark:text-amber-400", iconBg: "bg-amber-100 dark:bg-amber-900/30" },
+          { label: "Reseñas dejadas", value: reviewedSessionIds.size.toString(), icon: MessageSquare, tourAttr: undefined, accent: "text-stone-700 dark:text-stone-300", iconBg: "bg-stone-100 dark:bg-stone-800" },
+        ].map((stat) => (
+          <StaggerItem key={stat.label}>
             <div
-              key={stat.label}
               className="rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 p-4"
               {...(stat.tourAttr ? { "data-tour": stat.tourAttr } : {})}
             >
@@ -246,13 +276,17 @@ export default function ClientDashboard() {
               </p>
               <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">{stat.label}</p>
             </div>
-          ))}
-        </div>
-      </FadeIn>
+          </StaggerItem>
+        ))}
+      </StaggerContainer>
 
       {/* Sessions tabs */}
       <FadeIn delay={0.2}>
-        <Tabs defaultValue="upcoming" className="mt-8">
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => router.replace(`?tab=${v}`, { scroll: false })}
+          className="mt-8"
+        >
           <div data-tour="dashboard-tabs" className="overflow-x-auto">
             <TabsList className="w-max">
               <TabsTrigger value="upcoming">

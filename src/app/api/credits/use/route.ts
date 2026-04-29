@@ -36,7 +36,7 @@ export async function POST(req: Request) {
     const parsed = bookSessionSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: parsed.error.errors[0].message },
+        { error: parsed.error.errors[0]?.message ?? "Error de validación" },
         { status: 400 }
       );
     }
@@ -148,7 +148,7 @@ export async function POST(req: Request) {
           freeCreditsUsed: currentUsed + 1,
           creditsResetAt: currentUsed === 0 && (!resetAt || resetAt.getMonth() !== now.getMonth())
             ? now
-            : undefined,
+            : null,
         },
       });
 

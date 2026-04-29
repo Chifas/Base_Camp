@@ -88,7 +88,6 @@ export function Navbar() {
   return (
     <header
       ref={headerRef}
-      style={{ opacity: 0 }}
       className="sticky top-0 z-50 w-full border-b border-transparent transition-[background-color,backdrop-filter,border-color,box-shadow] duration-300"
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">

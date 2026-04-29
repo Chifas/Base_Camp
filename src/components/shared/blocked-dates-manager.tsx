@@ -276,7 +276,7 @@ export function BlockedDatesManager() {
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8 text-red-500 hover:text-red-600"
-                  onClick={() => handleDayClick(b.date.split("T")[0])}
+                  onClick={() => handleDayClick(b.date.split("T")[0] ?? b.date)}
                   disabled={saving}
                 >
                   <Trash2 className="h-4 w-4" />

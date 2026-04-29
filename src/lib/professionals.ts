@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/prisma";
 import type { Professional } from "@/types";
-import { CATEGORY_LABELS } from "@/types";
 
 /**
  * Fetch and score professionals for the landing page featured section.
@@ -8,14 +7,18 @@ import { CATEGORY_LABELS } from "@/types";
  */
 export async function getFeaturedProfessionals(limit = 4): Promise<Professional[]> {
   try {
-    const professionals = await prisma.professionalProfile.findMany({
-      include: {
-        user: { select: { id: true, name: true, image: true, bio: true } },
-        availability: true,
-      },
-      orderBy: [{ rating: "desc" }, { reviewCount: "desc" }],
-      take: limit * 2, // fetch extra candidates for scoring
-    });
+    const [professionals, categories] = await Promise.all([
+      prisma.professionalProfile.findMany({
+        include: {
+          user: { select: { id: true, name: true, image: true, bio: true } },
+          availability: true,
+        },
+        orderBy: [{ rating: "desc" }, { reviewCount: "desc" }],
+        take: limit * 2,
+      }),
+      prisma.category.findMany({ select: { id: true, name: true } }),
+    ]);
+    const categoryMap = Object.fromEntries(categories.map((c) => [c.id, c.name]));
 
     // Score-based sort with daily rotation
     const dayOfYear = Math.floor(Date.now() / 86400000);
@@ -38,7 +41,7 @@ export async function getFeaturedProfessionals(limit = 4): Promise<Professional[
       bio: p.user.bio ?? "",
       headline: p.headline ?? "",
       category: p.category as Professional["category"],
-      categoryName: CATEGORY_LABELS[p.category as Professional["category"]] ?? p.category,
+      categoryName: categoryMap[p.category] ?? p.category,
       hourlyRate: p.hourlyRate,
       rating: p.rating,
       reviewCount: p.reviewCount,

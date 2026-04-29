@@ -47,13 +47,13 @@ function getCoverColor(name: string): string {
   const index =
     name.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0) %
     colors.length;
-  return colors[index];
+  return colors[index] ?? "bg-indigo-100";
 }
 
 function getInitials(name: string) {
   return name
     .split(" ")
-    .map((n) => n[0])
+    .map((n) => n[0] ?? "")
     .slice(0, 2)
     .join("")
     .toUpperCase();
@@ -69,8 +69,9 @@ function getNextAvailability(availability: Professional["availability"]) {
     return da - db;
   });
   const next = sorted[0];
+  if (!next) return null;
   const diff = (next.dayOfWeek - today + 7) % 7;
-  const label = diff === 0 ? "Hoy" : diff === 1 ? "Mañana" : days[next.dayOfWeek];
+  const label = diff === 0 ? "Hoy" : diff === 1 ? "Mañana" : (days[next.dayOfWeek] ?? "");
   return `${label} ${next.startTime}`;
 }
 
@@ -309,7 +310,7 @@ export default function ExplorePage() {
             const isAvailableToday = nextSlot?.startsWith("Hoy");
 
             return (
-              <div key={pro.id} data-pro-card style={{ opacity: 0 }}>
+              <div key={pro.id} data-pro-card>
                 <Link href={`/professional/${pro.id}`} className="group block h-full">
                   <div className="h-full overflow-hidden rounded-2xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 transition-all duration-300 group-hover:shadow-xl group-hover:-translate-y-1.5">
 

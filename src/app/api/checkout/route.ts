@@ -26,7 +26,7 @@ export async function POST(req: Request) {
     const parsed = checkoutSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: parsed.error.errors[0].message },
+        { error: parsed.error.errors[0]?.message ?? "Error de validación" },
         { status: 400 }
       );
     }
@@ -47,7 +47,7 @@ export async function POST(req: Request) {
     }
 
     // Build scheduled date
-    const [hours, minutes] = time.split(":").map(Number);
+    const [hours = 0, minutes = 0] = time.split(":").map(Number);
     const scheduledAt = new Date(date);
     scheduledAt.setHours(hours, minutes, 0, 0);
 

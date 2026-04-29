@@ -40,7 +40,7 @@ export async function POST() {
           transfers: { requested: true },
         },
         business_profile: {
-          name: profile.user.name ?? undefined,
+          ...(profile.user.name ? { name: profile.user.name } : {}),
           product_description: "Sesiones de mentoría y coaching profesional",
         },
       });

@@ -2,14 +2,6 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { logger } from "@/lib/logger";
 
-/**
- * GET /api/cron/session-cleanup — clean up stale sessions.
- *
- * 1. Cancels PENDING sessions older than 24 hours (never confirmed).
- * 2. Cancels CONFIRMED sessions past due by 4+ hours (never completed).
- *
- * Protected by CRON_SECRET header.
- */
 export async function GET(req: Request) {
   const cronSecret =
     req.headers.get("x-cron-secret") ||
@@ -22,44 +14,54 @@ export async function GET(req: Request) {
   try {
     const now = new Date();
 
-    // 1. Cancel PENDING sessions older than 24 hours (expired, never confirmed)
+    // 1. Cancel PENDING sessions older than 24 hours
     const expiredCutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-    const expiredResult = await prisma.session.updateMany({
-      where: {
-        status: "PENDING",
-        scheduledAt: { lt: expiredCutoff },
-      },
-      data: {
-        status: "CANCELLED",
-        cancelledAt: now,
-        cancelledBy: "system",
-      },
+    const expiredSessions = await prisma.session.findMany({
+      where: { status: "PENDING", scheduledAt: { lt: expiredCutoff } },
+      select: { id: true, clientId: true, professional: { select: { userId: true } } },
     });
 
-    // 2. Cancel CONFIRMED sessions that are past due (scheduledAt + 4h grace passed)
+    if (expiredSessions.length > 0) {
+      await prisma.session.updateMany({
+        where: { id: { in: expiredSessions.map((s) => s.id) } },
+        data: { status: "CANCELLED", cancelledAt: now, cancelledBy: "system" },
+      });
+
+      await prisma.notification.createMany({
+        data: expiredSessions.flatMap((s) => [
+          { userId: s.clientId, type: "SESSION_CANCELLED" as const, title: "Sesión cancelada", message: "Tu sesión pendiente ha sido cancelada automáticamente por inactividad.", link: "/dashboard/client" },
+          { userId: s.professional.userId, type: "SESSION_CANCELLED" as const, title: "Sesión cancelada", message: "Una sesión pendiente ha sido cancelada automáticamente por inactividad.", link: "/dashboard/professional" },
+        ]),
+      });
+    }
+
+    // 2. Cancel CONFIRMED sessions past due by 4+ hours
     const pastDueCutoff = new Date(now.getTime() - 4 * 60 * 60 * 1000);
-    const pastDueResult = await prisma.session.updateMany({
-      where: {
-        status: "CONFIRMED",
-        scheduledAt: { lt: pastDueCutoff },
-      },
-      data: {
-        status: "CANCELLED",
-        cancelledAt: now,
-        cancelledBy: "system",
-      },
+    const pastDueSessions = await prisma.session.findMany({
+      where: { status: "CONFIRMED", scheduledAt: { lt: pastDueCutoff } },
+      select: { id: true, clientId: true, professional: { select: { userId: true } } },
     });
 
-    logger.info("Session cleanup completed", {
-      expiredCancelled: expiredResult.count,
-      pastDueCancelled: pastDueResult.count,
-    });
+    if (pastDueSessions.length > 0) {
+      await prisma.session.updateMany({
+        where: { id: { in: pastDueSessions.map((s) => s.id) } },
+        data: { status: "CANCELLED", cancelledAt: now, cancelledBy: "system" },
+      });
 
-    return NextResponse.json({
-      success: true,
-      expiredCancelled: expiredResult.count,
-      pastDueCancelled: pastDueResult.count,
-    });
+      await prisma.notification.createMany({
+        data: pastDueSessions.flatMap((s) => [
+          { userId: s.clientId, type: "SESSION_CANCELLED" as const, title: "Sesión cancelada", message: "Tu sesión confirmada ha vencido y ha sido cancelada automáticamente.", link: "/dashboard/client" },
+          { userId: s.professional.userId, type: "SESSION_CANCELLED" as const, title: "Sesión cancelada", message: "Una sesión confirmada ha vencido y ha sido cancelada automáticamente.", link: "/dashboard/professional" },
+        ]),
+      });
+    }
+
+    const expiredCancelled = expiredSessions.length;
+    const pastDueCancelled = pastDueSessions.length;
+
+    logger.info("Session cleanup completed", { expiredCancelled, pastDueCancelled });
+
+    return NextResponse.json({ success: true, expiredCancelled, pastDueCancelled });
   } catch (error) {
     logger.error("Session cleanup failed", { error: String(error) });
     return NextResponse.json({ error: "Error en limpieza de sesiones" }, { status: 500 });

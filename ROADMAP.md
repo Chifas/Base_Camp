@@ -1,6 +1,6 @@
 # GuidePath — Roadmap de Mejoras
 
-> **Última actualización:** 2026-04-21
+> **Última actualización:** 2026-04-23 (v0.6.0)
 > Modelo: Freemium (3 sesiones gratis/mes, impact points para profesionales)
 >
 > Para marcar un ítem como completado, cambia `[ ]` por `[x]` y haz commit.
@@ -236,4 +236,4 @@ Mejoras identificadas y completadas durante la auditoría del codebase.
 
 ---
 
-*Última actualización: Abril 2026*
+*Última actualización: 23 de abril de 2026 (v0.6.0)*

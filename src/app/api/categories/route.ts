@@ -1,16 +1,13 @@
 import { NextResponse } from "next/server";
-
-/**
- * Categories derived from the ProfessionalCategory enum in the Prisma schema.
- * Returned as objects with id, name, and slug for the frontend selects.
- */
-const CATEGORIES = [
-  { id: "CAREER_MENTOR", name: "Mentor de Carrera", slug: "career-mentor" },
-  { id: "COACH", name: "Coach Ejecutivo", slug: "coach" },
-  { id: "PSYCHOLOGIST", name: "Psicólogo Laboral", slug: "psychologist" },
-  { id: "NUTRITIONIST", name: "Nutricionista", slug: "nutritionist" },
-];
+import { prisma } from "@/lib/prisma";
 
 export async function GET() {
-  return NextResponse.json(CATEGORIES);
+  try {
+    const categories = await prisma.category.findMany({
+      orderBy: { name: "asc" },
+    });
+    return NextResponse.json(categories);
+  } catch {
+    return NextResponse.json({ error: "Error al obtener categorías" }, { status: 500 });
+  }
 }

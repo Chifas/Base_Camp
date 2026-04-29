@@ -7,14 +7,6 @@ import { createProfessionalProfileSchema, updateProfessionalProfileSchema } from
 import { stripHtml } from "@/lib/sanitize";
 import { logger } from "@/lib/logger";
 
-/** Map enum values to human-readable names */
-const CATEGORY_LABELS: Record<string, { name: string; slug: string }> = {
-  CAREER_MENTOR: { name: "Mentor de Carrera", slug: "career-mentor" },
-  COACH: { name: "Coach Ejecutivo", slug: "coach" },
-  PSYCHOLOGIST: { name: "Psicólogo Laboral", slug: "psychologist" },
-  NUTRITIONIST: { name: "Nutricionista", slug: "nutritionist" },
-};
-
 // GET /api/professionals/me — get own professional profile
 export async function GET() {
   try {
@@ -35,7 +27,7 @@ export async function GET() {
       return NextResponse.json({ error: "Perfil no encontrado", hasProfile: false }, { status: 404 });
     }
 
-    const catInfo = CATEGORY_LABELS[profile.category] ?? { name: profile.category, slug: profile.category.toLowerCase() };
+    const catRow = await prisma.category.findUnique({ where: { id: profile.category }, select: { name: true, slug: true } });
 
     return NextResponse.json({
       id: profile.id,
@@ -45,14 +37,15 @@ export async function GET() {
       reviewCount: profile.reviewCount,
       verified: profile.verified,
       category: profile.category,
-      categoryName: catInfo.name,
-      categorySlug: catInfo.slug,
+      categoryName: catRow?.name ?? profile.category,
+      categorySlug: catRow?.slug ?? profile.category.toLowerCase(),
       name: profile.user.name,
       email: profile.user.email,
       image: profile.user.image,
       bio: profile.user.bio,
       languages: profile.languages,
       yearsExperience: profile.yearsExperience,
+      coverImage: profile.coverImage,
       availability: profile.availability,
       hasProfile: true,
     });
@@ -82,7 +75,7 @@ export async function POST(req: Request) {
     const parsed = createProfessionalProfileSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: parsed.error.errors[0].message },
+        { error: parsed.error.errors[0]?.message ?? "Error de validación" },
         { status: 400 }
       );
     }
@@ -146,12 +139,12 @@ export async function PUT(req: Request) {
     const parsed = updateProfessionalProfileSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: parsed.error.errors[0].message },
+        { error: parsed.error.errors[0]?.message ?? "Error de validación" },
         { status: 400 }
       );
     }
 
-    const { category, headline, hourlyRate, bio, languages, yearsExperience } = parsed.data;
+    const { category, headline, hourlyRate, bio, languages, yearsExperience, coverImage } = parsed.data;
 
     const updated = await prisma.$transaction(async (tx) => {
       // Update user bio if provided
@@ -169,6 +162,7 @@ export async function PUT(req: Request) {
       if (hourlyRate !== undefined) profileData.hourlyRate = hourlyRate;
       if (languages !== undefined) profileData.languages = languages;
       if (yearsExperience !== undefined) profileData.yearsExperience = yearsExperience;
+      if (coverImage !== undefined) profileData.coverImage = coverImage;
 
       if (Object.keys(profileData).length > 0) {
         return tx.professionalProfile.update({

@@ -50,14 +50,13 @@ export function Categories() {
 
       const cards = gsap.utils.toArray<HTMLElement>("[data-cat-card]", sectionRef.current!);
 
-      gsap.set(cards, { opacity: 0, y: 24 });
+      gsap.set(cards, { y: 24 });
 
       ScrollTrigger.batch(cards, {
         start: "top 88%",
         once: true,
         onEnter: (els) => {
           gsap.to(els, {
-            opacity: 1,
             y: 0,
             duration: 0.7,
             ease: "power3.out",
@@ -86,7 +85,7 @@ export function Categories() {
 
         <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {categories.map((cat) => (
-            <div key={cat.slug} data-cat-card style={{ opacity: 0 }}>
+            <div key={cat.slug} data-cat-card>
               <Link href={`/explore?category=${cat.slug}`} className="group block h-full">
                 <div className="relative h-full rounded-2xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
                   {/* Icon */}

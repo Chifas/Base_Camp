@@ -31,23 +31,25 @@ export function Hero() {
       const trust   = s.querySelector<HTMLElement>("[data-trust]");
       const cards   = cardsRef.current;
 
-      gsap.set([badge, heading, sub, btns, social, trust], { opacity: 0 });
+      // CSS (@keyframes hero-fade-in in globals.css) handles opacity so the
+      // hero is always visible even if GSAP fails.  GSAP drives only the
+      // Y / X slide-in transforms — a polish layer on top.
       gsap.set(badge,   { y: -10 });
       gsap.set(heading, { y: 40 });
       gsap.set(sub,     { y: 20 });
       gsap.set(btns,    { y: 20 });
       gsap.set(social,  { y: 16 });
       gsap.set(trust,   { y: 12 });
-      if (cards) gsap.set(cards, { opacity: 0, x: 40 });
+      if (cards) gsap.set(cards, { x: 40 });
 
-      const tl = gsap.timeline({ delay: 0.1 });
-      tl.to(badge,   { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" })
-        .to(heading, { opacity: 1, y: 0, duration: 0.8, ease: "power3.out" }, "-=0.25")
-        .to(sub,     { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, "-=0.5")
-        .to(btns,    { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, "-=0.45")
-        .to(social,  { opacity: 1, y: 0, duration: 0.55, ease: "power3.out" }, "-=0.4")
-        .to(trust,   { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, "-=0.35")
-        .to(cards ?? [], { opacity: 1, x: 0, duration: 0.9, ease: "power3.out" }, "-=0.65");
+      const tl = gsap.timeline();
+      tl.to(badge,       { y: 0, duration: 0.5,  ease: "power3.out" })
+        .to(heading,     { y: 0, duration: 0.8,  ease: "power3.out" }, "-=0.25")
+        .to(sub,         { y: 0, duration: 0.6,  ease: "power3.out" }, "-=0.5")
+        .to(btns,        { y: 0, duration: 0.6,  ease: "power3.out" }, "-=0.45")
+        .to(social,      { y: 0, duration: 0.55, ease: "power3.out" }, "-=0.4")
+        .to(trust,       { y: 0, duration: 0.5,  ease: "power3.out" }, "-=0.35")
+        .to(cards ?? [], { x: 0, duration: 0.9,  ease: "power3.out" }, "-=0.65");
     },
     { scope: sectionRef }
   );
@@ -55,7 +57,7 @@ export function Hero() {
   return (
     <section
       ref={sectionRef}
-      className="relative min-h-[90vh] overflow-hidden bg-gradient-to-br from-stone-50 via-white to-teal-50/30 dark:from-stone-950 dark:via-stone-900 dark:to-teal-950/20"
+      className="hero-section relative min-h-[90vh] overflow-hidden bg-gradient-to-br from-stone-50 via-white to-teal-50/30 dark:from-stone-950 dark:via-stone-900 dark:to-teal-950/20"
     >
       {/* Subtle dot grid */}
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,#0d737718_1px,transparent_1px)] [background-size:28px_28px]" />
@@ -65,7 +67,7 @@ export function Hero() {
         {/* ── Left column ── */}
         <div className="md:col-span-3">
           {/* Badge */}
-          <div data-badge style={{ opacity: 0 }}>
+          <div data-badge>
             <span className="mb-6 inline-flex items-center gap-2 rounded-full bg-teal-100 px-4 py-1.5 text-sm font-medium text-teal-700 dark:bg-teal-900/40 dark:text-teal-300">
               ✦ Expertos verificados en España
             </span>
@@ -74,7 +76,6 @@ export function Hero() {
           {/* Heading */}
           <h1
             data-heading
-            style={{ opacity: 0 }}
             className="font-display font-extrabold tracking-tight text-[clamp(2.25rem,5vw,3.5rem)] leading-[1.1] text-stone-900 dark:text-stone-50"
           >
             Encuentra el mentor<br />
@@ -85,7 +86,6 @@ export function Hero() {
           {/* Subheading */}
           <p
             data-sub
-            style={{ opacity: 0 }}
             className="mt-5 max-w-lg text-lg text-stone-600 dark:text-stone-400 leading-relaxed"
           >
             Coaches ejecutivos, mentores de carrera y psicólogos laborales certificados.
@@ -96,7 +96,7 @@ export function Hero() {
           </p>
 
           {/* Buttons */}
-          <div data-btns style={{ opacity: 0 }} className="mt-8 flex flex-col gap-3 sm:flex-row">
+          <div data-btns className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Button
               size="lg"
               className="group h-12 px-7 text-base font-display font-semibold bg-teal-700 text-white hover:bg-teal-800 shadow-md shadow-teal-700/20 transition-all duration-200 hover:scale-[1.02] active:scale-[0.99]"
@@ -118,7 +118,7 @@ export function Hero() {
           </div>
 
           {/* Social proof */}
-          <div data-social style={{ opacity: 0 }} className="mt-8 flex items-center gap-4">
+          <div data-social className="mt-8 flex items-center gap-4">
             <div className="flex -space-x-2.5">
               {AVATARS.map(({ initials, bg }) => (
                 <div
@@ -143,7 +143,7 @@ export function Hero() {
           </div>
 
           {/* Microtrust */}
-          <div data-trust style={{ opacity: 0 }} className="mt-5 flex flex-wrap gap-x-5 gap-y-1.5">
+          <div data-trust className="mt-5 flex flex-wrap gap-x-5 gap-y-1.5">
             {["Sin tarjeta de crédito", "3 sesiones gratis al mes", "Cancela cuando quieras"].map((t) => (
               <span key={t} className="flex items-center gap-1.5 text-xs text-stone-500 dark:text-stone-400">
                 <CheckCircle2 className="h-3.5 w-3.5 text-teal-600 shrink-0" />
@@ -156,8 +156,7 @@ export function Hero() {
         {/* ── Right column — mock floating cards ── */}
         <div
           ref={cardsRef}
-          style={{ opacity: 0 }}
-          className="relative hidden md:col-span-2 md:flex md:items-center md:justify-center"
+          className="hero-cards relative hidden md:col-span-2 md:flex md:items-center md:justify-center"
         >
           {/* Back card */}
           <div

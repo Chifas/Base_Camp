@@ -35,9 +35,8 @@ export function FadeIn({
     const offset = directionMap[direction];
     gsap.fromTo(
       el,
-      { opacity: 0, ...offset },
+      { ...offset },
       {
-        opacity: 1,
         x: 0,
         y: 0,
         duration,
@@ -49,7 +48,7 @@ export function FadeIn({
   }, { scope: ref });
 
   return (
-    <div ref={ref} className={className} style={{ opacity: 0 }}>
+    <div ref={ref} className={className}>
       {children}
     </div>
   );
@@ -72,23 +71,20 @@ export function StaggerContainer({
     const items = gsap.utils.toArray<HTMLElement>("[data-stagger-item]", ref.current!);
     if (!items.length) return;
 
+    gsap.set(items, { y: 36, scale: 0.96 });
+
     ScrollTrigger.batch(items, {
       start: "top 86%",
       once: true,
       onEnter: (els) => {
-        gsap.fromTo(
-          els,
-          { opacity: 0, y: 36, scale: 0.96 },
-          {
-            opacity: 1,
-            y: 0,
-            scale: 1,
-            duration: 0.7,
-            ease: "expo.out",
-            stagger: 0.1,
-            delay,
-          }
-        );
+        gsap.to(els, {
+          y: 0,
+          scale: 1,
+          duration: 0.7,
+          ease: "expo.out",
+          stagger: 0.1,
+          delay,
+        });
       },
     });
   }, { scope: ref });
@@ -108,7 +104,7 @@ export function StaggerItem({
   className?: string;
 }) {
   return (
-    <div data-stagger-item className={className} style={{ opacity: 0 }}>
+    <div data-stagger-item className={className}>
       {children}
     </div>
   );
@@ -130,9 +126,8 @@ export function ScaleIn({
   useGSAP(() => {
     gsap.fromTo(
       ref.current,
-      { opacity: 0, scale: 0.9 },
+      { scale: 0.9 },
       {
-        opacity: 1,
         scale: 1,
         duration: 0.8,
         delay,
@@ -143,7 +138,7 @@ export function ScaleIn({
   }, { scope: ref });
 
   return (
-    <div ref={ref} className={className} style={{ opacity: 0 }}>
+    <div ref={ref} className={className}>
       {children}
     </div>
   );

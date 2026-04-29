@@ -1,5 +1,13 @@
+const isDev = process.env.NODE_ENV !== "production";
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Disabled to prevent GSAP double-invocation issues in dev.
+  // React Strict Mode mounts → cleans up → remounts every effect, which
+  // causes GSAP timelines and ScrollTrigger instances to run twice and
+  // leave animations in a broken state. Production (Vercel) doesn't have
+  // this problem because Strict Mode is a dev-only feature.
+  reactStrictMode: false,
   images: {
     remotePatterns: [
       {
@@ -40,7 +48,7 @@ const nextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' https://js.stripe.com https://cdn.vercel-insights.com",
+              `script-src 'self' 'unsafe-inline' ${isDev ? "'unsafe-eval'" : ""} https://js.stripe.com https://cdn.vercel-insights.com`,
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob: https://images.unsplash.com https://lh3.googleusercontent.com https://res.cloudinary.com",
               "font-src 'self'",

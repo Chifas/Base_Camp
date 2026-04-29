@@ -52,7 +52,7 @@ Configurar en `vercel.json` los cron jobs con el header `Authorization: Bearer $
   "crons": [
     { "path": "/api/cron/session-reminders", "schedule": "0 8 * * *" },
     { "path": "/api/cron/session-cleanup", "schedule": "0 2 * * *" },
-    { "path": "/api/cron/onboarding-emails", "schedule": "0 10 * * 1" }
+    { "path": "/api/cron/onboarding-emails", "schedule": "0 10 * * *" }
   ]
 }
 ```

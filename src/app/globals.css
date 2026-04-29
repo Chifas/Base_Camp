@@ -76,6 +76,12 @@
   * {
     @apply border-border;
   }
+  /* Safety net: never allow horizontal scroll on the document.
+     Individual horizontal scrollers (carousels, tab strips) opt in
+     locally via overflow-x-auto on their own container. */
+  html, body {
+    overflow-x: hidden;
+  }
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
@@ -200,4 +206,23 @@ html {
 
 h1, h2, h3 {
   text-wrap: balance;
+}
+
+/* ── Hero entrance animations (CSS-native, no GSAP dependency) ─────────────
+   Opacity is handled here so content is always visible even if GSAP fails.
+   GSAP handles only Y/X transforms (slide-in polish layer).
+   The .hero-section scope prevents leaking to other pages.            ── */
+@keyframes hero-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-section [data-badge]   { animation: hero-fade-in 0.5s  ease-out 0s     both; }
+  .hero-section [data-heading] { animation: hero-fade-in 0.8s  ease-out 0.2s   both; }
+  .hero-section [data-sub]     { animation: hero-fade-in 0.6s  ease-out 0.45s  both; }
+  .hero-section [data-btns]    { animation: hero-fade-in 0.6s  ease-out 0.55s  both; }
+  .hero-section [data-social]  { animation: hero-fade-in 0.55s ease-out 0.65s  both; }
+  .hero-section [data-trust]   { animation: hero-fade-in 0.5s  ease-out 0.75s  both; }
+  .hero-section .hero-cards    { animation: hero-fade-in 0.9s  ease-out 0.95s  both; }
 }

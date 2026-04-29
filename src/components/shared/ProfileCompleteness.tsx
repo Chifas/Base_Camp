@@ -1,8 +1,29 @@
 "use client";
 
-import { useMemo } from "react";
+/**
+ * ProfileCompleteness — onboarding progress card for professionals.
+ *
+ * Customisable via the constants at the top of this file:
+ *   - STEPS_CONFIG : the checklist (label, weight, deep-link href)
+ *   - MILESTONES   : motivational copy by progress threshold
+ *   - ACCENT       : color tokens for the card chrome
+ *
+ * Updating those should be enough for most visual / copy tweaks.
+ */
+
+import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, Circle, AlertTriangle } from "lucide-react";
+import {
+  CheckCircle2,
+  Circle,
+  ChevronDown,
+  ChevronUp,
+  ArrowRight,
+  Sparkles,
+} from "lucide-react";
+import { gsap, useGSAP } from "@/lib/gsap-config";
+
+// ─── Customisation ──────────────────────────────────────────────────────────
 
 interface ProfileData {
   headline?: string | null;
@@ -14,81 +35,249 @@ interface ProfileData {
   availability?: unknown[];
 }
 
-interface Step {
+type StepKey =
+  | "category"
+  | "headline"
+  | "bio"
+  | "image"
+  | "availability"
+  | "languages"
+  | "yearsExperience";
+
+interface StepConfig {
+  key: StepKey;
   label: string;
-  done: boolean;
-  href?: string;
+  /** Relative weight when computing percentage. */
+  weight: number;
+  /** Deep-link to the dashboard tab where this step is completed. */
+  href: string;
 }
 
+const STEPS_CONFIG: ReadonlyArray<StepConfig> = [
+  { key: "category",        label: "Categoría profesional",  weight: 15, href: "/dashboard/professional?tab=profile" },
+  { key: "headline",        label: "Titular profesional",    weight: 15, href: "/dashboard/professional?tab=profile" },
+  { key: "bio",             label: "Biografía",              weight: 20, href: "/dashboard/professional?tab=profile" },
+  { key: "image",           label: "Foto de perfil",         weight: 15, href: "/dashboard/professional?tab=profile" },
+  { key: "availability",    label: "Disponibilidad",         weight: 15, href: "/dashboard/professional?tab=availability" },
+  { key: "languages",       label: "Idiomas",                weight: 10, href: "/dashboard/professional?tab=profile" },
+  { key: "yearsExperience", label: "Años de experiencia",    weight: 10, href: "/dashboard/professional?tab=profile" },
+];
+
+const MILESTONES = [
+  { threshold: 40,  emoji: "🚀", title: "Empieza aquí",      message: "Completa los pasos esenciales para empezar a aparecer en búsquedas." },
+  { threshold: 80,  emoji: "✨", title: "Vas muy bien",      message: "Casi todo listo. Cada paso extra mejora tu visibilidad." },
+  { threshold: 99,  emoji: "💪", title: "Último empujón",    message: "Solo te falta un detalle para tener un perfil 100% optimizado." },
+] as const;
+
+const ACCENT = {
+  bgGradient:
+    "bg-gradient-to-br from-teal-50 via-white to-emerald-50 dark:from-teal-950/30 dark:via-stone-950 dark:to-emerald-950/20",
+  border:    "border-teal-100 dark:border-teal-900/40",
+  ring:      "stroke-teal-500 dark:stroke-teal-400",
+  ringTrack: "stroke-stone-200 dark:stroke-stone-800",
+  text:      "text-teal-700 dark:text-teal-300",
+  cta:       "bg-teal-600 hover:bg-teal-700 text-white",
+};
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
+function isStepDone(key: StepKey, profile: ProfileData): boolean {
+  switch (key) {
+    case "category":        return Boolean(profile.category);
+    case "headline":        return Boolean(profile.headline && profile.headline.length >= 5);
+    case "bio":             return Boolean(profile.bio && profile.bio.length >= 20);
+    case "image":           return Boolean(profile.image);
+    case "availability":    return (profile.availability?.length ?? 0) > 0;
+    case "languages":       return (profile.languages?.length ?? 0) > 0;
+    case "yearsExperience": return profile.yearsExperience !== null && profile.yearsExperience !== undefined;
+  }
+}
+
+function pickMilestone(pct: number) {
+  return MILESTONES.find((m) => pct < m.threshold) ?? MILESTONES[MILESTONES.length - 1]!;
+}
+
+// ─── Component ──────────────────────────────────────────────────────────────
+
 export default function ProfileCompleteness({ profile }: { profile: ProfileData }) {
-  const steps: Step[] = useMemo(
-    () => [
-      { label: "Categoría profesional", done: !!profile.category },
-      { label: "Titular profesional", done: !!profile.headline },
-      { label: "Biografía", done: !!profile.bio, href: "/dashboard/professional" },
-      {
-        label: "Al menos 1 día de disponibilidad",
-        done: (profile.availability?.length ?? 0) > 0,
-        href: "/dashboard/professional",
-      },
-      { label: "Foto de perfil", done: !!profile.image, href: "/dashboard/professional" },
-      {
-        label: "Idiomas",
-        done: (profile.languages?.length ?? 0) > 0,
-        href: "/dashboard/professional",
-      },
-    ],
-    [profile]
+  const [expanded, setExpanded] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const ringRef = useRef<SVGCircleElement>(null);
+  const numberRef = useRef<HTMLSpanElement>(null);
+
+  // Compute progress (weighted)
+  const { pct, completedSteps, pendingSteps } = useMemo(() => {
+    const evaluated = STEPS_CONFIG.map((s) => ({ ...s, done: isStepDone(s.key, profile) }));
+    const totalWeight = evaluated.reduce((sum, s) => sum + s.weight, 0);
+    const earnedWeight = evaluated.filter((s) => s.done).reduce((sum, s) => sum + s.weight, 0);
+    return {
+      pct: Math.round((earnedWeight / totalWeight) * 100),
+      completedSteps: evaluated.filter((s) => s.done),
+      pendingSteps: evaluated.filter((s) => !s.done),
+    };
+  }, [profile]);
+
+  // SVG ring math: r=42, circumference = 2πr ≈ 263.89
+  const radius = 42;
+  const circumference = 2 * Math.PI * radius;
+
+  // Animate ring on mount + when pct changes
+  useGSAP(
+    () => {
+      const root = containerRef.current;
+      if (!root) return;
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        // Skip animation: snap to final state
+        if (ringRef.current) {
+          ringRef.current.style.strokeDashoffset = String(circumference - (circumference * pct) / 100);
+        }
+        if (numberRef.current) numberRef.current.textContent = `${pct}`;
+        return;
+      }
+
+      // Animate ring fill
+      if (ringRef.current) {
+        gsap.fromTo(
+          ringRef.current,
+          { strokeDashoffset: circumference },
+          {
+            strokeDashoffset: circumference - (circumference * pct) / 100,
+            duration: 1.2,
+            ease: "expo.out",
+          }
+        );
+      }
+
+      // Animate the numeric counter
+      if (numberRef.current) {
+        const counter = { value: 0 };
+        gsap.to(counter, {
+          value: pct,
+          duration: 1.2,
+          ease: "expo.out",
+          onUpdate: () => {
+            if (numberRef.current) numberRef.current.textContent = String(Math.round(counter.value));
+          },
+        });
+      }
+    },
+    { scope: containerRef, dependencies: [pct, circumference] }
   );
 
-  const completed = steps.filter((s) => s.done).length;
-  const total = steps.length;
-  const pct = Math.round((completed / total) * 100);
+  if (pct >= 100) return null;
 
-  if (pct === 100) return null;
+  const milestone = pickMilestone(pct);
+  const firstPending = pendingSteps[0];
 
   return (
-    <div className="rounded-xl border border-amber-500/30 bg-amber-50/50 p-4 dark:bg-amber-950/20">
-      <div className="flex items-center gap-2">
-        <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
-        <h3 className="font-semibold text-amber-900 dark:text-amber-100">
-          Completa tu perfil — {pct}%
-        </h3>
+    <div
+      ref={containerRef}
+      className={`relative overflow-hidden rounded-2xl border ${ACCENT.border} ${ACCENT.bgGradient} p-5 sm:p-6`}
+    >
+      <div className="flex items-start gap-4 sm:items-center sm:gap-6">
+        {/* Circular progress ring */}
+        <div className="relative h-24 w-24 shrink-0 sm:h-28 sm:w-28">
+          <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
+            <circle
+              cx="50"
+              cy="50"
+              r={radius}
+              fill="none"
+              strokeWidth="8"
+              className={ACCENT.ringTrack}
+            />
+            <circle
+              ref={ringRef}
+              cx="50"
+              cy="50"
+              r={radius}
+              fill="none"
+              strokeWidth="8"
+              strokeLinecap="round"
+              strokeDasharray={circumference}
+              strokeDashoffset={circumference}
+              className={ACCENT.ring}
+            />
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <p className={`font-display text-2xl font-bold sm:text-3xl ${ACCENT.text}`}>
+              <span ref={numberRef}>0</span>
+              <span className="text-base">%</span>
+            </p>
+          </div>
+        </div>
+
+        {/* Title + message */}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <Sparkles className={`h-4 w-4 ${ACCENT.text}`} />
+            <h3 className="font-display text-base font-semibold text-stone-900 sm:text-lg dark:text-stone-50">
+              {milestone.title} {milestone.emoji}
+            </h3>
+          </div>
+          <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
+            {milestone.message}
+          </p>
+
+          {firstPending ? (
+            <Link
+              href={firstPending.href}
+              className={`mt-3 inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-display text-sm font-semibold transition-colors ${ACCENT.cta}`}
+            >
+              Continuar con: {firstPending.label}
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          ) : null}
+        </div>
       </div>
 
-      {/* Progress bar */}
-      <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-amber-200/50 dark:bg-amber-900/30">
-        <div
-          className="h-full rounded-full bg-amber-500 transition-all duration-500"
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-
-      {/* Checklist */}
-      <ul className="mt-3 space-y-1.5">
-        {steps.map((s) => (
-          <li key={s.label} className="flex items-center gap-2 text-sm">
-            {s.done ? (
-              <CheckCircle2 className="h-4 w-4 shrink-0 text-green-600 dark:text-green-400" />
-            ) : (
-              <Circle className="h-4 w-4 shrink-0 text-muted-foreground" />
-            )}
-            {!s.done && s.href ? (
-              <Link href={s.href} className="text-primary hover:underline">
-                {s.label}
-              </Link>
-            ) : (
-              <span className={s.done ? "text-muted-foreground line-through" : ""}>
-                {s.label}
-              </span>
-            )}
+      {/* Pending checklist */}
+      <ul className="mt-5 space-y-2">
+        {pendingSteps.map((s) => (
+          <li key={s.key} className="flex items-center gap-2 text-sm">
+            <Circle className="h-4 w-4 shrink-0 text-stone-400 dark:text-stone-500" />
+            <Link
+              href={s.href}
+              className="text-stone-700 hover:text-teal-700 hover:underline dark:text-stone-300 dark:hover:text-teal-300"
+            >
+              {s.label}
+            </Link>
           </li>
         ))}
       </ul>
 
-      <p className="mt-3 text-xs text-muted-foreground">
-        Los perfiles completos reciben hasta 3x más reservas.
-      </p>
+      {/* Completed (collapsed by default) */}
+      {completedSteps.length > 0 && (
+        <div className="mt-4 border-t border-stone-200/70 pt-3 dark:border-stone-800/70">
+          <button
+            type="button"
+            onClick={() => setExpanded((v) => !v)}
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-stone-500 hover:text-stone-700 dark:text-stone-400 dark:hover:text-stone-200"
+          >
+            {expanded ? (
+              <>
+                <ChevronUp className="h-3.5 w-3.5" />
+                Ocultar pasos completados ({completedSteps.length})
+              </>
+            ) : (
+              <>
+                <ChevronDown className="h-3.5 w-3.5" />
+                Ver pasos completados ({completedSteps.length})
+              </>
+            )}
+          </button>
+          {expanded && (
+            <ul className="mt-2 space-y-1.5">
+              {completedSteps.map((s) => (
+                <li key={s.key} className="flex items-center gap-2 text-sm text-stone-500 dark:text-stone-500">
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
+                  <span className="line-through">{s.label}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
     </div>
   );
 }

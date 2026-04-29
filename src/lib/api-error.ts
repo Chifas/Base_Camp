@@ -27,6 +27,10 @@ export function apiError({ status, error, code, details, route }: ApiErrorOption
   return NextResponse.json(body, { status });
 }
 
+function withRoute(opts: Omit<ApiErrorOptions, "route">, route?: string): ApiErrorOptions {
+  return route !== undefined ? { ...opts, route } : opts;
+}
+
 /** 400 — Bad Request (validation errors, missing fields) */
 export function badRequest(error: string, opts?: { code?: string; details?: unknown; route?: string }) {
   return apiError({ status: 400, error, ...opts });
@@ -34,22 +38,22 @@ export function badRequest(error: string, opts?: { code?: string; details?: unkn
 
 /** 401 — Unauthorized (no session) */
 export function unauthorized(route?: string) {
-  return apiError({ status: 401, error: "No autenticado", code: "UNAUTHORIZED", route });
+  return apiError(withRoute({ status: 401, error: "No autenticado", code: "UNAUTHORIZED" }, route));
 }
 
 /** 403 — Forbidden (wrong role or permissions) */
 export function forbidden(route?: string) {
-  return apiError({ status: 403, error: "No tienes permiso para realizar esta acción", code: "FORBIDDEN", route });
+  return apiError(withRoute({ status: 403, error: "No tienes permiso para realizar esta acción", code: "FORBIDDEN" }, route));
 }
 
 /** 404 — Not Found */
 export function notFound(resource: string, route?: string) {
-  return apiError({ status: 404, error: `${resource} no encontrado`, code: "NOT_FOUND", route });
+  return apiError(withRoute({ status: 404, error: `${resource} no encontrado`, code: "NOT_FOUND" }, route));
 }
 
 /** 409 — Conflict (duplicate, already exists) */
 export function conflict(error: string, route?: string) {
-  return apiError({ status: 409, error, code: "CONFLICT", route });
+  return apiError(withRoute({ status: 409, error, code: "CONFLICT" }, route));
 }
 
 /** 500 — Internal Server Error (catch-all) */

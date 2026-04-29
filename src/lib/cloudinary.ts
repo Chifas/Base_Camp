@@ -8,10 +8,8 @@ if (!cloudName || !apiKey || !apiSecret) {
   console.warn("⚠️ Cloudinary no configurado — subida de imágenes deshabilitada");
 }
 
-cloudinary.config({
-  cloud_name: cloudName,
-  api_key: apiKey,
-  api_secret: apiSecret,
-});
+if (cloudName && apiKey && apiSecret) {
+  cloudinary.config({ cloud_name: cloudName, api_key: apiKey, api_secret: apiSecret });
+}
 
 export { cloudinary };

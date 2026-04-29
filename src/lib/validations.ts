@@ -43,17 +43,15 @@ export const availabilitySchema = z.object({
       startTime: z.string().regex(/^(\d{2}:\d{2})?$/, "Formato HH:MM"),
       endTime: z.string().regex(/^(\d{2}:\d{2})?$/, "Formato HH:MM"),
       enabled: z.boolean(),
-    })
+    }).refine(
+      (slot) => !slot.enabled || !slot.startTime || !slot.endTime || slot.startTime < slot.endTime,
+      { message: "La hora de fin debe ser posterior a la hora de inicio" }
+    )
   ),
 });
 
-// Valid ProfessionalCategory enum values (must match prisma schema)
-const professionalCategoryEnum = z.enum([
-  "PSYCHOLOGIST",
-  "COACH",
-  "CAREER_MENTOR",
-  "NUTRITIONIST",
-]);
+// Category IDs are now dynamic — validate as non-empty string
+const professionalCategoryEnum = z.string().min(1, "La categoría es obligatoria");
 
 // POST /api/professionals/me (onboarding — create profile)
 export const createProfessionalProfileSchema = z.object({
@@ -71,6 +69,7 @@ export const updateProfessionalProfileSchema = z.object({
   bio: z.string().max(1000).optional(),
   languages: z.array(z.string().min(1)).optional(),
   yearsExperience: z.number().int().min(0).optional(),
+  coverImage: z.string().url().nullable().optional(),
 });
 
 // PATCH /api/sessions/[id]
@@ -154,4 +153,10 @@ export const sendMessageSchema = z.object({
 export const blockedDateSchema = z.object({
   date: z.string().min(1, "La fecha es obligatoria"),
   reason: z.string().max(200).optional(),
+});
+
+// POST /api/rewards
+export const redeemRewardSchema = z.object({
+  type: z.enum(["CERTIFICATION", "DONATION"]),
+  description: z.string().max(200).optional(),
 });

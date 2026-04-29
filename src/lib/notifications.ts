@@ -26,7 +26,7 @@ export async function createNotification(data: CreateNotificationInput) {
         type: data.type,
         title: data.title,
         message: data.message,
-        link: data.link,
+        link: data.link ?? null,
       },
     });
   } catch (error) {

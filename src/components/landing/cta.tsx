@@ -17,7 +17,8 @@ export function CTA() {
       const box = boxRef.current;
       if (!box) return;
 
-      gsap.set(box, { clipPath: "inset(0 0 100% 0 round 24px)", opacity: 0 });
+      // Clip-path wipe reveal — no opacity hiding so content is always visible
+      gsap.set(box, { clipPath: "inset(0 0 100% 0 round 24px)" });
 
       const headline = box.querySelector<HTMLElement>("[data-cta-headline]");
       const sub      = box.querySelector<HTMLElement>("[data-cta-sub]");
@@ -29,13 +30,12 @@ export function CTA() {
 
       tl.to(box, {
           clipPath: "inset(0 0 0% 0 round 24px)",
-          opacity: 1,
           duration: 0.9,
           ease: "expo.out",
         })
-        .fromTo(headline, { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.65, ease: "power3.out" }, "-=0.4")
-        .fromTo(sub,      { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.55, ease: "power3.out" }, "-=0.35")
-        .fromTo(btns,     { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.5,  ease: "power3.out" }, "-=0.3");
+        .fromTo(headline, { y: 24 }, { y: 0, duration: 0.65, ease: "power3.out" }, "-=0.4")
+        .fromTo(sub,      { y: 16 }, { y: 0, duration: 0.55, ease: "power3.out" }, "-=0.35")
+        .fromTo(btns,     { y: 12 }, { y: 0, duration: 0.5,  ease: "power3.out" }, "-=0.3");
     },
     { scope: sectionRef }
   );
@@ -45,12 +45,10 @@ export function CTA() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div
           ref={boxRef}
-          style={{ opacity: 0, clipPath: "inset(0 0 100% 0 round 24px)" }}
           className="rounded-3xl bg-teal-700 px-8 py-16 text-center sm:px-16 sm:py-24"
         >
           <h2
             data-cta-headline
-            style={{ opacity: 0 }}
             className="font-display text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl"
           >
             ¿Listo para dar el siguiente
@@ -59,7 +57,6 @@ export function CTA() {
 
           <p
             data-cta-sub
-            style={{ opacity: 0 }}
             className="mx-auto mt-5 max-w-xl text-lg text-white/80 leading-relaxed"
           >
             Conecta con el mentor o coach que necesitas. Reserva tu primera sesión hoy
@@ -68,7 +65,6 @@ export function CTA() {
 
           <div
             data-cta-btns
-            style={{ opacity: 0 }}
             className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row"
           >
             <Button

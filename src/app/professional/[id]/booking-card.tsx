@@ -115,7 +115,7 @@ export const BookingCard = memo(function BookingCard({ professionalId, availabil
                   isSelected ? "border-primary bg-primary text-primary-foreground" : "hover:border-primary/50"
                 }`}
               >
-                <span className="font-medium">{DAYS[day.getDay()].slice(0, 3)}</span>
+                <span className="font-medium">{(DAYS[day.getDay()] ?? "").slice(0, 3)}</span>
                 <span className="mt-0.5 text-lg font-bold tabular">{day.getDate()}</span>
               </button>
             );
@@ -154,7 +154,7 @@ export const BookingCard = memo(function BookingCard({ professionalId, availabil
           className="mt-6 w-full"
           size="lg"
           disabled={!selectedDate || !selectedTime}
-          asChild={selectedDate && selectedTime ? true : undefined}
+          asChild={!!(selectedDate && selectedTime)}
         >
           {selectedDate && selectedTime ? (
             <Link href={`/book/new?${new URLSearchParams({ professional: professionalId, date: selectedDate.toISOString(), time: selectedTime! }).toString()}`}>
