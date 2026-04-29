@@ -69,6 +69,7 @@ export const updateProfessionalProfileSchema = z.object({
   bio: z.string().max(1000).optional(),
   languages: z.array(z.string().min(1)).optional(),
   yearsExperience: z.number().int().min(0).optional(),
+  coverImage: z.string().url().nullable().optional(),
 });
 
 // PATCH /api/sessions/[id]

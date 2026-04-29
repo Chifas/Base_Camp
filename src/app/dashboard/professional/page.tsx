@@ -2,10 +2,11 @@
 
 import { lazy, Suspense, useMemo, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Calendar, TrendingUp, Users, Sparkles } from "lucide-react";
+import { Calendar, TrendingUp, Users, Sparkles, UserCog, Heart } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/shared/motion-wrapper";
 import { DashboardSkeleton } from "@/components/shared/dashboard-skeleton";
+import { DashboardHero } from "@/components/shared/dashboard-hero";
 import { OnboardingTour, type TourStep } from "@/components/shared/onboarding-tour";
 import ProfileCompleteness from "@/components/shared/ProfileCompleteness";
 import type { SessionItem, ProfileData, CategoryOption, AvailabilitySlot, CertificationItem } from "./tabs/types";
@@ -78,12 +79,30 @@ export default function ProfessionalDashboard() {
       <OnboardingTour storageKey="guidepath_tour_professional_v1" steps={TOUR_STEPS} />
 
       <FadeIn>
-        <h1 className="font-display text-2xl font-bold text-stone-900 dark:text-stone-50 sm:text-3xl">
-          Panel Profesional
-        </h1>
-        <p className="mt-1 text-stone-500 dark:text-stone-400">
-          Gestiona tus sesiones, disponibilidad e impacto social.
-        </p>
+        {(() => {
+          // Skip honorific titles like "Dra.", "Dr.", "Sr.", "Sra." when picking the first name.
+          const tokens = (profile?.name ?? "").split(" ").filter(Boolean);
+          const firstName = (tokens.find((t) => !t.endsWith(".")) ?? tokens[0] ?? "");
+          return (
+            <DashboardHero
+              name={profile?.name ?? "Profesional"}
+              avatar={profile?.image ?? null}
+              greeting={firstName ? `Hola, ${firstName}` : "Hola"}
+              subtitle={profile?.headline ?? "Completa tu perfil para empezar a recibir reservas."}
+              primaryAction={{
+                label: "Editar perfil",
+                href: "/dashboard/professional?tab=profile",
+                icon: UserCog,
+              }}
+              featuredMetric={{
+                label: "Impacto este mes",
+                value: `${profile?.impactPoints ?? 0} pts`,
+                icon: Heart,
+                accent: "amber",
+              }}
+            />
+          );
+        })()}
       </FadeIn>
 
       <StaggerContainer className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4" delay={0.1}>

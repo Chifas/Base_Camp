@@ -22,6 +22,7 @@ export interface ProfileData {
   bio: string | null;
   languages: string[];
   yearsExperience: number | null;
+  coverImage: string | null;
   hasProfile: boolean;
   impactPoints: number;
   totalSessionsCompleted: number;

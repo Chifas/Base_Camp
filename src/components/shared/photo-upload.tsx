@@ -2,15 +2,26 @@
 
 import { useState, useRef } from "react";
 import Image from "next/image";
-import { Camera, Loader2 } from "lucide-react";
+import { Camera, Loader2, ImagePlus } from "lucide-react";
 import { toast } from "sonner";
+
+type AspectRatio = "square" | "cover";
 
 interface PhotoUploadProps {
   currentImage?: string;
   onUpload?: (_url: string) => void;
+  /** "square" → circular avatar (default). "cover" → 16:5 banner. */
+  aspectRatio?: AspectRatio;
+  /** Custom helper label below the upload control. */
+  label?: string;
 }
 
-export function PhotoUpload({ currentImage, onUpload }: PhotoUploadProps) {
+export function PhotoUpload({
+  currentImage,
+  onUpload,
+  aspectRatio = "square",
+  label,
+}: PhotoUploadProps) {
   const [preview, setPreview] = useState(currentImage || "");
   const [uploading, setUploading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -47,7 +58,7 @@ export function PhotoUpload({ currentImage, onUpload }: PhotoUploadProps) {
 
       setPreview(data.url);
       onUpload?.(data.url);
-      toast.success("Foto actualizada");
+      toast.success("Imagen actualizada");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al subir la imagen");
       setPreview(currentImage || "");
@@ -57,24 +68,33 @@ export function PhotoUpload({ currentImage, onUpload }: PhotoUploadProps) {
     }
   }
 
+  const isCover = aspectRatio === "cover";
+  const containerSize = isCover
+    ? "h-28 w-full sm:h-36"
+    : "h-24 w-24";
+  const containerShape = isCover ? "rounded-2xl" : "rounded-full";
+  const helperText = label ?? (isCover ? "Haz clic para subir tu imagen de portada" : "Haz clic para cambiar tu foto");
+  const PlaceholderIcon = isCover ? ImagePlus : Camera;
+
   return (
-    <div className="flex flex-col items-center gap-3">
+    <div className={`flex flex-col gap-3 ${isCover ? "items-stretch" : "items-center"}`}>
       <button
         type="button"
         onClick={() => inputRef.current?.click()}
         disabled={uploading}
-        className="relative h-24 w-24 overflow-hidden rounded-full border-2 border-dashed border-zinc-300 dark:border-zinc-600 hover:border-indigo-500 transition-colors group"
+        className={`relative ${containerSize} overflow-hidden ${containerShape} border-2 border-dashed border-zinc-300 dark:border-zinc-600 hover:border-indigo-500 transition-colors group`}
       >
         {preview ? (
           <Image
             src={preview}
-            alt="Foto de perfil"
+            alt={isCover ? "Imagen de portada" : "Foto de perfil"}
             fill
+            sizes={isCover ? "(min-width: 1024px) 800px, 100vw" : "96px"}
             className="object-cover"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-zinc-100 dark:bg-zinc-800">
-            <Camera className="h-8 w-8 text-zinc-400" />
+            <PlaceholderIcon className={isCover ? "h-10 w-10 text-zinc-400" : "h-8 w-8 text-zinc-400"} />
           </div>
         )}
         {uploading && (
@@ -95,7 +115,7 @@ export function PhotoUpload({ currentImage, onUpload }: PhotoUploadProps) {
         onChange={handleChange}
         className="hidden"
       />
-      <span className="text-xs text-zinc-500">Haz clic para cambiar tu foto</span>
+      <span className={`text-xs text-zinc-500 ${isCover ? "" : "text-center"}`}>{helperText}</span>
     </div>
   );
 }

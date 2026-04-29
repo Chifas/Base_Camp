@@ -13,6 +13,7 @@ import {
   Save,
   Loader2,
   X,
+  ImageIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -146,6 +147,38 @@ export default function ProfileTab({
         <p className="mt-1 text-sm text-muted-foreground">
           Esta información es visible para los clientes en tu perfil público.
         </p>
+
+        {/* Cover image (banner) — shown above the public profile hero */}
+        <div className="mt-6 space-y-2">
+          <label className="flex items-center gap-2 text-sm font-medium">
+            <ImageIcon className="h-4 w-4 text-muted-foreground" />
+            Imagen de portada
+          </label>
+          <PhotoUpload
+            aspectRatio="cover"
+            currentImage={profile?.coverImage || ""}
+            label="Recomendado: 1600×500 px (16:5). Visible al comienzo de tu perfil público."
+            onUpload={async (url) => {
+              // Persist immediately so the public profile reflects the change
+              try {
+                const res = await fetch("/api/professionals/me", {
+                  method: "PUT",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ coverImage: url }),
+                });
+                if (res.ok) {
+                  onUpdate({ coverImage: url });
+                  toast.success("Imagen de portada guardada");
+                } else {
+                  const data = await res.json();
+                  toast.error(data.error ?? "Error al guardar la portada");
+                }
+              } catch {
+                toast.error("Error de conexión");
+              }
+            }}
+          />
+        </div>
 
         <div className="mt-6">
           <PhotoUpload

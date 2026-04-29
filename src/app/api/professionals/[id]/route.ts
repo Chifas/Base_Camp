@@ -74,6 +74,7 @@ export async function GET(
       verifiedAt: professional.verifiedAt?.toISOString() ?? null,
       languages: professional.languages,
       yearsExperience: professional.yearsExperience,
+      coverImage: professional.coverImage,
       certifications: professional.certifications.map((c) => ({
         id: c.id,
         title: c.title,

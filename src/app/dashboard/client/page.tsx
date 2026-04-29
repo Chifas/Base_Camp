@@ -21,6 +21,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/shared/motion-wrapper";
+import { DashboardHero } from "@/components/shared/dashboard-hero";
+import { Compass, CalendarClock } from "lucide-react";
 import { DashboardSkeleton } from "@/components/shared/dashboard-skeleton";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PhotoUpload } from "@/components/shared/photo-upload";
@@ -214,22 +216,43 @@ export default function ClientDashboard() {
       <OnboardingTour storageKey="guidepath_tour_client_v1" steps={CLIENT_TOUR_STEPS} />
 
       <FadeIn>
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="font-display text-2xl font-bold sm:text-3xl text-stone-900 dark:text-stone-50">
-              Mi Panel
-            </h1>
-            <p className="mt-1 text-stone-500 dark:text-stone-400">
-              Gestiona tus sesiones y revisa tu historial.
-            </p>
-          </div>
-          <Button asChild data-tour="new-session-btn">
-            <Link href="/explore">
-              Nueva sesión
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
-          </Button>
-        </div>
+        {(() => {
+          // Skip honorific titles like "Dra.", "Dr.", "Sr.", "Sra." when picking the first name.
+          const tokens = (authSession?.user?.name ?? "").split(" ").filter(Boolean);
+          const firstName = (tokens.find((t) => !t.endsWith(".")) ?? tokens[0] ?? "");
+          const remaining = credits?.remaining ?? CREDITS_CONFIG.FREE_SESSIONS_PER_MONTH;
+          const limit = credits?.limit ?? CREDITS_CONFIG.FREE_SESSIONS_PER_MONTH;
+          const next = upcomingSessions
+            .slice()
+            .sort((a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime())[0];
+          const nextLabel = next
+            ? new Date(next.scheduledAt).toLocaleDateString("es-ES", {
+                day: "numeric",
+                month: "short",
+                hour: "2-digit",
+                minute: "2-digit",
+              })
+            : "Sin sesiones";
+          return (
+            <DashboardHero
+              name={authSession?.user?.name ?? "Cliente"}
+              avatar={authSession?.user?.image ?? null}
+              greeting={firstName ? `Hola, ${firstName} 👋` : "Hola 👋"}
+              subtitle={
+                remaining > 0
+                  ? `Tienes ${remaining} de ${limit} sesiones gratuitas disponibles este mes.`
+                  : `Has usado tus ${limit} sesiones de este mes. Se renuevan el 1 del próximo mes.`
+              }
+              primaryAction={{ label: "Explorar profesionales", href: "/explore", icon: Compass }}
+              featuredMetric={{
+                label: "Próxima sesión",
+                value: nextLabel,
+                icon: CalendarClock,
+                accent: "teal",
+              }}
+            />
+          );
+        })()}
       </FadeIn>
 
       {/* Stats */}

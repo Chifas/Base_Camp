@@ -47,6 +47,7 @@ export interface Professional {
   impactPoints?: number;
   totalSessionsCompleted?: number;
   socialImpactScore?: number;
+  coverImage?: string | null;
   certifications?: Certification[];
   availability: AvailabilitySlot[];
 }

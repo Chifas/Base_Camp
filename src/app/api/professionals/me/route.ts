@@ -45,6 +45,7 @@ export async function GET() {
       bio: profile.user.bio,
       languages: profile.languages,
       yearsExperience: profile.yearsExperience,
+      coverImage: profile.coverImage,
       availability: profile.availability,
       hasProfile: true,
     });
@@ -143,7 +144,7 @@ export async function PUT(req: Request) {
       );
     }
 
-    const { category, headline, hourlyRate, bio, languages, yearsExperience } = parsed.data;
+    const { category, headline, hourlyRate, bio, languages, yearsExperience, coverImage } = parsed.data;
 
     const updated = await prisma.$transaction(async (tx) => {
       // Update user bio if provided
@@ -161,6 +162,7 @@ export async function PUT(req: Request) {
       if (hourlyRate !== undefined) profileData.hourlyRate = hourlyRate;
       if (languages !== undefined) profileData.languages = languages;
       if (yearsExperience !== undefined) profileData.yearsExperience = yearsExperience;
+      if (coverImage !== undefined) profileData.coverImage = coverImage;
 
       if (Object.keys(profileData).length > 0) {
         return tx.professionalProfile.update({
