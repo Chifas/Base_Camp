@@ -76,6 +76,12 @@
   * {
     @apply border-border;
   }
+  /* Safety net: never allow horizontal scroll on the document.
+     Individual horizontal scrollers (carousels, tab strips) opt in
+     locally via overflow-x-auto on their own container. */
+  html, body {
+    overflow-x: hidden;
+  }
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;

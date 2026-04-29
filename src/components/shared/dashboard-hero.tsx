@@ -108,45 +108,53 @@ export function DashboardHero({
       </svg>
 
       <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-        {/* Left: avatar + text */}
-        <div className="flex items-start gap-4 sm:items-center sm:gap-5">
-          <div
-            data-hero-avatar
-            className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl bg-stone-200 ring-4 ring-white shadow-lg dark:bg-stone-800 dark:ring-stone-900 lg:h-24 lg:w-24"
-          >
-            {avatar ? (
-              <Image
-                src={avatar}
-                alt={name}
-                fill
-                sizes="(min-width: 1024px) 96px, 80px"
-                className="object-cover"
-              />
-            ) : (
-              <div
-                className={`flex h-full w-full items-center justify-center font-display text-2xl font-bold lg:text-3xl ${ACCENT_TEXT[accentColor]}`}
-              >
-                {getInitials(name)}
-              </div>
-            )}
+        {/* Left: avatar + text + CTA */}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-4 sm:gap-5">
+            <div
+              data-hero-avatar
+              className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-stone-200 ring-4 ring-white shadow-lg dark:bg-stone-800 dark:ring-stone-900 sm:h-20 sm:w-20 lg:h-24 lg:w-24"
+            >
+              {avatar ? (
+                <Image
+                  src={avatar}
+                  alt={name}
+                  fill
+                  sizes="(min-width: 1024px) 96px, (min-width: 640px) 80px, 64px"
+                  className="object-cover"
+                />
+              ) : (
+                <div
+                  className={`flex h-full w-full items-center justify-center font-display text-xl font-bold sm:text-2xl lg:text-3xl ${ACCENT_TEXT[accentColor]}`}
+                >
+                  {getInitials(name)}
+                </div>
+              )}
+            </div>
+
+            <div data-hero-text className="min-w-0 flex-1">
+              <h1 className="font-display text-xl font-bold leading-tight text-stone-900 sm:text-2xl lg:text-3xl dark:text-stone-50">
+                {greeting}
+              </h1>
+              <p className="mt-1 text-sm text-stone-600 sm:text-base dark:text-stone-400">
+                {subtitle}
+              </p>
+            </div>
           </div>
 
-          <div data-hero-text className="min-w-0">
-            <h1 className="font-display text-2xl font-bold text-stone-900 sm:text-3xl dark:text-stone-50">
-              {greeting}
-            </h1>
-            <p className="mt-1.5 text-sm text-stone-600 sm:text-base dark:text-stone-400">
-              {subtitle}
-            </p>
-            <div data-hero-cta className="mt-4">
-              <Button asChild size="sm" className="bg-teal-600 text-white hover:bg-teal-700">
-                <Link href={primaryAction.href}>
-                  {PrimaryIcon ? <PrimaryIcon className="mr-2 h-4 w-4" /> : null}
-                  {primaryAction.label}
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-            </div>
+          {/* CTA spans full width on mobile, sits below avatar+text on every breakpoint */}
+          <div data-hero-cta className="mt-4">
+            <Button
+              asChild
+              size="sm"
+              className="w-full bg-teal-600 text-white hover:bg-teal-700 sm:w-auto"
+            >
+              <Link href={primaryAction.href}>
+                {PrimaryIcon ? <PrimaryIcon className="mr-2 h-4 w-4 shrink-0" /> : null}
+                <span className="truncate">{primaryAction.label}</span>
+                <ArrowRight className="ml-2 h-4 w-4 shrink-0" />
+              </Link>
+            </Button>
           </div>
         </div>
 
