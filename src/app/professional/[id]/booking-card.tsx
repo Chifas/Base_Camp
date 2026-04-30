@@ -43,8 +43,21 @@ export const BookingCard = memo(function BookingCard({ professionalId, availabil
   const nextDays = useMemo(() => getNextDays(14), []);
 
   const availableDays = useMemo(() => {
-    const availableDayOfWeek = availability.map((a) => a.dayOfWeek);
-    return nextDays.filter((d) => availableDayOfWeek.includes(d.getDay()));
+    return nextDays.filter((d) => {
+      const dayAvail = availability.find((a) => a.dayOfWeek === d.getDay());
+      if (!dayAvail) return false;
+      const now = new Date();
+      const isToday = d.toDateString() === now.toDateString();
+      if (!isToday) return true;
+      // Exclude today if every slot has already passed
+      return TIME_SLOTS.some((slot) => {
+        if (slot < dayAvail.startTime || slot >= dayAvail.endTime) return false;
+        const [h, m] = slot.split(":").map(Number);
+        const slotDate = new Date(d);
+        slotDate.setHours(h ?? 0, m ?? 0, 0, 0);
+        return slotDate > now;
+      });
+    });
   }, [availability, nextDays]);
 
   const availableSlots = useMemo(() => {
