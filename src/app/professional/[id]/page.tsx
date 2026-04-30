@@ -373,15 +373,10 @@ export default async function ProfessionalProfilePage({
                 }))}
                 socialImpactScore={professional.socialImpactScore}
               />
-              <div className="rounded-xl border border-stone-200 bg-stone-50 p-4 dark:border-stone-700 dark:bg-stone-800/50">
-                <p className="mb-3 text-sm text-muted-foreground">
-                  ¿Tienes alguna pregunta antes de reservar?
-                </p>
-                <SendMessageButton
+              <SendMessageButton
                   professionalId={professional.id}
                   professionalName={name}
                 />
-              </div>
             </div>
           </div>
 
