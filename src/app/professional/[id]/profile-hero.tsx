@@ -179,7 +179,7 @@ export function ProfileHero({
               ref={nameRef}
               className="flex flex-col items-center gap-2 sm:flex-row sm:items-center"
             >
-              <h1 className="font-display text-3xl font-extrabold tracking-tight text-stone-900 dark:text-stone-50 sm:text-4xl lg:text-[2.5rem]">
+              <h1 className="font-display text-2xl font-extrabold tracking-tight text-stone-900 dark:text-stone-50 sm:text-3xl lg:text-[2.5rem]">
                 {name}
               </h1>
               {verified && (
@@ -193,7 +193,7 @@ export function ProfileHero({
               )}
             </div>
             <div ref={metaRef}>
-              <p className="mt-1.5 text-lg font-medium text-teal-600 dark:text-teal-400 sm:text-xl">
+              <p className="mt-1.5 text-base font-medium text-teal-600 dark:text-teal-400 sm:text-lg lg:text-xl">
                 {headline}
               </p>
               {languages.length > 0 && (
@@ -211,10 +211,10 @@ export function ProfileHero({
         {/* Stat pills */}
         <div
           ref={pillsRef}
-          className="mt-6 flex flex-wrap justify-center gap-3 pb-2 sm:justify-start"
+          className="mt-4 flex flex-wrap justify-center gap-2 pb-2 sm:mt-6 sm:gap-3 sm:justify-start"
         >
-          <div className="flex items-center gap-2 rounded-full bg-stone-100 px-4 py-2 text-sm dark:bg-stone-800">
-            <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+          <div className="flex items-center gap-1.5 rounded-full bg-stone-100 px-3 py-1.5 text-xs dark:bg-stone-800 sm:gap-2 sm:px-4 sm:py-2 sm:text-sm">
+            <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400 sm:h-4 sm:w-4" />
             <span className="font-semibold tabular text-stone-900 dark:text-stone-50">
               {rating.toFixed(1)}
             </span>
@@ -222,29 +222,29 @@ export function ProfileHero({
           </div>
 
           {yearsExperience && yearsExperience > 0 && (
-            <div className="flex items-center gap-2 rounded-full bg-stone-100 px-4 py-2 text-sm dark:bg-stone-800">
-              <Award className="h-4 w-4 text-teal-600" />
+            <div className="flex items-center gap-1.5 rounded-full bg-stone-100 px-3 py-1.5 text-xs dark:bg-stone-800 sm:gap-2 sm:px-4 sm:py-2 sm:text-sm">
+              <Award className="h-3.5 w-3.5 text-teal-600 sm:h-4 sm:w-4" />
               <span className="text-stone-700 dark:text-stone-300">
-                {yearsExperience} años de experiencia
+                {yearsExperience} años exp.
               </span>
             </div>
           )}
 
-          <div className="flex items-center gap-2 rounded-full bg-stone-100 px-4 py-2 text-sm dark:bg-stone-800">
-            <Video className="h-4 w-4 text-teal-600" />
-            <span className="text-stone-700 dark:text-stone-300">Sesiones 60 min</span>
+          <div className="flex items-center gap-1.5 rounded-full bg-stone-100 px-3 py-1.5 text-xs dark:bg-stone-800 sm:gap-2 sm:px-4 sm:py-2 sm:text-sm">
+            <Video className="h-3.5 w-3.5 text-teal-600 sm:h-4 sm:w-4" />
+            <span className="text-stone-700 dark:text-stone-300">60 min</span>
           </div>
 
           {hasAvailability && (
-            <div className="flex items-center gap-2 rounded-full border border-teal-100 bg-teal-50 px-4 py-2 text-sm dark:border-teal-800 dark:bg-teal-900/30">
-              <Clock className="h-4 w-4 text-teal-600" />
+            <div className="flex items-center gap-1.5 rounded-full border border-teal-100 bg-teal-50 px-3 py-1.5 text-xs dark:border-teal-800 dark:bg-teal-900/30 sm:gap-2 sm:px-4 sm:py-2 sm:text-sm">
+              <Clock className="h-3.5 w-3.5 text-teal-600 sm:h-4 sm:w-4" />
               <span className="font-medium text-teal-700 dark:text-teal-400">
                 Disponible esta semana
               </span>
             </div>
           )}
 
-          <Badge className="h-auto rounded-full border-0 bg-stone-100 px-4 py-2 text-sm font-medium text-stone-600 dark:bg-stone-800 dark:text-stone-400">
+          <Badge className="h-auto rounded-full border-0 bg-stone-100 px-3 py-1.5 text-xs font-medium text-stone-600 dark:bg-stone-800 dark:text-stone-400 sm:px-4 sm:py-2 sm:text-sm">
             {categoryLabel}
           </Badge>
         </div>
