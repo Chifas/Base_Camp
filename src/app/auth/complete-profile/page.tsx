@@ -6,7 +6,7 @@ import Image from "next/image";
 import { Loader2 } from "lucide-react";
 
 export default function CompleteProfilePage() {
-  const { data: session, status } = useSession();
+  const { data: session, status, update } = useSession();
   const processedRef = useRef(false);
 
   useEffect(() => {
@@ -30,6 +30,8 @@ export default function CompleteProfilePage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ role: pendingRole }),
         });
+        // Refresh the JWT so the middleware sees the updated role before navigation
+        await update();
       }
 
       // Redirect based on role — professionals go to onboarding to complete
@@ -42,7 +44,7 @@ export default function CompleteProfilePage() {
     }
 
     finalize();
-  }, [status, session]);
+  }, [status, session, update]);
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
