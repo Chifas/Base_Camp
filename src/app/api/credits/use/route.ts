@@ -43,6 +43,14 @@ export async function POST(req: Request) {
 
     const { professionalId: validProfId, scheduledAt: validScheduledAt, duration: validDuration, notes: validNotes } = parsed.data;
 
+    // Reject past dates before hitting the DB
+    if (new Date(validScheduledAt) <= new Date()) {
+      return NextResponse.json(
+        { error: "No puedes reservar en una fecha u hora que ya ha pasado" },
+        { status: 400 }
+      );
+    }
+
     // Fetch professional (outside transaction — read-only)
     const profile = await prisma.professionalProfile.findUnique({
       where: { id: validProfId },
@@ -110,7 +118,7 @@ export async function POST(req: Request) {
 
       if (isBlocked) throw new Error("DATE_BLOCKED");
 
-      // 4. Duration-aware scheduling conflict check
+      // 4. Duration-aware scheduling conflict check — professional side
       const conflict = await tx.session.findFirst({
         where: {
           professionalId: validProfId,
@@ -128,7 +136,25 @@ export async function POST(req: Request) {
 
       if (conflict) throw new Error("SCHEDULE_CONFLICT");
 
-      // 5. Create session + deduct credit atomically
+      // 5. Client-side scheduling conflict check — prevent double-booking for the client
+      const clientConflict = await tx.session.findFirst({
+        where: {
+          clientId: session.user.id,
+          status: { in: ["PENDING", "CONFIRMED"] },
+          AND: [
+            { scheduledAt: { lt: sessionEnd } },
+            {
+              scheduledAt: {
+                gte: new Date(requestedDate.getTime() - validDuration * 60 * 1000),
+              },
+            },
+          ],
+        },
+      });
+
+      if (clientConflict) throw new Error("CLIENT_CONFLICT");
+
+      // 6. Create session + deduct credit atomically
       const dbSession = await tx.session.create({
         data: {
           clientId: session.user.id,
@@ -210,6 +236,7 @@ export async function POST(req: Request) {
       DUPLICATE_BOOKING: { error: "Solo puedes reservar una sesión gratuita al mes con el mismo profesional", status: 429 },
       DATE_BLOCKED: { error: "El profesional no está disponible en esta fecha", status: 409 },
       SCHEDULE_CONFLICT: { error: "Este horario ya no está disponible", status: 409 },
+      CLIENT_CONFLICT: { error: "Ya tienes una sesión programada en ese horario", status: 409 },
     };
 
     if (txErrors[msg]) {
