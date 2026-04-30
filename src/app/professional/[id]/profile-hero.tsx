@@ -179,7 +179,7 @@ export function ProfileHero({
               ref={nameRef}
               className="flex flex-col items-center gap-2 sm:flex-row sm:items-center"
             >
-              <h1 className="font-display text-2xl font-extrabold tracking-tight text-stone-900 dark:text-stone-50 sm:text-3xl lg:text-[2.5rem]">
+              <h1 className="font-display text-2xl font-extrabold tracking-tight text-stone-900 break-words dark:text-stone-50 sm:text-3xl lg:text-[2.5rem]">
                 {name}
               </h1>
               {verified && (
@@ -193,13 +193,13 @@ export function ProfileHero({
               )}
             </div>
             <div ref={metaRef}>
-              <p className="mt-1.5 text-base font-medium text-teal-600 dark:text-teal-400 sm:text-lg lg:text-xl">
+              <p className="mt-1.5 break-words text-base font-medium text-teal-600 dark:text-teal-400 sm:text-lg lg:text-xl">
                 {headline}
               </p>
               {languages.length > 0 && (
                 <div className="mt-2 flex items-center justify-center gap-1.5 sm:justify-start">
-                  <Globe className="h-3.5 w-3.5 text-stone-400" />
-                  <span className="text-sm text-stone-500 dark:text-stone-400">
+                  <Globe className="h-3.5 w-3.5 shrink-0 text-stone-400" />
+                  <span className="truncate text-sm text-stone-500 dark:text-stone-400">
                     {languages.join(", ")}
                   </span>
                 </div>

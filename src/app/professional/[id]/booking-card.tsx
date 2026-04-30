@@ -88,23 +88,23 @@ export const BookingCard = memo(function BookingCard({ professionalId, availabil
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.2 }}
     >
-      <div className="rounded-2xl border bg-card p-6 shadow-sm">
+      <div className="rounded-2xl border bg-card p-4 shadow-sm sm:p-6">
         <div className="text-center">
           <Badge className="bg-teal-600 text-white text-sm px-4 py-1 border-0">
             <Sparkles className="mr-1.5 h-4 w-4" />
             Sesión gratuita
           </Badge>
           {socialImpactScore !== undefined && socialImpactScore > 0 && (
-            <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 px-3 py-1">
+            <div className="mt-2 inline-flex max-w-full items-center gap-1.5 rounded-full bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 px-3 py-1">
               <span className="h-1.5 w-1.5 rounded-full bg-amber-500 shrink-0" />
-              <span className="text-xs font-medium text-amber-700 dark:text-amber-400 tabular">
+              <span className="truncate text-xs font-medium text-amber-700 dark:text-amber-400 tabular">
                 Impacto social: {socialImpactScore.toFixed(1)} pts
               </span>
             </div>
           )}
         </div>
 
-        <Separator className="my-6" />
+        <Separator className="my-5 sm:my-6" />
 
         {availableDays.length === 0 ? (
           <div className="flex flex-col items-center gap-3 py-6 text-center">
@@ -124,7 +124,7 @@ export const BookingCard = memo(function BookingCard({ professionalId, availabil
           <Calendar className="h-4 w-4" />
           Selecciona fecha
         </h3>
-        <div className="mt-3 flex gap-2 overflow-x-auto pb-2 snap-x snap-mandatory">
+        <div className="mt-3 flex gap-2 overflow-x-auto pb-2 snap-x snap-mandatory no-scrollbar">
           {availableDays.slice(0, 7).map((day) => {
             const isSelected = selectedDate?.toDateString() === day.toDateString();
             return (
@@ -133,7 +133,7 @@ export const BookingCard = memo(function BookingCard({ professionalId, availabil
                 onClick={() => { setSelectedDate(day); setSelectedTime(null); }}
                 aria-label={`${DAYS[day.getDay()]} ${day.getDate()} de ${day.toLocaleDateString("es-ES", { month: "long" })}`}
                 aria-pressed={isSelected}
-                className={`flex shrink-0 snap-center flex-col items-center rounded-lg border px-3 py-2 text-xs transition-all ${
+                className={`flex min-w-[52px] shrink-0 snap-center flex-col items-center rounded-lg border px-2.5 py-2 text-xs transition-all ${
                   isSelected ? "border-primary bg-primary text-primary-foreground" : "hover:border-primary/50"
                 }`}
               >
@@ -154,14 +154,14 @@ export const BookingCard = memo(function BookingCard({ professionalId, availabil
               <Clock className="h-4 w-4" />
               Selecciona hora
             </h3>
-            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+            <div className="mt-3 grid grid-cols-3 gap-2">
               {availableSlots.map((slot) => (
                 <button
                   key={slot}
                   onClick={() => setSelectedTime(slot)}
                   aria-label={`Hora ${slot}`}
                   aria-pressed={selectedTime === slot}
-                  className={`rounded-lg border px-3 py-2 text-sm tabular transition-all ${
+                  className={`rounded-lg border px-2 py-2 text-center text-sm tabular transition-all sm:px-3 ${
                     selectedTime === slot ? "border-primary bg-primary text-primary-foreground" : "hover:border-primary/50"
                   }`}
                 >
