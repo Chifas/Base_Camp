@@ -87,7 +87,6 @@ export const BookingCard = memo(function BookingCard({ professionalId, availabil
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.2 }}
-      className="lg:sticky lg:top-24"
     >
       <div className="rounded-2xl border bg-card p-6 shadow-sm">
         <div className="text-center">

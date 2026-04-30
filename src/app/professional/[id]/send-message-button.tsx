@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { MessageSquare, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConversationChat } from "@/components/shared/conversation-chat";
@@ -18,10 +19,6 @@ export function SendMessageButton({ professionalId, professionalName }: SendMess
   const router = useRouter();
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
-  // Don't show for professionals or unauthenticated users
-  if (status === "loading") return null;
-  if (!session?.user || session.user.role === "PROFESSIONAL") return null;
 
   const handleOpenChat = async () => {
     setLoading(true);
@@ -51,21 +48,37 @@ export function SendMessageButton({ professionalId, professionalName }: SendMess
     }
   };
 
+  // Hide while loading or for professionals visiting other profiles
+  if (status === "loading" || session?.user?.role === "PROFESSIONAL") return null;
+
   return (
-    <>
-      <Button
-        variant="outline"
-        className="w-full"
-        onClick={handleOpenChat}
-        disabled={loading}
-      >
-        {loading ? (
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-        ) : (
-          <MessageSquare className="mr-2 h-4 w-4" />
-        )}
-        Enviar mensaje
-      </Button>
+    <div className="rounded-xl border border-stone-200 bg-stone-50 p-4 dark:border-stone-700 dark:bg-stone-800/50">
+      <p className="mb-3 text-sm text-muted-foreground">
+        ¿Tienes alguna pregunta antes de reservar?
+      </p>
+
+      {!session?.user ? (
+        <Button variant="outline" className="w-full" asChild>
+          <Link href="/auth/login">
+            <MessageSquare className="mr-2 h-4 w-4" />
+            Inicia sesión para escribir
+          </Link>
+        </Button>
+      ) : (
+        <Button
+          variant="outline"
+          className="w-full"
+          onClick={handleOpenChat}
+          disabled={loading}
+        >
+          {loading ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <MessageSquare className="mr-2 h-4 w-4" />
+          )}
+          Enviar mensaje
+        </Button>
+      )}
 
       {/* Chat modal */}
       {conversationId && (
@@ -79,7 +92,7 @@ export function SendMessageButton({ professionalId, professionalName }: SendMess
             style={{ height: "min(600px, 80vh)" }}
           >
             <div className="flex items-center justify-between border-b px-4 py-3">
-              <h3 className="font-heading text-base font-semibold">
+              <h3 className="font-display text-base font-semibold">
                 Chat con {professionalName}
               </h3>
               <button
@@ -95,6 +108,6 @@ export function SendMessageButton({ professionalId, professionalName }: SendMess
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
