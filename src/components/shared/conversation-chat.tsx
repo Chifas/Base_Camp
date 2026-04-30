@@ -126,9 +126,9 @@ export function ConversationChat({
   // Determine the empty-state message
   const getEmptyStateText = () => {
     if (canSendFirst) {
-      return "Env\u00eda el primer mensaje";
+      return "Envía el primer mensaje";
     }
-    return "El cliente a\u00fan no ha iniciado la conversaci\u00f3n.";
+    return "El cliente aún no ha iniciado la conversación.";
   };
 
   const wrapperClass = embedded
