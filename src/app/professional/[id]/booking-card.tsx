@@ -53,10 +53,20 @@ export const BookingCard = memo(function BookingCard({ professionalId, availabil
       (a) => a.dayOfWeek === selectedDate.getDay()
     );
     if (!dayAvailability) return [];
-    return TIME_SLOTS.filter(
-      (slot) =>
-        slot >= dayAvailability.startTime && slot < dayAvailability.endTime
-    );
+
+    const now = new Date();
+    const isToday = selectedDate.toDateString() === now.toDateString();
+
+    return TIME_SLOTS.filter((slot) => {
+      if (slot < dayAvailability.startTime || slot >= dayAvailability.endTime) return false;
+      if (isToday) {
+        const [h, m] = slot.split(":").map(Number);
+        const slotDate = new Date(selectedDate);
+        slotDate.setHours(h ?? 0, m ?? 0, 0, 0);
+        return slotDate > now;
+      }
+      return true;
+    });
   }, [availability, selectedDate]);
 
   return (
