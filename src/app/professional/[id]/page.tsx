@@ -164,8 +164,8 @@ export default async function ProfessionalProfilePage({
         hasAvailability={professional.availability.length > 0}
       />
 
-      {/* Sticky anchor nav */}
-      <nav className="sticky top-0 z-30 -mx-4 mt-4 border-b border-stone-200 bg-background/85 px-4 py-2 backdrop-blur dark:border-stone-800 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+      {/* Sticky anchor nav — sits below the 64px main navbar (top-16 z-40) */}
+      <nav className="sticky top-16 z-40 border-b border-stone-200 bg-background/95 px-4 py-2 backdrop-blur dark:border-stone-800 sm:px-6 lg:px-8">
         <div className="mx-auto flex max-w-7xl gap-3 overflow-x-auto text-xs font-medium text-stone-600 dark:text-stone-400 no-scrollbar sm:gap-5 sm:text-sm">
           <a href="#about" className="shrink-0 py-1.5 hover:text-teal-600 dark:hover:text-teal-400">Sobre mí</a>
           {headline ? <a href="#specialties" className="shrink-0 py-1.5 hover:text-teal-600 dark:hover:text-teal-400">Especialidades</a> : null}
@@ -176,15 +176,15 @@ export default async function ProfessionalProfilePage({
       </nav>
 
       {/* Content grid */}
-      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 pt-4 pb-10 sm:pt-8 sm:pb-12 sm:px-6 lg:px-8">
         <div className="grid gap-6 lg:gap-8 lg:grid-cols-3">
 
           {/* ── Left column — content sections ── */}
-          <div className="order-2 lg:order-1 lg:col-span-2 space-y-10">
+          <div className="order-2 lg:order-1 lg:col-span-2 space-y-8 lg:space-y-10">
 
             {/* Bio — pull-quote style */}
             <FadeIn delay={0.1}>
-              <section id="about" className="scroll-mt-20">
+              <section id="about" className="scroll-mt-28">
                 <div className="flex items-center gap-2.5 mb-4">
                   <span className="h-4 w-0.5 rounded-full bg-teal-500 shrink-0" />
                   <h2 className="font-display text-xl font-bold text-stone-900 dark:text-stone-50">
@@ -198,7 +198,7 @@ export default async function ProfessionalProfilePage({
                       <div className="space-y-4">
                         <blockquote className="relative rounded-2xl border-l-4 border-teal-500 bg-stone-50 px-5 py-4 dark:border-teal-400 dark:bg-stone-800/50">
                           <Quote className="absolute -top-3 left-4 h-5 w-5 rounded-full bg-teal-500 p-1 text-white" aria-hidden="true" />
-                          <p className="font-display text-lg italic leading-snug text-stone-800 dark:text-stone-100 sm:text-xl">
+                          <p className="font-display text-base italic leading-snug text-stone-800 dark:text-stone-100 sm:text-lg">
                             {lead}
                           </p>
                         </blockquote>
@@ -227,7 +227,7 @@ export default async function ProfessionalProfilePage({
               if (specialties.length === 0) return null;
               return (
                 <FadeIn delay={0.12}>
-                  <section id="specialties" className="scroll-mt-20">
+                  <section id="specialties" className="scroll-mt-28">
                     <div className="flex items-center gap-2.5 mb-4">
                       <span className="h-4 w-0.5 rounded-full bg-teal-500 shrink-0" />
                       <h2 className="font-display text-xl font-bold text-stone-900 dark:text-stone-50">
@@ -260,7 +260,7 @@ export default async function ProfessionalProfilePage({
             {/* Certifications — horizontal carousel */}
             {professional.certifications.length > 0 && (
               <FadeIn delay={0.14}>
-                <section id="certifications" className="scroll-mt-20">
+                <section id="certifications" className="scroll-mt-28">
                   <div className="flex items-center gap-2.5 mb-4">
                     <span className="h-4 w-0.5 rounded-full bg-teal-500 shrink-0" />
                     <h2 className="font-display text-xl font-bold text-stone-900 dark:text-stone-50">
@@ -294,7 +294,7 @@ export default async function ProfessionalProfilePage({
 
             {/* Availability */}
             <FadeIn delay={0.15}>
-              <section id="availability" className="scroll-mt-20">
+              <section id="availability" className="scroll-mt-28">
                 <div className="flex items-center gap-2.5 mb-4">
                   <span className="h-4 w-0.5 rounded-full bg-teal-500 shrink-0" />
                   <h2 className="font-display text-xl font-bold text-stone-900 dark:text-stone-50">
@@ -350,7 +350,7 @@ export default async function ProfessionalProfilePage({
 
             {/* Reviews — ReviewsSection provides its own header + rating summary */}
             <FadeIn delay={0.2}>
-              <section id="reviews" className="scroll-mt-20">
+              <section id="reviews" className="scroll-mt-28">
                 <ReviewsSection
                   reviews={reviews}
                   rating={professional.rating}
@@ -362,7 +362,7 @@ export default async function ProfessionalProfilePage({
 
           {/* ── Right column — booking card, first on mobile ── */}
           <div className="order-1 lg:order-2 lg:col-span-1">
-            <div className="lg:sticky lg:top-6 space-y-4">
+            <div className="lg:sticky lg:top-[6.5rem] space-y-4">
               <BookingCard
                 professionalId={professional.id}
                 availability={professional.availability.map((a) => ({
