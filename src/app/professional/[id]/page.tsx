@@ -180,7 +180,7 @@ export default async function ProfessionalProfilePage({
         <div className="grid gap-6 lg:gap-8 lg:grid-cols-3">
 
           {/* ── Left column — content sections ── */}
-          <div className="order-2 lg:order-1 lg:col-span-2 space-y-8 lg:space-y-10">
+          <div className="order-2 min-w-0 lg:order-1 lg:col-span-2 space-y-8 lg:space-y-10">
 
             {/* Bio — pull-quote style */}
             <FadeIn delay={0.1}>
@@ -196,14 +196,14 @@ export default async function ProfessionalProfilePage({
                     const { lead, rest } = splitBio(bio);
                     return (
                       <div className="space-y-4">
-                        <blockquote className="relative rounded-2xl border-l-4 border-teal-500 bg-stone-50 px-5 py-4 dark:border-teal-400 dark:bg-stone-800/50">
+                        <blockquote className="relative rounded-2xl border-l-4 border-teal-500 bg-stone-50 px-4 py-4 dark:border-teal-400 dark:bg-stone-800/50 sm:px-5">
                           <Quote className="absolute -top-3 left-4 h-5 w-5 rounded-full bg-teal-500 p-1 text-white" aria-hidden="true" />
                           <p className="font-display text-base italic leading-snug text-stone-800 dark:text-stone-100 sm:text-lg">
                             {lead}
                           </p>
                         </blockquote>
                         {rest && (
-                          <p className="text-base leading-relaxed text-stone-600 dark:text-stone-400">
+                          <p className="text-sm leading-relaxed text-stone-600 dark:text-stone-400 sm:text-base">
                             {rest}
                           </p>
                         )}
@@ -245,7 +245,7 @@ export default async function ProfessionalProfilePage({
                             <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-100 text-teal-700 transition-colors group-hover:bg-teal-200 dark:bg-teal-900/40 dark:text-teal-300">
                               <Icon className="h-5 w-5" />
                             </span>
-                            <p className="mt-1 font-display font-semibold leading-tight text-stone-900 dark:text-stone-50">
+                            <p className="mt-1 min-w-0 break-words font-display font-semibold leading-tight text-stone-900 dark:text-stone-50">
                               {tag}
                             </p>
                           </div>
@@ -361,7 +361,7 @@ export default async function ProfessionalProfilePage({
           </div>
 
           {/* ── Right column — booking card, first on mobile ── */}
-          <div className="order-1 lg:order-2 lg:col-span-1">
+          <div className="order-1 min-w-0 lg:order-2 lg:col-span-1">
             <div className="lg:sticky lg:top-[6.5rem] space-y-4">
               <BookingCard
                 professionalId={professional.id}

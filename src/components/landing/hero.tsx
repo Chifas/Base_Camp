@@ -57,12 +57,26 @@ export function Hero() {
   return (
     <section
       ref={sectionRef}
-      className="hero-section relative min-h-[90vh] overflow-hidden bg-gradient-to-br from-stone-50 via-white to-teal-50/30 dark:from-stone-950 dark:via-stone-900 dark:to-teal-950/20"
+      className="hero-section relative flex min-h-screen items-center overflow-hidden bg-gradient-to-br from-stone-50 via-white to-teal-50/40 dark:from-stone-950 dark:via-stone-900 dark:to-teal-950/30"
     >
-      {/* Subtle dot grid */}
+      {/* Aurora blobs — main visual accent */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-40 -left-32 h-[36rem] w-[36rem] rounded-full bg-teal-300/40 blur-3xl dark:bg-teal-500/15"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -bottom-48 -right-24 h-[32rem] w-[32rem] rounded-full bg-amber-200/40 blur-3xl dark:bg-amber-500/10"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute top-1/3 right-1/3 h-[24rem] w-[24rem] rounded-full bg-teal-200/30 blur-3xl dark:bg-teal-400/10"
+      />
+
+      {/* Subtle dot grid — sits above aurora, below content */}
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,#0d737718_1px,transparent_1px)] [background-size:28px_28px]" />
 
-      <div className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-12 px-4 py-20 sm:px-6 md:grid-cols-5 md:gap-8 lg:px-8 lg:py-28">
+      <div className="relative mx-auto grid w-full max-w-7xl grid-cols-1 items-center gap-12 px-4 py-24 sm:px-6 md:grid-cols-5 md:gap-8 lg:px-8 lg:py-32">
 
         {/* ── Left column ── */}
         <div className="md:col-span-3">
@@ -76,7 +90,7 @@ export function Hero() {
           {/* Heading */}
           <h1
             data-heading
-            className="font-display font-extrabold tracking-tight text-[clamp(2.25rem,5vw,3.5rem)] leading-[1.1] text-stone-900 dark:text-stone-50"
+            className="font-display font-extrabold tracking-tight text-[clamp(2.75rem,6vw,4.5rem)] leading-[1.05] text-stone-900 dark:text-stone-50"
           >
             Encuentra el mentor<br />
             que cambiará{" "}
@@ -86,7 +100,7 @@ export function Hero() {
           {/* Subheading */}
           <p
             data-sub
-            className="mt-5 max-w-lg text-lg text-stone-600 dark:text-stone-400 leading-relaxed"
+            className="mt-6 max-w-lg text-lg text-stone-600 dark:text-stone-400 leading-relaxed sm:text-xl"
           >
             Coaches ejecutivos, mentores de carrera y psicólogos laborales certificados.
             Sesiones por videollamada,{" "}
