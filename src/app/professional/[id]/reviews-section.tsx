@@ -43,12 +43,15 @@ export function ReviewsSection({ reviews, rating, reviewCount }: ReviewsSectionP
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <h2 className="font-heading text-xl font-semibold">Reseñas</h2>
-        <div className="flex items-center gap-1">
-          <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-          <span className="font-heading text-lg font-bold">{rating.toFixed(1)}</span>
-          <span className="text-sm text-muted-foreground">({reviewCount})</span>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2.5">
+          <span className="h-4 w-0.5 rounded-full bg-teal-500 shrink-0" />
+          <h2 className="font-display text-xl font-bold text-stone-900 dark:text-stone-50">Reseñas</h2>
+        </div>
+        <div className="flex shrink-0 items-center gap-1">
+          <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+          <span className="font-display text-sm font-bold text-stone-900 dark:text-stone-50">{rating.toFixed(1)}</span>
+          <span className="text-xs text-muted-foreground">({reviewCount})</span>
         </div>
       </div>
 
