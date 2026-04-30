@@ -35,7 +35,7 @@ export async function GET(req: Request) {
       });
     }
 
-    // 2. Cancel CONFIRMED sessions past due by 4+ hours
+    // 2. Complete CONFIRMED sessions past due by 4+ hours so clients can leave reviews
     const pastDueCutoff = new Date(now.getTime() - 4 * 60 * 60 * 1000);
     const pastDueSessions = await prisma.session.findMany({
       where: { status: "CONFIRMED", scheduledAt: { lt: pastDueCutoff } },
@@ -45,23 +45,23 @@ export async function GET(req: Request) {
     if (pastDueSessions.length > 0) {
       await prisma.session.updateMany({
         where: { id: { in: pastDueSessions.map((s) => s.id) } },
-        data: { status: "CANCELLED", cancelledAt: now, cancelledBy: "system" },
+        data: { status: "COMPLETED" },
       });
 
       await prisma.notification.createMany({
         data: pastDueSessions.flatMap((s) => [
-          { userId: s.clientId, type: "SESSION_CANCELLED" as const, title: "Sesión cancelada", message: "Tu sesión confirmada ha vencido y ha sido cancelada automáticamente.", link: "/dashboard/client" },
-          { userId: s.professional.userId, type: "SESSION_CANCELLED" as const, title: "Sesión cancelada", message: "Una sesión confirmada ha vencido y ha sido cancelada automáticamente.", link: "/dashboard/professional" },
+          { userId: s.clientId, type: "SESSION_COMPLETED" as const, title: "Sesión completada", message: "Tu sesión ha finalizado. ¡Deja tu valoración al profesional!", link: "/dashboard/client" },
+          { userId: s.professional.userId, type: "SESSION_COMPLETED" as const, title: "Sesión completada", message: "Una sesión ha sido marcada como completada automáticamente.", link: "/dashboard/professional" },
         ]),
       });
     }
 
     const expiredCancelled = expiredSessions.length;
-    const pastDueCancelled = pastDueSessions.length;
+    const pastDueCompleted = pastDueSessions.length;
 
-    logger.info("Session cleanup completed", { expiredCancelled, pastDueCancelled });
+    logger.info("Session cleanup completed", { expiredCancelled, pastDueCompleted });
 
-    return NextResponse.json({ success: true, expiredCancelled, pastDueCancelled });
+    return NextResponse.json({ success: true, expiredCancelled, pastDueCompleted });
   } catch (error) {
     logger.error("Session cleanup failed", { error: String(error) });
     return NextResponse.json({ error: "Error en limpieza de sesiones" }, { status: 500 });
