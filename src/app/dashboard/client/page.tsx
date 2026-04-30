@@ -201,17 +201,22 @@ export default function ClientDashboard() {
 
   const upcomingSessions = useMemo(
     () =>
-      sessions.filter(
-        (s) => s.status === "CONFIRMED" || s.status === "PENDING"
-      ),
+      sessions.filter((s) => {
+        if (s.status === "COMPLETED" || s.status === "CANCELLED") return false;
+        const sessionEnd = new Date(s.scheduledAt).getTime() + s.duration * 60 * 1000;
+        return sessionEnd > Date.now();
+      }),
     [sessions]
   );
 
   const pastSessions = useMemo(
     () =>
-      sessions.filter(
-        (s) => s.status === "COMPLETED" || s.status === "CANCELLED"
-      ),
+      sessions.filter((s) => {
+        if (s.status === "COMPLETED" || s.status === "CANCELLED") return true;
+        // CONFIRMED/PENDING sessions whose time has already passed belong in history
+        const sessionEnd = new Date(s.scheduledAt).getTime() + s.duration * 60 * 1000;
+        return sessionEnd <= Date.now();
+      }),
     [sessions]
   );
 
@@ -409,7 +414,15 @@ export default function ClientDashboard() {
               />
             ) : (
             <div className="space-y-4">
-              {pastSessions.map((session, i) => (
+              {pastSessions.map((session, i) => {
+                // Treat a CONFIRMED session whose time has passed as effectively completed
+                // until the cleanup cron marks it COMPLETED in the DB
+                const sessionEnd = new Date(session.scheduledAt).getTime() + session.duration * 60 * 1000;
+                const effectivelyCompleted =
+                  session.status === "COMPLETED" ||
+                  (session.status === "CONFIRMED" && sessionEnd <= Date.now());
+
+                return (
                 <motion.div
                   key={session.id}
                   initial={{ opacity: 0, y: 12 }}
@@ -441,12 +454,12 @@ export default function ClientDashboard() {
 
                   <div className="flex items-center gap-3">
                     <Badge
-                      className={statusColors[session.status]}
+                      className={effectivelyCompleted ? statusColors["COMPLETED"] : statusColors[session.status]}
                       variant="secondary"
                     >
-                      {STATUS_LABELS[session.status]}
+                      {effectivelyCompleted ? STATUS_LABELS["COMPLETED"] : STATUS_LABELS[session.status]}
                     </Badge>
-                    {session.status === "COMPLETED" && !reviewedSessionIds.has(session.id) && (
+                    {effectivelyCompleted && !reviewedSessionIds.has(session.id) && (
                       <Button
                         size="sm"
                         variant="outline"
@@ -456,7 +469,7 @@ export default function ClientDashboard() {
                         Dejar reseña
                       </Button>
                     )}
-                    {session.status === "COMPLETED" && (
+                    {effectivelyCompleted && (
                       <Button
                         size="sm"
                         variant="outline"
@@ -466,7 +479,7 @@ export default function ClientDashboard() {
                         Chat
                       </Button>
                     )}
-                    {session.status === "COMPLETED" && (
+                    {effectivelyCompleted && (
                       <Button
                         size="sm"
                         variant="ghost"
@@ -478,7 +491,8 @@ export default function ClientDashboard() {
                     )}
                   </div>
                 </motion.div>
-              ))}
+                );
+              })}
             </div>
             )}
           </TabsContent>
