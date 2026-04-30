@@ -165,13 +165,13 @@ export default async function ProfessionalProfilePage({
       />
 
       {/* Sticky anchor nav */}
-      <nav className="sticky top-0 z-30 -mx-4 mt-4 border-b border-stone-200 bg-background/85 px-4 py-2.5 backdrop-blur dark:border-stone-800 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
-        <div className="mx-auto flex max-w-7xl gap-5 overflow-x-auto text-sm font-medium text-stone-600 dark:text-stone-400 no-scrollbar">
-          <a href="#about" className="shrink-0 hover:text-teal-600 dark:hover:text-teal-400">Sobre mí</a>
-          {headline ? <a href="#specialties" className="shrink-0 hover:text-teal-600 dark:hover:text-teal-400">Especialidades</a> : null}
-          {professional.certifications.length > 0 ? <a href="#certifications" className="shrink-0 hover:text-teal-600 dark:hover:text-teal-400">Certificaciones</a> : null}
-          <a href="#availability" className="shrink-0 hover:text-teal-600 dark:hover:text-teal-400">Disponibilidad</a>
-          <a href="#reviews" className="shrink-0 hover:text-teal-600 dark:hover:text-teal-400">Reseñas</a>
+      <nav className="sticky top-0 z-30 -mx-4 mt-4 border-b border-stone-200 bg-background/85 px-4 py-2 backdrop-blur dark:border-stone-800 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+        <div className="mx-auto flex max-w-7xl gap-3 overflow-x-auto text-xs font-medium text-stone-600 dark:text-stone-400 no-scrollbar sm:gap-5 sm:text-sm">
+          <a href="#about" className="shrink-0 py-1.5 hover:text-teal-600 dark:hover:text-teal-400">Sobre mí</a>
+          {headline ? <a href="#specialties" className="shrink-0 py-1.5 hover:text-teal-600 dark:hover:text-teal-400">Especialidades</a> : null}
+          {professional.certifications.length > 0 ? <a href="#certifications" className="shrink-0 py-1.5 hover:text-teal-600 dark:hover:text-teal-400">Certificaciones</a> : null}
+          <a href="#availability" className="shrink-0 py-1.5 hover:text-teal-600 dark:hover:text-teal-400">Disponibilidad</a>
+          <a href="#reviews" className="shrink-0 py-1.5 hover:text-teal-600 dark:hover:text-teal-400">Reseñas</a>
         </div>
       </nav>
 
@@ -179,8 +179,8 @@ export default async function ProfessionalProfilePage({
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="grid gap-6 lg:gap-8 lg:grid-cols-3">
 
-          {/* ── Left column ── */}
-          <div className="lg:col-span-2 space-y-10">
+          {/* ── Left column — content sections ── */}
+          <div className="order-2 lg:order-1 lg:col-span-2 space-y-10">
 
             {/* Bio — pull-quote style */}
             <FadeIn delay={0.1}>
@@ -360,8 +360,8 @@ export default async function ProfessionalProfilePage({
             </FadeIn>
           </div>
 
-          {/* ── Right column — sticky ── */}
-          <div className="lg:col-span-1">
+          {/* ── Right column — booking card, first on mobile ── */}
+          <div className="order-1 lg:order-2 lg:col-span-1">
             <div className="lg:sticky lg:top-6 space-y-4">
               <BookingCard
                 professionalId={professional.id}
