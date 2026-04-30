@@ -404,8 +404,8 @@ export default function ClientDashboard() {
             {pastSessions.length === 0 ? (
               <EmptyState
                 icon={Clock}
-                title="Sin historial todav\u00eda"
-                description="Aqu\u00ed ver\u00e1s las sesiones que ya hayas completado o cancelado."
+                title="Sin historial todavía"
+                description="Aquí verás las sesiones que ya hayas completado o cancelado."
               />
             ) : (
             <div className="space-y-4">
