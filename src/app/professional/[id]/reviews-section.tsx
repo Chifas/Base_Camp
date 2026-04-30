@@ -65,9 +65,9 @@ export function ReviewsSection({ reviews, rating, reviewCount }: ReviewsSectionP
               />
             </div>
             <div className="flex-1">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold">{review.userName}</p>
-                <p className="text-xs text-muted-foreground">{formatDate(review.createdAt)}</p>
+              <div className="flex items-baseline justify-between gap-2">
+                <p className="min-w-0 truncate text-sm font-semibold">{review.userName}</p>
+                <p className="shrink-0 text-xs text-muted-foreground">{formatDate(review.createdAt)}</p>
               </div>
               <div className="mt-1 flex gap-0.5">
                 {Array.from({ length: 5 }, (_, i) => (
