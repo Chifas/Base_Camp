@@ -168,13 +168,13 @@ export async function POST(req: Request) {
         },
       });
 
+      // Only stamp creditsResetAt when starting a fresh month — never overwrite it with null
+      const needsResetStamp = !resetAt || resetAt.getMonth() !== now.getMonth() || resetAt.getFullYear() !== now.getFullYear();
       await tx.user.update({
         where: { id: session.user.id },
         data: {
           freeCreditsUsed: currentUsed + 1,
-          creditsResetAt: currentUsed === 0 && (!resetAt || resetAt.getMonth() !== now.getMonth())
-            ? now
-            : null,
+          ...(needsResetStamp ? { creditsResetAt: now } : {}),
         },
       });
 

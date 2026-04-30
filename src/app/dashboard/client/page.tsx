@@ -270,7 +270,11 @@ export default function ClientDashboard() {
       <StaggerContainer className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4" delay={0.1}>
         {[
           { label: "Sesiones disponibles", value: credits ? `${credits.remaining}/${credits.limit}` : `—/${CREDITS_CONFIG.FREE_SESSIONS_PER_MONTH}`, icon: Calendar, tourAttr: "credits-stat", accent: "text-teal-600 dark:text-teal-400", iconBg: "bg-teal-100 dark:bg-teal-900/30" },
-          { label: "Sesiones completadas", value: pastSessions.filter((s) => s.status === "COMPLETED").length.toString(), icon: Clock, tourAttr: undefined, accent: "text-stone-700 dark:text-stone-300", iconBg: "bg-stone-100 dark:bg-stone-800" },
+          { label: "Sesiones completadas", value: pastSessions.filter((s) => {
+              if (s.status === "COMPLETED") return true;
+              const sessionEnd = new Date(s.scheduledAt).getTime() + s.duration * 60 * 1000;
+              return s.status === "CONFIRMED" && sessionEnd <= Date.now();
+            }).length.toString(), icon: Clock, tourAttr: undefined, accent: "text-stone-700 dark:text-stone-300", iconBg: "bg-stone-100 dark:bg-stone-800" },
           { label: "Próximas sesiones", value: upcomingSessions.length.toString(), icon: Star, tourAttr: undefined, accent: "text-amber-600 dark:text-amber-400", iconBg: "bg-amber-100 dark:bg-amber-900/30" },
           { label: "Reseñas dejadas", value: reviewedSessionIds.size.toString(), icon: MessageSquare, tourAttr: undefined, accent: "text-stone-700 dark:text-stone-300", iconBg: "bg-stone-100 dark:bg-stone-800" },
         ].map((stat) => (
