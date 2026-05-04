@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { CREDITS_CONFIG } from "@/lib/credits-config";
+import { getTierLimits } from "@/lib/credits-config";
 import { sendBookingEmails, type EmailSessionData } from "@/lib/emails";
 import { createNotifications } from "@/lib/notifications";
 import { stripHtml } from "@/lib/sanitize";
@@ -80,10 +80,19 @@ export async function POST(req: Request) {
       // 1. Fetch user and check credits (inside transaction for consistency)
       const user = await tx.user.findUnique({
         where: { id: session.user.id },
-        select: { freeCreditsUsed: true, creditsResetAt: true, name: true, email: true },
+        select: {
+          freeCreditsUsed: true,
+          creditsResetAt: true,
+          name: true,
+          email: true,
+          subscriptionTier: true,
+        },
       });
 
       if (!user) throw new Error("USER_NOT_FOUND");
+
+      // Tier-aware limit (Premium gets 10/month, Free gets 3)
+      const limits = getTierLimits(user.subscriptionTier);
 
       // Auto-reset credits if month changed
       const resetAt = user.creditsResetAt ? new Date(user.creditsResetAt) : null;
@@ -94,12 +103,12 @@ export async function POST(req: Request) {
       }
 
       // Check credits available
-      if (currentUsed >= CREDITS_CONFIG.FREE_SESSIONS_PER_MONTH) {
+      if (currentUsed >= limits.sessionsPerMonth) {
         throw new Error("CREDITS_EXHAUSTED");
       }
 
-      // 2. Anti-abuse: max 1 free session per client-professional pair per month
-      const existingWithProfessional = await tx.session.findFirst({
+      // 2. Anti-abuse: max free sessions per client-professional pair per month (tier-aware)
+      const sameProMonthly = await tx.session.count({
         where: {
           clientId: session.user.id,
           professionalId: validProfId,
@@ -109,7 +118,9 @@ export async function POST(req: Request) {
         },
       });
 
-      if (existingWithProfessional) throw new Error("DUPLICATE_BOOKING");
+      if (sameProMonthly >= limits.maxFreePerProfessional) {
+        throw new Error("DUPLICATE_BOOKING");
+      }
 
       // 3. Check blocked date
       const isBlocked = await tx.blockedDate.findFirst({
@@ -181,7 +192,7 @@ export async function POST(req: Request) {
       return {
         dbSession,
         user,
-        creditsRemaining: CREDITS_CONFIG.FREE_SESSIONS_PER_MONTH - (currentUsed + 1),
+        creditsRemaining: limits.sessionsPerMonth - (currentUsed + 1),
       };
     });
 
