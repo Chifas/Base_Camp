@@ -29,6 +29,7 @@ import { PhotoUpload } from "@/components/shared/photo-upload";
 import { BetaFeedbackModal } from "@/components/shared/beta-feedback-modal";
 import { ReferralPanel } from "@/components/shared/referral-panel";
 import { SessionChat } from "@/components/shared/session-chat";
+import { SubscriptionTab } from "./subscription-tab";
 import { OnboardingTour, type TourStep } from "@/components/shared/onboarding-tour";
 import { STATUS_LABELS, type Session } from "@/types";
 import { formatDate, formatTime } from "@/lib/utils";
@@ -97,7 +98,7 @@ const CATEGORY_LABELS_REVIEW = {
 // Must mirror the TabsTrigger values rendered below.
 // "past" was previously misspelled as "history" and "profile" was missing,
 // which silently bounced the URL back to "upcoming" → tabs felt broken.
-const CLIENT_TABS = ["upcoming", "past", "referrals", "profile"] as const;
+const CLIENT_TABS = ["upcoming", "past", "subscription", "referrals", "profile"] as const;
 type ClientTab = typeof CLIENT_TABS[number];
 
 export default function ClientDashboard() {
@@ -310,6 +311,7 @@ export default function ClientDashboard() {
               <TabsTrigger value="past">
                 Historial ({pastSessions.length})
               </TabsTrigger>
+              <TabsTrigger value="subscription">Suscripción</TabsTrigger>
               <TabsTrigger value="referrals">Referidos</TabsTrigger>
               <TabsTrigger value="profile">Mi perfil</TabsTrigger>
             </TabsList>
@@ -500,6 +502,11 @@ export default function ClientDashboard() {
             </div>
             )}
           </TabsContent>
+          {/* ===== Subscription ===== */}
+          <TabsContent value="subscription" className="mt-6">
+            <SubscriptionTab />
+          </TabsContent>
+
           {/* ===== Referrals ===== */}
           <TabsContent value="referrals" className="mt-6">
             <ReferralPanel

@@ -3,7 +3,14 @@ import { headers } from "next/headers";
 import { stripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import { env } from "@/lib/env";
-import { sendBookingEmails, type EmailSessionData } from "@/lib/emails";
+import {
+  sendBookingEmails,
+  sendPremiumWelcomeEmail,
+  sendPremiumTrialEndingEmail,
+  sendPremiumPaymentFailedEmail,
+  sendPremiumCanceledEmail,
+  type EmailSessionData,
+} from "@/lib/emails";
 import { createNotifications } from "@/lib/notifications";
 import { mapSubscriptionStatusToTier } from "@/lib/billing";
 import type Stripe from "stripe";
@@ -178,7 +185,7 @@ export async function POST(req: Request) {
           },
         });
 
-        // Welcome notification when transitioning into Premium
+        // Welcome notification + email when transitioning into Premium
         if (wasFree && newTier === "PREMIUM") {
           void createNotifications([
             {
@@ -192,6 +199,13 @@ export async function POST(req: Request) {
               link: "/dashboard/client?tab=subscription",
             },
           ]);
+          if (user.email) {
+            void sendPremiumWelcomeEmail({
+              email: user.email,
+              name: user.name,
+              trialing: subscription.status === "trialing",
+            });
+          }
         }
 
         logger.info("Subscription synced", {
@@ -211,16 +225,17 @@ export async function POST(req: Request) {
 
         const user = await prisma.user.findFirst({
           where: { stripeCustomerId: customerId },
-          select: { id: true },
+          select: { id: true, email: true, name: true },
         });
         if (!user) break;
 
+        const endsAt = new Date(subscription.current_period_end * 1000);
         await prisma.user.update({
           where: { id: user.id },
           data: {
             subscriptionTier: "FREE",
             subscriptionStatus: "canceled",
-            subscriptionEndsAt: new Date(subscription.current_period_end * 1000),
+            subscriptionEndsAt: endsAt,
           },
         });
 
@@ -233,6 +248,9 @@ export async function POST(req: Request) {
             link: "/dashboard/client?tab=subscription",
           },
         ]);
+        if (user.email) {
+          void sendPremiumCanceledEmail({ email: user.email, name: user.name, endsAt });
+        }
         logger.info("Subscription deleted", { userId: user.id });
         break;
       }
@@ -247,7 +265,7 @@ export async function POST(req: Request) {
 
         const user = await prisma.user.findFirst({
           where: { stripeCustomerId: customerId },
-          select: { id: true },
+          select: { id: true, email: true, name: true },
         });
         if (!user) break;
 
@@ -265,6 +283,9 @@ export async function POST(req: Request) {
             link: "/dashboard/client?tab=subscription",
           },
         ]);
+        if (user.email) {
+          void sendPremiumPaymentFailedEmail({ email: user.email, name: user.name });
+        }
         logger.warn("Subscription payment failed", { userId: user.id });
         break;
       }
@@ -273,6 +294,29 @@ export async function POST(req: Request) {
         // Stripe sends its own receipt — log only
         const invoice = event.data.object as Stripe.Invoice;
         logger.info("Invoice paid", { invoiceId: invoice.id, amount: invoice.amount_paid });
+        break;
+      }
+
+      case "customer.subscription.trial_will_end": {
+        // Fired ~3 days before trial ends — Stripe handles the timing for us
+        const subscription = event.data.object as Stripe.Subscription;
+        const customerId =
+          typeof subscription.customer === "string"
+            ? subscription.customer
+            : subscription.customer.id;
+
+        const user = await prisma.user.findFirst({
+          where: { stripeCustomerId: customerId },
+          select: { id: true, email: true, name: true },
+        });
+        if (!user?.email) break;
+
+        await sendPremiumTrialEndingEmail({
+          email: user.email,
+          name: user.name,
+          endsAt: new Date(subscription.trial_end! * 1000),
+        });
+        logger.info("Trial-ending email sent", { userId: user.id });
         break;
       }
 
