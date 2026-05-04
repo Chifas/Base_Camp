@@ -9,3 +9,9 @@ export { sessionReminderHtml, sendSessionReminderEmails } from "./session-remind
 export { sessionCancelledHtml, sendCancellationEmails } from "./cancellation";
 export { newReviewHtml, sendNewReviewEmail } from "./review";
 export { sendOnboardingEmail, sendWaitlistConfirmationEmail } from "./onboarding";
+export {
+  sendPremiumWelcomeEmail,
+  sendPremiumTrialEndingEmail,
+  sendPremiumPaymentFailedEmail,
+  sendPremiumCanceledEmail,
+} from "./premium";

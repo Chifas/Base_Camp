@@ -43,6 +43,7 @@ export const availabilitySchema = z.object({
       startTime: z.string().regex(/^(\d{2}:\d{2})?$/, "Formato HH:MM"),
       endTime: z.string().regex(/^(\d{2}:\d{2})?$/, "Formato HH:MM"),
       enabled: z.boolean(),
+      priorityOnly: z.boolean().optional().default(false),
     }).refine(
       (slot) => !slot.enabled || !slot.startTime || !slot.endTime || slot.startTime < slot.endTime,
       { message: "La hora de fin debe ser posterior a la hora de inicio" }

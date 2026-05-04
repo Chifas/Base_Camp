@@ -3,8 +3,16 @@ import { headers } from "next/headers";
 import { stripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import { env } from "@/lib/env";
-import { sendBookingEmails, type EmailSessionData } from "@/lib/emails";
+import {
+  sendBookingEmails,
+  sendPremiumWelcomeEmail,
+  sendPremiumTrialEndingEmail,
+  sendPremiumPaymentFailedEmail,
+  sendPremiumCanceledEmail,
+  type EmailSessionData,
+} from "@/lib/emails";
 import { createNotifications } from "@/lib/notifications";
+import { mapSubscriptionStatusToTier } from "@/lib/billing";
 import type Stripe from "stripe";
 import { logger } from "@/lib/logger";
 
@@ -41,6 +49,16 @@ export async function POST(req: Request) {
       { error: `Firma inválida: ${message}` },
       { status: 400 }
     );
+  }
+
+  // Idempotency: Stripe retries deliveries; insert before processing so duplicates short-circuit
+  try {
+    await prisma.stripeEventLog.create({
+      data: { id: event.id, type: event.type },
+    });
+  } catch {
+    logger.info("Stripe webhook ya procesado", { eventId: event.id, type: event.type });
+    return NextResponse.json({ received: true, duplicate: true });
   }
 
   try {
@@ -132,6 +150,173 @@ export async function POST(req: Request) {
           });
           logger.info("Sesión cancelada por checkout expirado", { sessionId });
         }
+        break;
+      }
+
+      case "customer.subscription.created":
+      case "customer.subscription.updated": {
+        const subscription = event.data.object as Stripe.Subscription;
+        const customerId =
+          typeof subscription.customer === "string"
+            ? subscription.customer
+            : subscription.customer.id;
+
+        const user = await prisma.user.findFirst({
+          where: { stripeCustomerId: customerId },
+          select: { id: true, subscriptionTier: true, name: true, email: true },
+        });
+        if (!user) {
+          logger.warn("Subscription event for unknown customer", { customerId });
+          break;
+        }
+
+        const newTier = mapSubscriptionStatusToTier(subscription.status);
+        const wasFree = user.subscriptionTier === "FREE";
+        const interval = subscription.items.data[0]?.price.recurring?.interval ?? null;
+
+        await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            stripeSubscriptionId: subscription.id,
+            subscriptionStatus: subscription.status,
+            subscriptionTier: newTier,
+            subscriptionEndsAt: new Date(subscription.current_period_end * 1000),
+            subscriptionInterval: interval,
+          },
+        });
+
+        // Welcome notification + email when transitioning into Premium
+        if (wasFree && newTier === "PREMIUM") {
+          void createNotifications([
+            {
+              userId: user.id,
+              type: "PAYMENT_RECEIVED",
+              title: "¡Bienvenido a Premium!",
+              message:
+                subscription.status === "trialing"
+                  ? "Empieza tu prueba gratuita de 7 días. Disfruta de tus beneficios Premium."
+                  : "Tu suscripción Premium está activa. Disfruta de tus nuevos beneficios.",
+              link: "/dashboard/client?tab=subscription",
+            },
+          ]);
+          if (user.email) {
+            void sendPremiumWelcomeEmail({
+              email: user.email,
+              name: user.name,
+              trialing: subscription.status === "trialing",
+            });
+          }
+        }
+
+        logger.info("Subscription synced", {
+          userId: user.id,
+          status: subscription.status,
+          tier: newTier,
+        });
+        break;
+      }
+
+      case "customer.subscription.deleted": {
+        const subscription = event.data.object as Stripe.Subscription;
+        const customerId =
+          typeof subscription.customer === "string"
+            ? subscription.customer
+            : subscription.customer.id;
+
+        const user = await prisma.user.findFirst({
+          where: { stripeCustomerId: customerId },
+          select: { id: true, email: true, name: true },
+        });
+        if (!user) break;
+
+        const endsAt = new Date(subscription.current_period_end * 1000);
+        await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            subscriptionTier: "FREE",
+            subscriptionStatus: "canceled",
+            subscriptionEndsAt: endsAt,
+          },
+        });
+
+        void createNotifications([
+          {
+            userId: user.id,
+            type: "PAYMENT_RECEIVED",
+            title: "Suscripción cancelada",
+            message: "Tu acceso Premium continúa hasta el final del periodo de facturación.",
+            link: "/dashboard/client?tab=subscription",
+          },
+        ]);
+        if (user.email) {
+          void sendPremiumCanceledEmail({ email: user.email, name: user.name, endsAt });
+        }
+        logger.info("Subscription deleted", { userId: user.id });
+        break;
+      }
+
+      case "invoice.payment_failed": {
+        const invoice = event.data.object as Stripe.Invoice;
+        const customerId =
+          typeof invoice.customer === "string"
+            ? invoice.customer
+            : invoice.customer?.id;
+        if (!customerId) break;
+
+        const user = await prisma.user.findFirst({
+          where: { stripeCustomerId: customerId },
+          select: { id: true, email: true, name: true },
+        });
+        if (!user) break;
+
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { subscriptionStatus: "past_due" },
+        });
+
+        void createNotifications([
+          {
+            userId: user.id,
+            type: "PAYMENT_RECEIVED",
+            title: "Pago fallido",
+            message: "No pudimos cobrar tu suscripción. Actualiza tu método de pago para no perder Premium.",
+            link: "/dashboard/client?tab=subscription",
+          },
+        ]);
+        if (user.email) {
+          void sendPremiumPaymentFailedEmail({ email: user.email, name: user.name });
+        }
+        logger.warn("Subscription payment failed", { userId: user.id });
+        break;
+      }
+
+      case "invoice.payment_succeeded": {
+        // Stripe sends its own receipt — log only
+        const invoice = event.data.object as Stripe.Invoice;
+        logger.info("Invoice paid", { invoiceId: invoice.id, amount: invoice.amount_paid });
+        break;
+      }
+
+      case "customer.subscription.trial_will_end": {
+        // Fired ~3 days before trial ends — Stripe handles the timing for us
+        const subscription = event.data.object as Stripe.Subscription;
+        const customerId =
+          typeof subscription.customer === "string"
+            ? subscription.customer
+            : subscription.customer.id;
+
+        const user = await prisma.user.findFirst({
+          where: { stripeCustomerId: customerId },
+          select: { id: true, email: true, name: true },
+        });
+        if (!user?.email) break;
+
+        await sendPremiumTrialEndingEmail({
+          email: user.email,
+          name: user.name,
+          endsAt: new Date(subscription.trial_end! * 1000),
+        });
+        logger.info("Trial-ending email sent", { userId: user.id });
         break;
       }
 

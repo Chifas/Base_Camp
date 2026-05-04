@@ -89,7 +89,7 @@ export async function PATCH(
             user: { select: { id: true, name: true, email: true } },
           },
         },
-        client: { select: { id: true, name: true, email: true } },
+        client: { select: { id: true, name: true, email: true, subscriptionTier: true } },
       },
     });
 
@@ -164,6 +164,7 @@ export async function PATCH(
         scheduledAt: existing.scheduledAt,
         price: existing.price,
         cancelledByRole: isProfessional ? "PROFESSIONAL" : "CLIENT",
+        clientTier: existing.client.subscriptionTier,
       });
 
       const updateData: Record<string, unknown> = {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Save, Loader2 } from "lucide-react";
+import { Check, Save, Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -16,13 +16,13 @@ export const DAYS = [
 ];
 
 export const EMPTY_AVAILABILITY = [
-  { dayOfWeek: 1, startTime: "09:00", endTime: "14:00", enabled: false },
-  { dayOfWeek: 2, startTime: "09:00", endTime: "14:00", enabled: false },
-  { dayOfWeek: 3, startTime: "09:00", endTime: "14:00", enabled: false },
-  { dayOfWeek: 4, startTime: "09:00", endTime: "14:00", enabled: false },
-  { dayOfWeek: 5, startTime: "09:00", endTime: "13:00", enabled: false },
-  { dayOfWeek: 6, startTime: "", endTime: "", enabled: false },
-  { dayOfWeek: 0, startTime: "", endTime: "", enabled: false },
+  { dayOfWeek: 1, startTime: "09:00", endTime: "14:00", enabled: false, priorityOnly: false },
+  { dayOfWeek: 2, startTime: "09:00", endTime: "14:00", enabled: false, priorityOnly: false },
+  { dayOfWeek: 3, startTime: "09:00", endTime: "14:00", enabled: false, priorityOnly: false },
+  { dayOfWeek: 4, startTime: "09:00", endTime: "14:00", enabled: false, priorityOnly: false },
+  { dayOfWeek: 5, startTime: "09:00", endTime: "13:00", enabled: false, priorityOnly: false },
+  { dayOfWeek: 6, startTime: "", endTime: "", enabled: false, priorityOnly: false },
+  { dayOfWeek: 0, startTime: "", endTime: "", enabled: false, priorityOnly: false },
 ];
 
 export interface AvailabilitySlot {
@@ -30,6 +30,7 @@ export interface AvailabilitySlot {
   startTime: string;
   endTime: string;
   enabled: boolean;
+  priorityOnly?: boolean;
 }
 
 interface AvailabilityEditorProps {
@@ -107,7 +108,7 @@ export function AvailabilityEditor({
             </div>
 
             {slot.enabled && (
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <input
                   type="time"
                   value={slot.startTime}
@@ -129,11 +130,31 @@ export function AvailabilityEditor({
                   }}
                   className="rounded-lg border bg-background px-3 py-1.5 text-sm"
                 />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const updated = [...availability];
+                    updated[idx] = { ...slot, priorityOnly: !slot.priorityOnly };
+                    setAvailability(updated);
+                  }}
+                  title="Reservar este horario solo para clientes Premium"
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${
+                    slot.priorityOnly
+                      ? "border-amber-300 bg-gradient-to-r from-teal-50 to-amber-50 text-amber-700 dark:border-amber-800 dark:from-teal-950/40 dark:to-amber-950/40 dark:text-amber-300"
+                      : "border-stone-200 text-stone-500 hover:border-stone-300 dark:border-stone-700 dark:text-stone-400"
+                  }`}
+                >
+                  <Sparkles className="h-3 w-3" />
+                  Solo Premium
+                </button>
               </div>
             )}
           </div>
         ))}
       </div>
+      <p className="mt-3 text-xs text-muted-foreground">
+        Marca un horario como <span className="font-medium">Solo Premium</span> para reservarlo a clientes con plan de pago. Útil para tus mejores franjas.
+      </p>
 
       {showSaveButton && (
         <div className="mt-6">

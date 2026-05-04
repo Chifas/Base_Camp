@@ -9,10 +9,13 @@ import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./theme-toggle";
 import { NotificationBell } from "./notification-bell";
+import { PremiumBadge } from "@/components/shared/premium-badge";
+import { isPremium } from "@/lib/session-utils";
 import { gsap } from "@/lib/gsap-config";
 
 const navLinks = [
   { href: "/explore", label: "Explorar" },
+  { href: "/precios", label: "Precios" },
 ];
 
 export function Navbar() {
@@ -152,7 +155,10 @@ export function Navbar() {
                     className="absolute right-0 top-full mt-2 w-[min(13rem,calc(100vw-2rem))] rounded-xl border bg-popover shadow-lg ring-1 ring-black/5 overflow-hidden"
                   >
                     <div className="px-4 py-3 border-b">
-                      <p className="text-sm font-semibold truncate">{user?.name ?? ""}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-semibold truncate">{user?.name ?? ""}</p>
+                        {isPremium(session) && <PremiumBadge size="sm" />}
+                      </div>
                       <p className="text-xs text-muted-foreground">
                         {(user as { role?: string })?.role === "PROFESSIONAL"
                           ? "Profesional"
@@ -244,8 +250,11 @@ export function Navbar() {
                     <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-semibold">
                       {initials}
                     </div>
-                    <div>
-                      <p className="text-sm font-semibold">{user?.name ?? ""}</p>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="truncate text-sm font-semibold">{user?.name ?? ""}</p>
+                        {isPremium(session) && <PremiumBadge size="sm" />}
+                      </div>
                       <p className="text-xs text-muted-foreground">
                         {(user as { role?: string })?.role === "PROFESSIONAL"
                           ? "Profesional"

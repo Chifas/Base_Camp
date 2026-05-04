@@ -2,11 +2,13 @@
 
 import { memo, useMemo, useState } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
 import { Calendar, Clock, MessageSquare, Video, Sparkles, CalendarOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { isPremium } from "@/lib/session-utils";
 import type { AvailabilitySlot } from "@/types";
 
 const TIME_SLOTS = [
@@ -37,14 +39,28 @@ interface BookingCardProps {
 }
 
 export const BookingCard = memo(function BookingCard({ professionalId, availability, socialImpactScore }: BookingCardProps) {
+  const { data: session } = useSession();
+  const userIsPremium = isPremium(session);
+
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
+
+  // Hide priority-only slots from non-Premium users at the source
+  const visibleAvailability = useMemo(
+    () => availability.filter((a) => userIsPremium || !a.priorityOnly),
+    [availability, userIsPremium],
+  );
+
+  const hasPremiumOnlyHidden = useMemo(
+    () => !userIsPremium && availability.some((a) => a.priorityOnly),
+    [availability, userIsPremium],
+  );
 
   const nextDays = useMemo(() => getNextDays(14), []);
 
   const availableDays = useMemo(() => {
     return nextDays.filter((d) => {
-      const dayAvail = availability.find((a) => a.dayOfWeek === d.getDay());
+      const dayAvail = visibleAvailability.find((a) => a.dayOfWeek === d.getDay());
       if (!dayAvail) return false;
       const now = new Date();
       const isToday = d.toDateString() === now.toDateString();
@@ -58,11 +74,11 @@ export const BookingCard = memo(function BookingCard({ professionalId, availabil
         return slotDate > now;
       });
     });
-  }, [availability, nextDays]);
+  }, [visibleAvailability, nextDays]);
 
   const availableSlots = useMemo(() => {
     if (!selectedDate) return [];
-    const dayAvailability = availability.find(
+    const dayAvailability = visibleAvailability.find(
       (a) => a.dayOfWeek === selectedDate.getDay()
     );
     if (!dayAvailability) return [];
@@ -80,7 +96,7 @@ export const BookingCard = memo(function BookingCard({ professionalId, availabil
       }
       return true;
     });
-  }, [availability, selectedDate]);
+  }, [visibleAvailability, selectedDate]);
 
   return (
     <motion.div
@@ -197,6 +213,16 @@ export const BookingCard = memo(function BookingCard({ professionalId, availabil
             Videollamada integrada en la plataforma
           </div>
         </div>
+
+        {hasPremiumOnlyHidden && (
+          <Link
+            href="/precios"
+            className="mt-4 flex items-center gap-2 rounded-lg border border-amber-200 bg-gradient-to-r from-teal-50 to-amber-50 px-3 py-2 text-xs font-medium text-amber-800 transition-colors hover:border-amber-300 dark:border-amber-800 dark:from-teal-950/30 dark:to-amber-950/30 dark:text-amber-200"
+          >
+            <Sparkles className="h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
+            <span>Hay horarios reservados a clientes Premium — descúbrelos</span>
+          </Link>
+        )}
           </>
         )}
       </div>
