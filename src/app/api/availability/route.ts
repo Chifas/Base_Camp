@@ -69,6 +69,7 @@ export async function PUT(req: Request) {
           dayOfWeek:      s.dayOfWeek,
           startTime:      s.startTime,
           endTime:        s.endTime,
+          priorityOnly:   s.priorityOnly ?? false,
         })),
       }),
     ]);

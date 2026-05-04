@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
-import { Check, Save, Loader2 } from "lucide-react";
+import { Check, Save, Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import type { AvailabilitySlot } from "./types";
@@ -10,20 +10,28 @@ import type { AvailabilitySlot } from "./types";
 const DAYS = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
 
 const EMPTY_AVAILABILITY: AvailabilitySlot[] = [
-  { dayOfWeek: 1, startTime: "09:00", endTime: "14:00", enabled: false },
-  { dayOfWeek: 2, startTime: "09:00", endTime: "14:00", enabled: false },
-  { dayOfWeek: 3, startTime: "09:00", endTime: "14:00", enabled: false },
-  { dayOfWeek: 4, startTime: "09:00", endTime: "14:00", enabled: false },
-  { dayOfWeek: 5, startTime: "09:00", endTime: "13:00", enabled: false },
-  { dayOfWeek: 6, startTime: "", endTime: "", enabled: false },
-  { dayOfWeek: 0, startTime: "", endTime: "", enabled: false },
+  { dayOfWeek: 1, startTime: "09:00", endTime: "14:00", enabled: false, priorityOnly: false },
+  { dayOfWeek: 2, startTime: "09:00", endTime: "14:00", enabled: false, priorityOnly: false },
+  { dayOfWeek: 3, startTime: "09:00", endTime: "14:00", enabled: false, priorityOnly: false },
+  { dayOfWeek: 4, startTime: "09:00", endTime: "14:00", enabled: false, priorityOnly: false },
+  { dayOfWeek: 5, startTime: "09:00", endTime: "13:00", enabled: false, priorityOnly: false },
+  { dayOfWeek: 6, startTime: "", endTime: "", enabled: false, priorityOnly: false },
+  { dayOfWeek: 0, startTime: "", endTime: "", enabled: false, priorityOnly: false },
 ];
 
 function buildAvailability(initial: AvailabilitySlot[]): AvailabilitySlot[] {
   if (initial.length === 0) return EMPTY_AVAILABILITY;
   return EMPTY_AVAILABILITY.map((slot) => {
     const db = initial.find((a) => a.dayOfWeek === slot.dayOfWeek);
-    return db ? { dayOfWeek: db.dayOfWeek, startTime: db.startTime, endTime: db.endTime, enabled: true } : slot;
+    return db
+      ? {
+          dayOfWeek: db.dayOfWeek,
+          startTime: db.startTime,
+          endTime: db.endTime,
+          enabled: true,
+          priorityOnly: db.priorityOnly ?? false,
+        }
+      : slot;
   });
 }
 
@@ -100,7 +108,7 @@ export default function AvailabilityTab({ initialAvailability, onSaved }: Props)
               </div>
 
               {slot.enabled && (
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <input
                     type="time"
                     value={slot.startTime}
@@ -122,11 +130,31 @@ export default function AvailabilityTab({ initialAvailability, onSaved }: Props)
                     }}
                     className="rounded-lg border bg-background px-3 py-1.5 text-sm"
                   />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const updated = [...availability];
+                      updated[idx] = { ...slot, priorityOnly: !slot.priorityOnly };
+                      setAvailability(updated);
+                    }}
+                    title="Reservar este horario solo a clientes Premium"
+                    className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${
+                      slot.priorityOnly
+                        ? "border-amber-300 bg-gradient-to-r from-teal-50 to-amber-50 text-amber-700 dark:border-amber-800 dark:from-teal-950/40 dark:to-amber-950/40 dark:text-amber-300"
+                        : "border-stone-200 text-stone-500 hover:border-stone-300 dark:border-stone-700 dark:text-stone-400"
+                    }`}
+                  >
+                    <Sparkles className="h-3 w-3" />
+                    Solo Premium
+                  </button>
                 </div>
               )}
             </div>
           ))}
         </div>
+        <p className="mt-3 text-xs text-muted-foreground">
+          Marca un horario como <span className="font-medium">Solo Premium</span> para reservarlo a clientes con plan de pago. Útil para tus mejores franjas.
+        </p>
 
         <Separator className="my-6" />
 
