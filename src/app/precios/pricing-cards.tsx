@@ -37,7 +37,7 @@ export function PricingCards({
 }: PricingCardsProps) {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [interval, setInterval] = useState<Interval>("month");
+  const [selectedInterval, setSelectedInterval] = useState<Interval>("month");
   const [loading, setLoading] = useState(false);
 
   const isAuthed = status === "authenticated";
@@ -50,7 +50,7 @@ export function PricingCards({
 
   async function handleStartTrial() {
     if (!isAuthed) {
-      router.push(`/auth/register?next=/precios&plan=premium-${interval}`);
+      router.push(`/auth/register?next=/precios&plan=premium-${selectedInterval}`);
       return;
     }
     if (isPremium) {
@@ -62,7 +62,7 @@ export function PricingCards({
       const res = await fetch("/api/billing/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ interval }),
+        body: JSON.stringify({ interval: selectedInterval }),
       });
       const data = await res.json();
       if (!res.ok || !data.checkoutUrl) {
@@ -100,11 +100,11 @@ export function PricingCards({
       <div className="mb-8 flex justify-center">
         <div className="inline-flex rounded-full border border-stone-200 bg-white p-1 shadow-sm dark:border-stone-800 dark:bg-stone-900">
           <button
-            onClick={() => setInterval("month")}
-            aria-pressed={interval === "month"}
+            onClick={() => setSelectedInterval("month")}
+            aria-pressed={selectedInterval === "month"}
             className={cn(
               "rounded-full px-5 py-1.5 text-sm font-medium transition-colors",
-              interval === "month"
+              selectedInterval === "month"
                 ? "bg-teal-600 text-white"
                 : "text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-100",
             )}
@@ -112,11 +112,11 @@ export function PricingCards({
             Mensual
           </button>
           <button
-            onClick={() => setInterval("year")}
-            aria-pressed={interval === "year"}
+            onClick={() => setSelectedInterval("year")}
+            aria-pressed={selectedInterval === "year"}
             className={cn(
               "relative rounded-full px-5 py-1.5 text-sm font-medium transition-colors",
-              interval === "year"
+              selectedInterval === "year"
                 ? "bg-teal-600 text-white"
                 : "text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-100",
             )}
@@ -174,7 +174,7 @@ export function PricingCards({
               Para quien quiere acelerar de verdad su crecimiento
             </p>
             <div className="mt-6 flex items-baseline gap-1">
-              {interval === "month" ? (
+              {selectedInterval === "month" ? (
                 <>
                   <span className="font-display text-5xl font-extrabold tracking-tight text-stone-900 dark:text-stone-50">
                     {monthlyDisplay}€
@@ -190,7 +190,7 @@ export function PricingCards({
                 </>
               )}
             </div>
-            {interval === "year" && (
+            {selectedInterval === "year" && (
               <p className="mt-1 text-xs text-stone-500 dark:text-stone-400">
                 Equivale a {yearlyMonthly}€/mes — facturado una vez al año
               </p>

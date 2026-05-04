@@ -34,6 +34,7 @@ vi.mock("@/lib/prisma", () => ({
   prisma: {
     session: { update: vi.fn() },
     professionalProfile: { updateMany: vi.fn() },
+    stripeEventLog: { create: vi.fn() },
   },
 }));
 
@@ -66,6 +67,7 @@ describe("POST /api/webhooks/stripe", () => {
 
   it("handles checkout.session.completed and confirms session", async () => {
     mockConstructEvent.mockReturnValue({
+      id: "evt_1",
       type: "checkout.session.completed",
       data: {
         object: {
@@ -98,6 +100,7 @@ describe("POST /api/webhooks/stripe", () => {
 
   it("handles checkout.session.expired and cancels session", async () => {
     mockConstructEvent.mockReturnValue({
+      id: "evt_2",
       type: "checkout.session.expired",
       data: {
         object: {
@@ -122,6 +125,7 @@ describe("POST /api/webhooks/stripe", () => {
 
   it("handles unknown event type gracefully", async () => {
     mockConstructEvent.mockReturnValue({
+      id: "evt_3",
       type: "customer.updated",
       data: { object: {} },
     });
