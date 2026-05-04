@@ -19,7 +19,7 @@ export async function getOrCreateStripeCustomer(userId: string): Promise<string>
 
   const customer = await stripe.customers.create({
     email: user.email,
-    name: user.name ?? undefined,
+    ...(user.name ? { name: user.name } : {}),
     metadata: { userId },
   });
 
