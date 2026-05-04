@@ -56,9 +56,23 @@ export function HowItWorks() {
     <section
       ref={sectionRef}
       id="como-funciona"
-      className="border-t bg-stone-50/50 dark:bg-stone-900/30 py-20 sm:py-28"
+      className="relative overflow-hidden border-t border-stone-200/70 bg-gradient-to-b from-stone-50 to-stone-100/60 py-20 dark:border-stone-800/60 dark:from-stone-900/40 dark:to-stone-950/40 sm:py-28"
     >
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      {/* Soft dot grid for texture */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,#0d737714_1px,transparent_1px)] [background-size:32px_32px] opacity-60 dark:opacity-30"
+      />
+      {/* Side accent blobs */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -left-20 top-1/3 h-72 w-72 rounded-full bg-amber-100/40 blur-3xl dark:bg-amber-500/5"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-20 bottom-0 h-72 w-72 rounded-full bg-teal-100/50 blur-3xl dark:bg-teal-500/10"
+      />
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <FadeIn className="mx-auto max-w-2xl text-center">
           <p className="text-sm font-display font-semibold uppercase tracking-widest text-teal-600 dark:text-teal-400 mb-2">
             Proceso simple

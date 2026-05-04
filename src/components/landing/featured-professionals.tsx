@@ -124,8 +124,17 @@ export const FeaturedProfessionals = memo(function FeaturedProfessionals({ profe
   );
 
   return (
-    <section ref={sectionRef} className="py-20 sm:py-28">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section ref={sectionRef} className="relative overflow-hidden py-20 sm:py-28">
+      {/* Soft accents to break the white background */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute right-1/4 top-12 h-96 w-96 rounded-full bg-amber-100/40 blur-3xl dark:bg-amber-500/5"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -left-24 bottom-24 h-[28rem] w-[28rem] rounded-full bg-teal-100/40 blur-3xl dark:bg-teal-500/10"
+      />
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <FadeIn className="flex items-end justify-between">
           <div>
             <p className="text-sm font-display font-semibold uppercase tracking-widest text-teal-600 dark:text-teal-400 mb-1">

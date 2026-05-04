@@ -45,8 +45,23 @@ export function CTA() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div
           ref={boxRef}
-          className="rounded-3xl bg-teal-700 px-8 py-16 text-center sm:px-16 sm:py-24"
+          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-teal-600 via-teal-700 to-teal-800 px-8 py-16 text-center shadow-xl shadow-teal-700/20 sm:px-16 sm:py-24"
         >
+          {/* Aurora highlights */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -top-24 -left-16 h-80 w-80 rounded-full bg-white/15 blur-3xl"
+          />
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -bottom-32 -right-20 h-96 w-96 rounded-full bg-amber-300/20 blur-3xl"
+          />
+          {/* Soft pattern */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,#ffffff14_1px,transparent_1px)] [background-size:28px_28px] opacity-60"
+          />
+          <div className="relative">
           <h2
             data-cta-headline
             className="font-display text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl"
@@ -87,9 +102,10 @@ export function CTA() {
             </Button>
           </div>
 
-          <p className="mt-6 text-sm text-teal-300">
+          <p className="mt-6 text-sm text-teal-200/90">
             Sin tarjeta de crédito · Cancela cuando quieras
           </p>
+          </div>
         </div>
       </div>
     </section>
