@@ -15,6 +15,8 @@ const optionalSchema = z.object({
   STRIPE_SECRET_KEY: z.string().optional(),
   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string().optional(),
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
+  STRIPE_PREMIUM_MONTHLY_PRICE_ID: z.string().optional(),
+  STRIPE_PREMIUM_YEARLY_PRICE_ID: z.string().optional(),
   DAILY_API_KEY: z.string().optional(),
   RESEND_API_KEY: z.string().optional(),
   UPSTASH_REDIS_REST_URL: z.string().optional(),

@@ -53,22 +53,30 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           image: user.image,
           role: user.role,
+          subscriptionTier: user.subscriptionTier,
         };
       },
     }),
   ],
   callbacks: {
     async jwt({ token, user, trigger }) {
-      // Only read role from DB at login or when session is explicitly updated
+      // Only read role/tier from DB at login or when session is explicitly updated
       if (user) {
         token.id = user.id;
         token.role = "role" in user && typeof user.role === "string" ? user.role : "";
+        token.subscriptionTier =
+          "subscriptionTier" in user && typeof user.subscriptionTier === "string"
+            ? user.subscriptionTier
+            : "FREE";
       } else if (trigger === "update" && token.id) {
         const fresh = await prisma.user.findUnique({
           where: { id: token.id as string },
-          select: { role: true },
+          select: { role: true, subscriptionTier: true },
         });
-        if (fresh) token.role = fresh.role;
+        if (fresh) {
+          token.role = fresh.role;
+          token.subscriptionTier = fresh.subscriptionTier;
+        }
       }
       return token;
     },
@@ -76,6 +84,7 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.id = token.id as string;
         session.user.role = token.role as string;
+        session.user.subscriptionTier = (token.subscriptionTier as string) ?? "FREE";
       }
       return session;
     },

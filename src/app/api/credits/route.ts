@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { CREDITS_CONFIG } from "@/lib/credits-config";
+import { getTierLimits } from "@/lib/credits-config";
 
 /**
  * GET /api/credits — returns the authenticated client's credit status.
@@ -36,7 +36,7 @@ export async function GET() {
       });
     }
 
-    const limit = CREDITS_CONFIG.FREE_SESSIONS_PER_MONTH;
+    const limit = getTierLimits(user.subscriptionTier).sessionsPerMonth;
     return NextResponse.json({
       used,
       limit,

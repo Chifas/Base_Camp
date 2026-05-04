@@ -50,19 +50,24 @@ enum RedemptionType {
 }
 
 model User {
-  id               String            @id @default(cuid())
-  name             String?
-  email            String            @unique
-  emailVerified    DateTime?
-  password         String?
-  image            String?
-  bio              String?
-  role             UserRole          @default(CLIENT)
-  freeCreditsUsed  Int               @default(0)
-  creditsResetAt   DateTime?
-  subscriptionTier SubscriptionTier  @default(FREE)
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
+  id                   String            @id @default(cuid())
+  name                 String?
+  email                String            @unique
+  emailVerified        DateTime?
+  password             String?
+  image                String?
+  bio                  String?
+  role                 UserRole          @default(CLIENT)
+  freeCreditsUsed      Int               @default(0)
+  creditsResetAt       DateTime?
+  subscriptionTier     SubscriptionTier  @default(FREE)
+  stripeCustomerId     String?           @unique
+  stripeSubscriptionId String?           @unique
+  subscriptionStatus   String?
+  subscriptionEndsAt   DateTime?
+  subscriptionInterval String?
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
 
   accounts             Account[]
   sessions             AuthSession[]
@@ -119,6 +124,15 @@ model VerificationToken {
 
   @@unique([identifier, token])
   @@map("verification_tokens")
+}
+
+// Webhook idempotency — Stripe retries duplicate events; we INSERT before processing
+model StripeEventLog {
+  id          String   @id
+  type        String
+  processedAt DateTime @default(now())
+
+  @@map("stripe_event_log")
 }
 
 // Task 5: Dynamic categories — replaces ProfessionalCategory enum
@@ -246,6 +260,8 @@ model Availability {
   dayOfWeek       Int
   startTime       String
   endTime         String
+  // When true, only Premium-tier clients can book this slot (priority booking benefit)
+  priorityOnly    Boolean  @default(false)
   // Task 8: track when availability was last modified
   updatedAt       DateTime @updatedAt
 

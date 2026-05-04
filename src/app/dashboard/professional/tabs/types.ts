@@ -62,6 +62,7 @@ export type AvailabilitySlot = {
   startTime: string;
   endTime: string;
   enabled: boolean;
+  priorityOnly?: boolean;
 };
 
 export interface CategoryOption {

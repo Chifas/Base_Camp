@@ -1,4 +1,17 @@
-import type { Prisma } from "@prisma/client";
+import type { Prisma, SubscriptionTier } from "@prisma/client";
+import type { Session } from "next-auth";
+
+/**
+ * Check whether a NextAuth session belongs to a paying tier.
+ * Reads from the JWT-cached tier — fine for UI/optimistic checks. Sensitive
+ * server logic (credits, billing) should re-read tier from the DB.
+ */
+export function isPremium(
+  session: Pick<Session, "user"> | null | undefined,
+): boolean {
+  const tier = session?.user?.subscriptionTier as SubscriptionTier | undefined;
+  return tier === "PREMIUM" || tier === "ENTERPRISE";
+}
 
 /** Loosely typed session record from Prisma include queries */
 interface SessionWithRelations {

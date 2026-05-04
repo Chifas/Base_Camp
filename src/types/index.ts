@@ -57,6 +57,7 @@ export interface AvailabilitySlot {
   dayOfWeek: number;
   startTime: string;
   endTime: string;
+  priorityOnly?: boolean;
 }
 
 export interface Session {
