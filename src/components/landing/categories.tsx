@@ -69,8 +69,13 @@ export function Categories() {
   );
 
   return (
-    <section ref={sectionRef} className="py-20 sm:py-28">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section ref={sectionRef} className="relative overflow-hidden py-20 sm:py-28">
+      {/* Soft accent — keeps section airy but not flat */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-24 left-1/2 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full bg-teal-100/50 blur-3xl dark:bg-teal-900/20"
+      />
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <FadeIn className="mx-auto max-w-2xl text-center">
           <p className="text-sm font-display font-semibold uppercase tracking-widest text-teal-600 dark:text-teal-400 mb-2">
             Especialidades
@@ -87,7 +92,12 @@ export function Categories() {
           {categories.map((cat) => (
             <div key={cat.slug} data-cat-card>
               <Link href={`/explore?category=${cat.slug}`} className="group block h-full">
-                <div className="relative h-full rounded-2xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+                <div className="relative h-full overflow-hidden rounded-2xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-teal-200 hover:shadow-xl hover:shadow-teal-700/5 dark:hover:border-teal-800/60 dark:hover:shadow-teal-500/10">
+                  {/* Soft hover glow */}
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full bg-teal-200/0 blur-2xl transition-all duration-500 group-hover:bg-teal-200/60 dark:group-hover:bg-teal-500/20"
+                  />
                   {/* Icon */}
                   <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-teal-100 dark:bg-teal-900/30 transition-colors duration-300 group-hover:bg-teal-200 dark:group-hover:bg-teal-900/50">
                     <cat.icon className="h-6 w-6 text-teal-700 dark:text-teal-400" />
