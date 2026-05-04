@@ -57,9 +57,23 @@ export function Testimonials() {
   return (
     <section
       ref={sectionRef}
-      className="bg-stone-900 dark:bg-stone-950 py-20 sm:py-28"
+      className="relative overflow-hidden bg-gradient-to-br from-stone-900 via-stone-900 to-stone-950 dark:from-stone-950 dark:via-stone-950 dark:to-black py-20 sm:py-28"
     >
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      {/* Aurora glows to break the flat dark */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-32 -left-24 h-[30rem] w-[30rem] rounded-full bg-teal-500/15 blur-3xl"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -bottom-40 -right-32 h-[32rem] w-[32rem] rounded-full bg-amber-500/8 blur-3xl"
+      />
+      {/* Subtle dot grid */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,#5eead420_1px,transparent_1px)] [background-size:32px_32px] opacity-40"
+      />
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mx-auto max-w-2xl text-center mb-14">
           <p className="text-sm font-display font-semibold uppercase tracking-widest text-teal-400 mb-2">
@@ -79,7 +93,7 @@ export function Testimonials() {
             <div
               key={testimonial.id}
               data-testimonial-card
-              className="relative rounded-2xl border border-stone-800 bg-stone-800/60 p-7 transition-all duration-300 hover:border-stone-700 hover:bg-stone-800/80"
+              className="relative rounded-2xl border border-stone-700/60 bg-stone-800/50 p-7 backdrop-blur-sm transition-all duration-300 hover:border-teal-700/60 hover:bg-stone-800/70 hover:shadow-xl hover:shadow-teal-500/5"
             >
               {/* Decorative quote mark */}
               <span className="absolute right-6 top-4 font-display text-7xl font-bold leading-none text-teal-400/20 select-none">
