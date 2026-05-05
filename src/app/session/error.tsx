@@ -86,10 +86,10 @@ export default function SessionError({
             <p className="text-xs text-muted-foreground">
               Si el problema persiste, contacta con nuestro equipo de soporte en{" "}
               <a
-                href="mailto:soporte@guidepath.dev"
+                href="mailto:guidepathje@gmail.com"
                 className="font-medium text-indigo-600 dark:text-indigo-400 hover:underline"
               >
-                soporte@guidepath.dev
+                guidepathje@gmail.com
               </a>
             </p>
             {error.digest && (

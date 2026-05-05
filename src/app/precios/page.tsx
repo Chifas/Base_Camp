@@ -24,7 +24,7 @@ const FAQ = [
   },
   {
     q: "¿Hay reembolsos?",
-    a: "Si algo va mal, escríbenos a soporte@guidepath.com en los primeros 14 días y resolvemos el caso individualmente.",
+    a: "Si algo va mal, escríbenos a guidepathje@gmail.com en los primeros 14 días y resolvemos el caso individualmente.",
   },
 ];
 
