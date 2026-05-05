@@ -10,11 +10,14 @@ const footerLinks = {
     { href: "/#como-funciona", label: "Cómo funciona" },
   ],
   soporte: [
-    { href: "mailto:soporte@guidepath.com", label: "Contacto" },
+    { href: "/ayuda", label: "Centro de ayuda" },
+    { href: "/faq", label: "FAQ" },
+    { href: "mailto:guidepathje@gmail.com", label: "Contacto" },
   ],
   legal: [
     { href: "/legal/privacidad", label: "Política de privacidad" },
     { href: "/legal/terminos", label: "Términos de uso" },
+    { href: "/legal/cookies", label: "Política de cookies" },
   ],
 };
 

@@ -33,8 +33,8 @@ export default function PrivacidadPage() {
             GuidePath S.L. (en adelante, &ldquo;GuidePath&rdquo;) es la entidad
             responsable del tratamiento de tus datos personales. Puedes
             contactarnos en{" "}
-            <a href="mailto:privacidad@guidepath.es" className="text-primary hover:underline">
-              privacidad@guidepath.es
+            <a href="mailto:guidepathje@gmail.com" className="text-primary hover:underline">
+              guidepathje@gmail.com
             </a>
             .
           </p>
@@ -165,10 +165,10 @@ export default function PrivacidadPage() {
           <p className="mt-3">
             Para ejercer cualquiera de estos derechos, envía un email a{" "}
             <a
-              href="mailto:privacidad@guidepath.es"
+              href="mailto:guidepathje@gmail.com"
               className="text-primary hover:underline"
             >
-              privacidad@guidepath.es
+              guidepathje@gmail.com
             </a>{" "}
             con copia de tu documento de identidad. Responderemos en un máximo
             de 30 días. También puedes presentar una reclamación ante la{" "}
