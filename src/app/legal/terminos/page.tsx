@@ -154,10 +154,10 @@ export default function TerminosPage() {
             Para cualquier consulta sobre estos términos, puedes contactarnos
             en{" "}
             <a
-              href="mailto:legal@guidepath.es"
+              href="mailto:guidepathje@gmail.com"
               className="text-primary hover:underline"
             >
-              legal@guidepath.es
+              guidepathje@gmail.com
             </a>
             .
           </p>

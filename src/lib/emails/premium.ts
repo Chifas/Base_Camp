@@ -86,7 +86,7 @@ export async function sendPremiumPaymentFailedEmail(data: PremiumEmailData) {
         </p>
         ${ctaButton("Actualizar tarjeta", `${APP_URL}/dashboard/client?tab=subscription`)}
         <p style="margin:24px 0 0;color:#94a3b8;font-size:13px;line-height:1.6;">
-          Mantenemos tu acceso unos días en gracia. Si no puedes resolverlo, escríbenos a soporte@guidepath.com.
+          Mantenemos tu acceso unos días en gracia. Si no puedes resolverlo, escríbenos a guidepathje@gmail.com.
         </p>
       `),
     });
