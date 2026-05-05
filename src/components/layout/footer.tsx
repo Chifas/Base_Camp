@@ -6,18 +6,15 @@ const footerLinks = {
   plataforma: [
     { href: "/explore", label: "Explorar profesionales" },
     { href: "/auth/register", label: "Registrarse como profesional" },
-    { href: "#", label: "Precios" },
-    { href: "#", label: "Cómo funciona" },
+    { href: "/precios", label: "Precios" },
+    { href: "/#como-funciona", label: "Cómo funciona" },
   ],
   soporte: [
-    { href: "#", label: "Centro de ayuda" },
-    { href: "#", label: "Contacto" },
-    { href: "#", label: "FAQ" },
+    { href: "mailto:soporte@guidepath.com", label: "Contacto" },
   ],
   legal: [
-    { href: "#", label: "Política de privacidad" },
-    { href: "#", label: "Términos de uso" },
-    { href: "#", label: "Política de cookies" },
+    { href: "/legal/privacidad", label: "Política de privacidad" },
+    { href: "/legal/terminos", label: "Términos de uso" },
   ],
 };
 
