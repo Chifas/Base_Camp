@@ -11,11 +11,13 @@ import {
   X,
   MessageSquare,
   Clock,
+  SlidersHorizontal,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Pagination } from "@/components/shared/pagination";
 import { ExploreSkeleton } from "@/components/shared/explore-skeleton";
 import { gsap } from "@/lib/gsap-config";
+import { LANGUAGES as LANGUAGE_OPTIONS } from "@/lib/languages";
 import type { Professional } from "@/types";
 
 const CATEGORY_PILLS = [
@@ -30,9 +32,27 @@ const SORT_OPTIONS = [
   { value: "relevance", label: "Más relevantes" },
   { value: "rating", label: "Mejor valorados" },
   { value: "reviews", label: "Más reseñas" },
+  { value: "price-low", label: "Precio: menor a mayor" },
+  { value: "price-high", label: "Precio: mayor a menor" },
 ];
 
-const LANGUAGES = ["ES", "EN", "FR", "DE"];
+const PRICE_RANGES = [
+  { value: "", label: "Cualquier precio" },
+  { value: "0-40", label: "Hasta 40€" },
+  { value: "40-70", label: "40€ - 70€" },
+  { value: "70-100", label: "70€ - 100€" },
+  { value: "100-", label: "Más de 100€" },
+];
+
+const EXPERIENCE_RANGES = [
+  { value: "", label: "Cualquier experiencia" },
+  { value: "1", label: "1+ años" },
+  { value: "3", label: "3+ años" },
+  { value: "5", label: "5+ años" },
+  { value: "10", label: "10+ años" },
+];
+
+const DISPLAY_LANGUAGES = LANGUAGE_OPTIONS.slice(0, 8);
 
 function getCoverColor(name: string): string {
   const colors = [
@@ -89,8 +109,13 @@ export default function ExplorePage() {
   const sortBy         = searchParams.get("sort") || "relevance";
   const page           = parseInt(searchParams.get("page") || "1");
   const minRating      = searchParams.get("minRating") || "";
+  const language       = searchParams.get("language") || "";
+  const priceRange     = searchParams.get("price") || "";
+  const minExperience  = searchParams.get("experience") || "";
+  const availableNow   = searchParams.get("available") === "true";
 
   const [localSearch, setLocalSearch] = useState(searchQuery);
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const debounceRef = useRef<NodeJS.Timeout>();
   const gridRef     = useRef<HTMLDivElement>(null);
 
@@ -156,6 +181,14 @@ export default function ExplorePage() {
     if (selectedCat !== "ALL") params.set("category", selectedCat);
     if (sortBy) params.set("sort", sortBy);
     if (minRating) params.set("minRating", minRating);
+    if (language) params.set("language", language);
+    if (minExperience) params.set("minExperience", minExperience);
+    if (availableNow) params.set("available", "true");
+    if (priceRange) {
+      const [min, max] = priceRange.split("-");
+      if (min) params.set("minPrice", min);
+      if (max) params.set("maxPrice", max);
+    }
     params.set("page", page.toString());
     params.set("limit", "12");
 
@@ -168,14 +201,27 @@ export default function ExplorePage() {
       })
       .catch(() => setProfessionals([]))
       .finally(() => setLoading(false));
-  }, [searchQuery, selectedCat, sortBy, page, minRating]);
+  }, [searchQuery, selectedCat, sortBy, page, minRating, language, priceRange, minExperience, availableNow]);
 
   // Categories fetch kept for potential dynamic use
   useEffect(() => {
     fetch("/api/categories").catch(() => {});
   }, []);
 
-  const hasActiveFilters = !!minRating;
+  const hasActiveFilters =
+    !!minRating ||
+    !!language ||
+    !!priceRange ||
+    !!minExperience ||
+    availableNow;
+
+  const clearAllFilters = () => {
+    const params = new URLSearchParams();
+    if (searchQuery) params.set("search", searchQuery);
+    if (selectedCat !== "ALL") params.set("category", selectedCat);
+    if (sortBy && sortBy !== "relevance") params.set("sort", sortBy);
+    router.push(`/explore?${params.toString()}`, { scroll: false });
+  };
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
@@ -243,16 +289,120 @@ export default function ExplorePage() {
             </button>
           ))}
 
+          <button
+            type="button"
+            onClick={() => setShowAdvanced((v) => !v)}
+            aria-expanded={showAdvanced}
+            aria-controls="advanced-filters"
+            className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-1 ${
+              showAdvanced || hasActiveFilters
+                ? "bg-teal-700 text-white shadow-sm shadow-teal-700/20"
+                : "border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-600 dark:text-stone-400 hover:border-teal-300 hover:text-teal-700"
+            }`}
+          >
+            <SlidersHorizontal className="h-3.5 w-3.5" />
+            Filtros
+            {hasActiveFilters && (
+              <span className="ml-0.5 rounded-full bg-white/25 px-1.5 text-[10px] font-bold">
+                {[minRating, language, priceRange, minExperience, availableNow ? "1" : ""].filter(Boolean).length}
+              </span>
+            )}
+          </button>
+
           {hasActiveFilters && (
             <button
-              onClick={() => updateParams({ minRating: "" })}
-              className="flex items-center gap-1 rounded-full border border-stone-200 dark:border-stone-700 px-3 py-1.5 text-sm text-stone-500 hover:text-stone-700 dark:text-stone-500 dark:hover:text-stone-300 transition-colors"
+              onClick={clearAllFilters}
+              className="flex items-center gap-1 rounded-full border border-stone-200 dark:border-stone-700 px-3 py-1.5 text-sm text-stone-500 hover:text-stone-700 dark:text-stone-500 dark:hover:text-stone-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-1"
             >
               <X className="h-3.5 w-3.5" />
-              Limpiar
+              Limpiar todo
             </button>
           )}
         </div>
+
+        {/* Advanced filters panel */}
+        {showAdvanced && (
+          <div
+            id="advanced-filters"
+            className="rounded-2xl border border-stone-200 bg-stone-50 p-4 dark:border-stone-800 dark:bg-stone-900/60 sm:p-5"
+          >
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {/* Language */}
+              <div>
+                <label htmlFor="filter-language" className="mb-1.5 block text-xs font-display font-semibold text-stone-700 dark:text-stone-300">
+                  Idioma
+                </label>
+                <select
+                  id="filter-language"
+                  value={language}
+                  onChange={(e) => updateParams({ language: e.target.value })}
+                  className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm text-stone-900 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-50"
+                >
+                  <option value="">Cualquier idioma</option>
+                  {DISPLAY_LANGUAGES.map((lang) => (
+                    <option key={lang.code} value={lang.name}>
+                      {lang.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Price */}
+              <div>
+                <label htmlFor="filter-price" className="mb-1.5 block text-xs font-display font-semibold text-stone-700 dark:text-stone-300">
+                  Tarifa por hora
+                </label>
+                <select
+                  id="filter-price"
+                  value={priceRange}
+                  onChange={(e) => updateParams({ price: e.target.value })}
+                  className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm text-stone-900 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-50"
+                >
+                  {PRICE_RANGES.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Experience */}
+              <div>
+                <label htmlFor="filter-experience" className="mb-1.5 block text-xs font-display font-semibold text-stone-700 dark:text-stone-300">
+                  Años de experiencia
+                </label>
+                <select
+                  id="filter-experience"
+                  value={minExperience}
+                  onChange={(e) => updateParams({ experience: e.target.value })}
+                  className="w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm text-stone-900 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-50"
+                >
+                  {EXPERIENCE_RANGES.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Availability */}
+              <div>
+                <label className="mb-1.5 block text-xs font-display font-semibold text-stone-700 dark:text-stone-300">
+                  Disponibilidad
+                </label>
+                <label className="flex h-[38px] cursor-pointer items-center gap-2 rounded-lg border border-stone-200 bg-white px-3 text-sm text-stone-900 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-50">
+                  <input
+                    type="checkbox"
+                    checked={availableNow}
+                    onChange={(e) => updateParams({ available: e.target.checked ? "true" : "" })}
+                    className="h-4 w-4 rounded border-stone-300 text-teal-600 focus:ring-teal-500"
+                  />
+                  Solo con horarios disponibles
+                </label>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Sort — pills on sm+, native select on mobile */}
         <div className="flex items-center gap-1.5">
@@ -301,9 +451,10 @@ export default function ExplorePage() {
         >
           {professionals.map((pro) => {
             const nextSlot = getNextAvailability(pro.availability);
-            // Deterministic language assignment from name seed
-            const langCount = (pro.name.charCodeAt(0) % 2) + 1;
-            const langs = LANGUAGES.slice(0, langCount);
+            const langs =
+              pro.languages && pro.languages.length > 0
+                ? pro.languages.slice(0, 3)
+                : ["Español"];
 
             const coverColor = getCoverColor(pro.name);
             const initials = getInitials(pro.name);
@@ -432,9 +583,16 @@ export default function ExplorePage() {
 
                     {/* Footer */}
                     <div className="flex items-center justify-between border-t border-stone-100 dark:border-stone-800 px-5 py-3">
-                      <span className="text-sm font-semibold text-stone-900 dark:text-stone-50">
-                        Gratis · 3/mes
-                      </span>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-semibold text-teal-700 dark:text-teal-400">
+                          Gratis · 3/mes
+                        </span>
+                        {pro.hourlyRate && pro.hourlyRate > 0 && (
+                          <span className="text-[11px] text-stone-500 dark:text-stone-400">
+                            Después: {pro.hourlyRate}€/h
+                          </span>
+                        )}
+                      </div>
                       <Button
                         size="sm"
                         variant="outline"

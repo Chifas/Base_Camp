@@ -90,23 +90,23 @@ export function Hero() {
           {/* Heading */}
           <h1
             data-heading
-            className="font-display font-extrabold tracking-tight text-[clamp(2.75rem,6vw,4.5rem)] leading-[1.05] text-stone-900 dark:text-stone-50"
+            className="font-display font-extrabold tracking-tight text-[clamp(2.5rem,5.5vw,4.25rem)] leading-[1.05] text-stone-900 dark:text-stone-50"
           >
-            Encuentra el mentor<br />
-            que cambiará{" "}
-            <span className="text-gradient-teal">tu carrera</span>
+            3 sesiones gratis al mes con{" "}
+            <span className="text-gradient-teal">expertos verificados</span>
           </h1>
 
           {/* Subheading */}
           <p
             data-sub
-            className="mt-6 max-w-lg text-lg text-stone-600 dark:text-stone-400 leading-relaxed sm:text-xl"
+            className="mt-6 max-w-xl text-lg text-stone-600 dark:text-stone-400 leading-relaxed sm:text-xl"
           >
             Coaches ejecutivos, mentores de carrera y psicólogos laborales certificados.
-            Sesiones por videollamada,{" "}
+            Tú avanzas{" "}
             <span className="font-semibold text-stone-800 dark:text-stone-200">
-              completamente gratis.
+              sin pagar
             </span>
+            ; ellos ganan puntos canjeables por certificaciones y donaciones solidarias.
           </p>
 
           {/* Buttons */}
@@ -129,6 +129,16 @@ export function Hero() {
             >
               <Link href="/auth/register?role=PROFESSIONAL">¿Eres profesional?</Link>
             </Button>
+          </div>
+
+          {/* "How is it free?" anchor link */}
+          <div className="mt-3">
+            <a
+              href="#modelo-gratuito"
+              className="text-sm font-medium text-teal-700 underline decoration-teal-300 underline-offset-4 hover:text-teal-800 hover:decoration-teal-500 dark:text-teal-400 dark:decoration-teal-700 dark:hover:text-teal-300"
+            >
+              ¿Cómo puede ser gratis? →
+            </a>
           </div>
 
           {/* Social proof */}

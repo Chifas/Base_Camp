@@ -82,8 +82,8 @@ export function Testimonials() {
           <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl text-stone-50">
             Lo que dicen nuestros usuarios
           </h2>
-          <p className="mt-4 text-lg text-stone-400">
-            Miles de profesionales ya han encontrado la orientación que necesitaban.
+          <p className="mt-4 text-lg text-stone-300">
+            Cientos de profesionales ya han encontrado la orientación que necesitaban.
           </p>
         </div>
 
@@ -100,7 +100,7 @@ export function Testimonials() {
                 &ldquo;
               </span>
 
-              <blockquote className="relative font-display text-base font-medium leading-relaxed text-stone-300">
+              <blockquote className="relative font-display text-base font-medium leading-relaxed text-stone-100">
                 &ldquo;{testimonial.quote}&rdquo;
               </blockquote>
 
@@ -112,10 +112,10 @@ export function Testimonials() {
                   {getInitials(testimonial.name)}
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-stone-100">
+                  <p className="text-sm font-semibold text-stone-50">
                     {testimonial.name}
                   </p>
-                  <p className="text-xs text-stone-400">{testimonial.role}</p>
+                  <p className="text-xs text-stone-300">{testimonial.role}</p>
                 </div>
               </div>
             </div>

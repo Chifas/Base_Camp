@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Hero } from "@/components/landing/hero";
 import { Categories } from "@/components/landing/categories";
 import { HowItWorks } from "@/components/landing/how-it-works";
+import { FreemiumModel } from "@/components/landing/freemium-model";
 import {
   FeaturedProfessionals,
   FeaturedProfessionalsSkeleton,
@@ -34,6 +35,7 @@ export default function HomePage() {
   return (
     <>
       <Hero />
+      <FreemiumModel />
       <Categories />
       <HowItWorks />
       <Suspense fallback={<FeaturedProfessionalsSkeleton />}>

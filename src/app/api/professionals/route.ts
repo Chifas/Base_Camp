@@ -13,6 +13,7 @@ export async function GET(req: Request) {
     const maxPrice = parseFloat(searchParams.get("maxPrice") || "0");
     const language = searchParams.get("language") || "";
     const available = searchParams.get("available") === "true";
+    const minExperience = parseInt(searchParams.get("minExperience") || "0", 10);
     const sort = searchParams.get("sort") || "relevance";
     const page = Math.max(1, parseInt(searchParams.get("page") || "1") || 1);
     const limit = Math.min(Math.max(1, parseInt(searchParams.get("limit") || "12") || 12), 100);
@@ -39,6 +40,10 @@ export async function GET(req: Request) {
 
     if (language) {
       where.languages = { has: language };
+    }
+
+    if (minExperience > 0) {
+      where.yearsExperience = { gte: minExperience };
     }
 
     if (available) {
