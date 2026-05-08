@@ -17,6 +17,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { NpsModal } from "@/components/shared/nps-modal";
 
 interface RoomData {
   url: string;
@@ -47,6 +48,7 @@ export default function VideoSessionPage() {
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [showRetry, setShowRetry] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showNps, setShowNps] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const callRef = useRef<DailyCall | null>(null);
@@ -76,13 +78,14 @@ export default function VideoSessionPage() {
       });
   }, [params.id]);
 
-  // Handle leaving the call with confirmation
+  // Show NPS prompt before leaving the call
   const handleLeave = useCallback(() => {
-    const confirmed = window.confirm(
-      "¿Estás seguro de que quieres salir de la videollamada? La sesión seguirá activa hasta que ambos participantes se desconecten."
-    );
-    if (!confirmed) return;
+    setShowNps(true);
+  }, []);
 
+  // Called when the user submits or skips the NPS — actually leave the call here
+  const handleNpsDone = useCallback(() => {
+    setShowNps(false);
     if (callRef.current) {
       callRef.current.destroy();
       callRef.current = null;
@@ -412,6 +415,10 @@ export default function VideoSessionPage() {
           Salir de la llamada
         </Button>
       </div>
+
+      {showNps && typeof params.id === "string" && (
+        <NpsModal sessionId={params.id} onDone={handleNpsDone} />
+      )}
     </div>
   );
 }

@@ -195,6 +195,56 @@ model Favorite {
   @@map("favorites")
 }
 
+// Notes the professional shares with the client after a session
+// (summary, next steps, resources). Action items hang off this.
+model SessionNote {
+  id          String   @id @default(cuid())
+  sessionId   String   @unique
+  summary     String?  @db.Text
+  nextSteps   String?  @db.Text
+  resources   String[] @default([])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  session     Session       @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  actionItems ActionItem[]
+
+  @@map("session_notes")
+}
+
+// Tasks the professional assigns to the client after a session.
+// `completed` is toggled by the client from their dashboard.
+model ActionItem {
+  id            String   @id @default(cuid())
+  sessionNoteId String
+  content       String
+  completed     Boolean  @default(false)
+  order         Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  sessionNote SessionNote @relation(fields: [sessionNoteId], references: [id], onDelete: Cascade)
+
+  @@index([sessionNoteId])
+  @@map("action_items")
+}
+
+// NPS-style feedback submitted by either party at the end of a call.
+// Each user can submit at most one feedback per session.
+model SessionFeedback {
+  id        String   @id @default(cuid())
+  sessionId String
+  userId    String
+  npsScore  Int
+  comment   String?  @db.Text
+  createdAt DateTime @default(now())
+
+  session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, userId])
+  @@index([sessionId])
+  @@map("session_feedbacks")
+}
+
 model Session {
   id                    String        @id @default(cuid())
   clientId              String
@@ -212,6 +262,7 @@ model Session {
   cancelledAt           DateTime?
   cancelledBy           String?
   reminderSent          Boolean       @default(false)
+  followupSent          Boolean       @default(false)
   createdAt             DateTime      @default(now())
   updatedAt             DateTime      @updatedAt
 
@@ -221,6 +272,8 @@ model Session {
   rescheduleRequests  RescheduleRequest[]
   messages            Message[]
   betaFeedbacks       BetaFeedback[]
+  note                SessionNote?
+  feedbacks           SessionFeedback[]
 
   @@index([clientId])
   @@index([professionalId])

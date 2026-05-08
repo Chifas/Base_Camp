@@ -19,7 +19,9 @@ import {
   Heart,
   ExternalLink,
   RotateCcw,
+  FileText,
 } from "lucide-react";
+import { SessionNotesViewer } from "@/components/shared/session-notes-viewer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -139,6 +141,7 @@ export default function ClientDashboard() {
   const [reviewedSessionIds, setReviewedSessionIds] = useState<Set<string>>(new Set());
   const [feedbackSessionId, setFeedbackSessionId] = useState<string | null>(null);
   const [chatSessionId, setChatSessionId] = useState<string | null>(null);
+  const [notesView, setNotesView] = useState<{ id: string; name: string } | null>(null);
 
   // Credits state
   const [credits, setCredits] = useState<{ used: number; limit: number; remaining: number } | null>(null);
@@ -517,6 +520,16 @@ export default function ClientDashboard() {
                     {effectivelyCompleted && (
                       <Button
                         size="sm"
+                        variant="outline"
+                        onClick={() => setNotesView({ id: session.id, name: session.professionalName })}
+                      >
+                        <FileText className="mr-2 h-4 w-4" />
+                        Ver notas
+                      </Button>
+                    )}
+                    {effectivelyCompleted && (
+                      <Button
+                        size="sm"
                         variant="ghost"
                         onClick={() => setFeedbackSessionId(session.id)}
                       >
@@ -640,6 +653,15 @@ export default function ClientDashboard() {
           </TabsContent>
         </Tabs>
       </FadeIn>
+
+      {/* Session notes viewer */}
+      {notesView && (
+        <SessionNotesViewer
+          sessionId={notesView.id}
+          professionalName={notesView.name}
+          onClose={() => setNotesView(null)}
+        />
+      )}
 
       {/* Beta feedback modal */}
       {feedbackSessionId && (

@@ -3,10 +3,11 @@
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Calendar, Clock, Check, X, Video, MessageSquare } from "lucide-react";
+import { Calendar, Clock, Check, X, Video, MessageSquare, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/empty-state";
 import { SessionChat } from "@/components/shared/session-chat";
+import { SessionNotesEditor } from "@/components/shared/session-notes-editor";
 import { formatDate, formatTime } from "@/lib/utils";
 import type { SessionItem } from "./types";
 
@@ -18,9 +19,11 @@ interface Props {
 export default function SessionsTab({ sessions, onSessionsChange }: Props) {
   const router = useRouter();
   const [chatSessionId, setChatSessionId] = useState<string | null>(null);
+  const [notesSessionId, setNotesSessionId] = useState<string | null>(null);
 
   const confirmedSessions = sessions.filter((s) => s.status === "CONFIRMED");
-  const pendingSessions = sessions.filter((s) => s.status === "PENDING");
+  const pendingSessions   = sessions.filter((s) => s.status === "PENDING");
+  const completedSessions = sessions.filter((s) => s.status === "COMPLETED");
 
   const handleSessionAction = useCallback(
     async (sessionId: string, newStatus: "CONFIRMED" | "CANCELLED") => {
@@ -134,6 +137,10 @@ export default function SessionsTab({ sessions, onSessionsChange }: Props) {
                       Mensajes ({session.messageCount})
                     </Button>
                   )}
+                  <Button size="sm" variant="outline" onClick={() => setNotesSessionId(session.id)}>
+                    <FileText className="mr-2 h-4 w-4" />
+                    Notas
+                  </Button>
                   <Button size="sm" onClick={() => router.push(`/session/${session.id}`)}>
                     <Video className="mr-2 h-4 w-4" />
                     Iniciar sesión
@@ -144,6 +151,39 @@ export default function SessionsTab({ sessions, onSessionsChange }: Props) {
           </div>
         )}
       </div>
+
+      {completedSessions.length > 0 && (
+        <div>
+          <h3 className="font-display text-lg font-semibold text-stone-900 dark:text-stone-50">
+            Sesiones completadas
+          </h3>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Añade resumen, próximos pasos y tareas para que el cliente lo vea en su panel.
+          </p>
+          <div className="mt-3 space-y-3">
+            {completedSessions.slice(0, 8).map((session) => (
+              <div
+                key={session.id}
+                className="flex flex-col gap-3 rounded-xl border bg-card p-4 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div>
+                  <p className="font-semibold">{session.clientName}</p>
+                  <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
+                    <Calendar className="h-3.5 w-3.5" />
+                    {formatDate(session.scheduledAt)}
+                    <Clock className="h-3.5 w-3.5" />
+                    {formatTime(session.scheduledAt)}
+                  </div>
+                </div>
+                <Button size="sm" variant="outline" onClick={() => setNotesSessionId(session.id)}>
+                  <FileText className="mr-2 h-4 w-4" />
+                  Notas y plan
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {chatSessionId && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center">
@@ -165,6 +205,13 @@ export default function SessionsTab({ sessions, onSessionsChange }: Props) {
             </div>
           </div>
         </div>
+      )}
+
+      {notesSessionId && (
+        <SessionNotesEditor
+          sessionId={notesSessionId}
+          onClose={() => setNotesSessionId(null)}
+        />
       )}
     </div>
   );
