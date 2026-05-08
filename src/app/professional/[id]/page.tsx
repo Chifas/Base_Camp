@@ -4,6 +4,8 @@ import { GraduationCap, Target, Briefcase, Heart, Compass, Lightbulb, Quote } fr
 import type { LucideIcon } from "lucide-react";
 import { FadeIn } from "@/components/shared/motion-wrapper";
 import { prisma } from "@/lib/prisma";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { CATEGORY_LABELS } from "@/types";
 import type { ProfessionalCategory, Review } from "@/types";
 import { BookingCard } from "./booking-card";
@@ -79,9 +81,24 @@ export default async function ProfessionalProfilePage({
 }: {
   params: { id: string };
 }) {
-  const professional = await getProfessional(params.id);
+  const [professional, authSession] = await Promise.all([
+    getProfessional(params.id),
+    getServerSession(authOptions),
+  ]);
 
   if (!professional) notFound();
+
+  const initialSaved = authSession?.user?.id
+    ? !!(await prisma.favorite.findUnique({
+        where: {
+          userId_professionalId: {
+            userId: authSession.user.id,
+            professionalId: params.id,
+          },
+        },
+        select: { id: true },
+      }))
+    : false;
 
   const name     = professional.user.name ?? "";
   const image    = professional.user.image ?? "";
@@ -151,6 +168,7 @@ export default async function ProfessionalProfilePage({
 
       {/* Hero — full width */}
       <ProfileHero
+        professionalId={professional.id}
         name={name}
         image={image}
         coverImage={professional.coverImage}
@@ -162,6 +180,7 @@ export default async function ProfessionalProfilePage({
         {...(professional.yearsExperience !== null ? { yearsExperience: professional.yearsExperience } : {})}
         languages={professional.languages}
         hasAvailability={professional.availability.length > 0}
+        initialSaved={initialSaved}
       />
 
       {/* Sticky anchor nav — sits below the 64px main navbar (top-16 z-40) */}

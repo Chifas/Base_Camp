@@ -82,6 +82,7 @@ model User {
   referralsReceived    Referral[]         @relation("ReferralReferred")
   conversations        Conversation[]     @relation("ClientConversations")
   directMessages       DirectMessage[]    @relation("DirectMessageSender")
+  favorites            Favorite[]
 
   @@map("users")
 }
@@ -174,9 +175,24 @@ model ProfessionalProfile {
   certifications  Certification[]
   redemptions     RewardRedemption[]
   conversations   Conversation[]
+  favorites       Favorite[]
 
   @@index([category])
   @@map("professional_profiles")
+}
+
+model Favorite {
+  id             String   @id @default(cuid())
+  userId         String
+  professionalId String
+  createdAt      DateTime @default(now())
+
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  professional ProfessionalProfile @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, professionalId])
+  @@index([userId])
+  @@map("favorites")
 }
 
 model Session {

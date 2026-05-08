@@ -16,8 +16,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Pagination } from "@/components/shared/pagination";
 import { ExploreSkeleton } from "@/components/shared/explore-skeleton";
+import { SaveProfessionalButton } from "@/components/shared/save-professional-button";
 import { gsap } from "@/lib/gsap-config";
 import { LANGUAGES as LANGUAGE_OPTIONS } from "@/lib/languages";
+import { getTimezoneOffsetLabel } from "@/lib/timezone";
 import type { Professional } from "@/types";
 
 const CATEGORY_PILLS = [
@@ -116,6 +118,12 @@ export default function ExplorePage() {
 
   const [localSearch, setLocalSearch] = useState(searchQuery);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [clientTz] = useState(() =>
+    typeof window !== "undefined"
+      ? Intl.DateTimeFormat().resolvedOptions().timeZone
+      : "Europe/Madrid"
+  );
+  const tzOffsetLabel = getTimezoneOffsetLabel(clientTz);
   const debounceRef = useRef<NodeJS.Timeout>();
   const gridRef     = useRef<HTMLDivElement>(null);
 
@@ -435,8 +443,21 @@ export default function ExplorePage() {
         </div>
       </div>
 
+      {/* Timezone notice */}
+      {tzOffsetLabel && (
+        <div className="mt-4 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-800 dark:border-amber-800/50 dark:bg-amber-900/20 dark:text-amber-300">
+          <span className="text-base" aria-hidden="true">🌍</span>
+          <span>
+            Los horarios se muestran en hora de España (Madrid).
+            Tu zona horaria es{" "}
+            <strong>{clientTz}</strong>{" "}
+            <span className="font-medium">({tzOffsetLabel} respecto a Madrid)</span>.
+          </span>
+        </div>
+      )}
+
       {/* Results count */}
-      <p className="mt-6 text-sm text-stone-500 dark:text-stone-400">
+      <p className="mt-4 text-sm text-stone-500 dark:text-stone-400">
         {total} profesional{total !== 1 ? "es" : ""} encontrado{total !== 1 ? "s" : ""}
       </p>
 
@@ -467,6 +488,13 @@ export default function ExplorePage() {
 
                     {/* Cover band */}
                     <div className={`relative h-20 ${coverColor} transition-all duration-300 group-hover:brightness-95`}>
+                      {/* Save button */}
+                      <div className="absolute left-3 top-3 z-10">
+                        <SaveProfessionalButton
+                          professionalId={pro.id}
+                          className="h-8 w-8 rounded-full bg-white/90 shadow-sm hover:bg-white dark:bg-stone-900/80 dark:hover:bg-stone-900"
+                        />
+                      </div>
                       <svg
                         className="absolute inset-0 h-full w-full opacity-20"
                         xmlns="http://www.w3.org/2000/svg"

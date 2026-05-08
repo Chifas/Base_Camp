@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { gsap, useGSAP } from "@/lib/gsap-config";
+import { SaveProfessionalButton } from "@/components/shared/save-professional-button";
 
 // Hash-based fallback gradient when no coverImage is set.
 function getCoverGradient(name: string): string {
@@ -33,6 +34,7 @@ function getCoverGradient(name: string): string {
 }
 
 interface ProfileHeroProps {
+  professionalId: string;
   name: string;
   image: string;
   coverImage?: string | null;
@@ -44,9 +46,11 @@ interface ProfileHeroProps {
   yearsExperience?: number;
   languages: string[];
   hasAvailability: boolean;
+  initialSaved?: boolean;
 }
 
 export function ProfileHero({
+  professionalId,
   name,
   image,
   coverImage,
@@ -58,6 +62,7 @@ export function ProfileHero({
   yearsExperience,
   languages,
   hasAvailability,
+  initialSaved = false,
 }: ProfileHeroProps) {
   const heroRef = useRef<HTMLDivElement>(null);
   const photoRef = useRef<HTMLDivElement>(null);
@@ -247,6 +252,12 @@ export function ProfileHero({
           <Badge className="h-auto rounded-full border-0 bg-stone-100 px-3 py-1.5 text-xs font-medium text-stone-600 dark:bg-stone-800 dark:text-stone-400 sm:px-4 sm:py-2 sm:text-sm">
             {categoryLabel}
           </Badge>
+
+          <SaveProfessionalButton
+            professionalId={professionalId}
+            initialSaved={initialSaved}
+            variant="pill"
+          />
         </div>
       </div>
     </div>
