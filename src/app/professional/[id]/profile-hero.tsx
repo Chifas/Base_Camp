@@ -11,10 +11,12 @@ import {
   Clock,
   Globe,
   ChevronLeft,
+  TrendingUp,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { gsap, useGSAP } from "@/lib/gsap-config";
 import { SaveProfessionalButton } from "@/components/shared/save-professional-button";
+import { getProfessionalLevel } from "@/lib/professional-level";
 
 // Hash-based fallback gradient when no coverImage is set.
 function getCoverGradient(name: string): string {
@@ -47,6 +49,7 @@ interface ProfileHeroProps {
   languages: string[];
   hasAvailability: boolean;
   initialSaved?: boolean;
+  totalSessionsCompleted?: number;
 }
 
 export function ProfileHero({
@@ -63,7 +66,9 @@ export function ProfileHero({
   languages,
   hasAvailability,
   initialSaved = false,
+  totalSessionsCompleted = 0,
 }: ProfileHeroProps) {
+  const level = getProfessionalLevel(totalSessionsCompleted);
   const heroRef = useRef<HTMLDivElement>(null);
   const photoRef = useRef<HTMLDivElement>(null);
   const nameRef = useRef<HTMLDivElement>(null);
@@ -252,6 +257,14 @@ export function ProfileHero({
           <Badge className="h-auto rounded-full border-0 bg-stone-100 px-3 py-1.5 text-xs font-medium text-stone-600 dark:bg-stone-800 dark:text-stone-400 sm:px-4 sm:py-2 sm:text-sm">
             {categoryLabel}
           </Badge>
+
+          <span
+            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold sm:px-4 sm:py-2 sm:text-sm ${level.current.badgeClass}`}
+            title={level.current.description}
+          >
+            <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            {level.current.label}
+          </span>
 
           <SaveProfessionalButton
             professionalId={professionalId}

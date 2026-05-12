@@ -172,10 +172,11 @@ export function FreemiumModel() {
             </p>
           </div>
 
-          <div className="mt-10 grid gap-6 lg:grid-cols-2">
+          <div className="mt-10 grid items-stretch gap-6 lg:grid-cols-2">
             {/* Free card */}
-            <div className="relative overflow-hidden rounded-3xl border border-stone-200 bg-white p-8 shadow-sm dark:border-stone-800 dark:bg-stone-900">
-              <div className="flex items-center justify-between">
+            <div className="relative flex h-full flex-col overflow-hidden rounded-3xl border border-stone-200 bg-white p-8 shadow-sm dark:border-stone-800 dark:bg-stone-900">
+              {/* Header — height matched to Premium via min-h on the heading block */}
+              <div className="flex min-h-[88px] items-start justify-between">
                 <div>
                   <p className="text-xs font-display font-semibold uppercase tracking-widest text-teal-700 dark:text-teal-400">
                     Para empezar
@@ -185,12 +186,16 @@ export function FreemiumModel() {
                   </h4>
                 </div>
                 <div className="text-right">
-                  <p className="font-display text-3xl font-extrabold text-stone-900 dark:text-stone-50">
+                  <p className="font-display text-4xl font-extrabold text-stone-900 dark:text-stone-50">
                     0€
                   </p>
                   <p className="text-xs text-stone-600 dark:text-stone-400">para siempre</p>
                 </div>
               </div>
+              {/* Spacer to match the "X días gratis · cancela cuando quieras" line in Premium */}
+              <p className="mt-1 text-xs text-transparent select-none" aria-hidden="true">
+                placeholder
+              </p>
 
               <ul className="mt-6 space-y-3">
                 {COMPARISON.map((row) => (
@@ -220,7 +225,7 @@ export function FreemiumModel() {
               </ul>
 
               <Button
-                className="mt-7 w-full bg-stone-900 text-white hover:bg-stone-800 dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-white"
+                className="mt-auto w-full bg-stone-900 text-white hover:bg-stone-800 dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-white"
                 asChild
               >
                 <Link href="/auth/register">
@@ -231,24 +236,28 @@ export function FreemiumModel() {
             </div>
 
             {/* Premium card */}
-            <div className="relative overflow-hidden rounded-3xl border-2 border-teal-600 bg-gradient-to-br from-teal-50 via-white to-amber-50 p-8 shadow-md dark:border-teal-500 dark:from-teal-950/40 dark:via-stone-900 dark:to-amber-950/30">
+            <div className="relative flex h-full flex-col overflow-hidden rounded-3xl border-2 border-teal-600 bg-gradient-to-br from-teal-50 via-white to-amber-50 p-8 shadow-md dark:border-teal-500 dark:from-teal-950/40 dark:via-stone-900 dark:to-amber-950/30">
               <span className="absolute right-6 top-6 rounded-full bg-teal-700 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-white">
                 Recomendado
               </span>
 
-              <div>
-                <p className="text-xs font-display font-semibold uppercase tracking-widest text-teal-700 dark:text-teal-300">
-                  Para los que van en serio
-                </p>
-                <h4 className="mt-1 font-display text-2xl font-bold text-stone-900 dark:text-stone-50">
-                  Premium
-                </h4>
-              </div>
-              <div className="mt-3 flex items-end gap-2">
-                <p className="font-display text-4xl font-extrabold text-stone-900 dark:text-stone-50">
-                  {PREMIUM_PRICING.monthlyAmount}€
-                </p>
-                <p className="pb-1 text-sm text-stone-600 dark:text-stone-400">/ mes</p>
+              <div className="flex min-h-[88px] items-start justify-between pr-28">
+                <div>
+                  <p className="text-xs font-display font-semibold uppercase tracking-widest text-teal-700 dark:text-teal-300">
+                    Para los que van en serio
+                  </p>
+                  <h4 className="mt-1 font-display text-2xl font-bold text-stone-900 dark:text-stone-50">
+                    Premium
+                  </h4>
+                </div>
+                <div className="text-right">
+                  <div className="flex items-end justify-end gap-1">
+                    <p className="font-display text-4xl font-extrabold text-stone-900 dark:text-stone-50">
+                      {PREMIUM_PRICING.monthlyAmount}€
+                    </p>
+                    <p className="pb-1 text-sm text-stone-600 dark:text-stone-400">/ mes</p>
+                  </div>
+                </div>
               </div>
               <p className="mt-1 text-xs text-teal-700 dark:text-teal-300">
                 {PREMIUM_PRICING.trialDays} días gratis · cancela cuando quieras
@@ -282,7 +291,7 @@ export function FreemiumModel() {
               </ul>
 
               <Button
-                className="mt-7 w-full bg-teal-700 text-white hover:bg-teal-800"
+                className="mt-auto w-full bg-teal-700 text-white hover:bg-teal-800"
                 asChild
               >
                 <Link href="/precios">
