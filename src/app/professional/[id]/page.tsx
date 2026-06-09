@@ -12,6 +12,10 @@ import { BookingCard } from "./booking-card";
 import { ReviewsSection } from "./reviews-section";
 import { SendMessageButton } from "./send-message-button";
 import { ProfileHero } from "./profile-hero";
+import { TrackProfileView } from "@/components/shared/track-profile-view";
+
+// ISR — public profile pages cache for 1h, revalidated on demand by Prisma writes elsewhere.
+export const revalidate = 3600;
 
 const DAYS = [
   "Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado",
@@ -166,6 +170,9 @@ export default async function ProfessionalProfilePage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
+      {/* Track this view (fire-and-forget, skips owner) */}
+      <TrackProfileView professionalId={professional.id} />
+
       {/* Hero — full width */}
       <ProfileHero
         professionalId={professional.id}
@@ -181,6 +188,7 @@ export default async function ProfessionalProfilePage({
         languages={professional.languages}
         hasAvailability={professional.availability.length > 0}
         initialSaved={initialSaved}
+        totalSessionsCompleted={professional.totalSessionsCompleted}
       />
 
       {/* Sticky anchor nav — sits below the 64px main navbar (top-16 z-40) */}

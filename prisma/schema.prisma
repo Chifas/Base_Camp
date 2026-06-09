@@ -176,9 +176,59 @@ model ProfessionalProfile {
   redemptions     RewardRedemption[]
   conversations   Conversation[]
   favorites       Favorite[]
+  views           ProfileView[]
+  clientNotes     ClientNote[]
+  templates       MessageTemplate[]
 
   @@index([category])
   @@map("professional_profiles")
+}
+
+// Tracks visits to /professional/[id] for analytics.
+// viewerId is null for anonymous visits.
+model ProfileView {
+  id             String   @id @default(cuid())
+  professionalId String
+  viewerId       String?
+  createdAt      DateTime @default(now())
+
+  professional ProfessionalProfile @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+
+  @@index([professionalId, createdAt])
+  @@map("profile_views")
+}
+
+// Private notes a professional keeps about a specific client.
+// Distinct from SessionNote (per-session, shared with client).
+model ClientNote {
+  id             String   @id @default(cuid())
+  professionalId String
+  clientId       String
+  content        String   @db.Text
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  professional ProfessionalProfile @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+
+  @@unique([professionalId, clientId])
+  @@index([professionalId])
+  @@map("client_notes")
+}
+
+// Reusable message/plan templates the professional can paste into
+// session notes, action plans, or messages.
+model MessageTemplate {
+  id             String   @id @default(cuid())
+  professionalId String
+  name           String
+  content        String   @db.Text
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  professional ProfessionalProfile @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+
+  @@index([professionalId])
+  @@map("message_templates")
 }
 
 model Favorite {
@@ -263,6 +313,7 @@ model Session {
   cancelledBy           String?
   reminderSent          Boolean       @default(false)
   followupSent          Boolean       @default(false)
+  deletedAt             DateTime?
   createdAt             DateTime      @default(now())
   updatedAt             DateTime      @updatedAt
 
@@ -279,6 +330,9 @@ model Session {
   @@index([professionalId])
   @@index([status])
   @@index([scheduledAt])
+  @@index([clientId, status, scheduledAt])
+  @@index([professionalId, status, scheduledAt])
+  @@index([clientId, professionalId, status])
   @@map("sessions")
 }
 
