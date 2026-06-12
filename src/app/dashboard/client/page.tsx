@@ -30,11 +30,11 @@ import { DashboardHero } from "@/components/shared/dashboard-hero";
 import { Compass, CalendarClock } from "lucide-react";
 import { DashboardSkeleton } from "@/components/shared/dashboard-skeleton";
 import { EmptyState } from "@/components/shared/empty-state";
-import { PhotoUpload } from "@/components/shared/photo-upload";
 import { BetaFeedbackModal } from "@/components/shared/beta-feedback-modal";
 import { ReferralPanel } from "@/components/shared/referral-panel";
 import { SessionChat } from "@/components/shared/session-chat";
 import { SubscriptionTab } from "./subscription-tab";
+import { ProfileTab } from "./profile-tab";
 import { OnboardingTour, type TourStep } from "@/components/shared/onboarding-tour";
 import { STATUS_LABELS, type Session } from "@/types";
 import { formatDate, formatTime } from "@/lib/utils";
@@ -639,17 +639,7 @@ export default function ClientDashboard() {
 
           {/* ===== Profile ===== */}
           <TabsContent value="profile" className="mt-6">
-            <div className="rounded-xl border bg-card p-6">
-              <h3 className="font-heading text-lg font-semibold">Mi perfil</h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Actualiza tu foto de perfil.
-              </p>
-              <div className="mt-6">
-                <PhotoUpload
-                  currentImage={authSession?.user?.image || ""}
-                />
-              </div>
-            </div>
+            <ProfileTab />
           </TabsContent>
         </Tabs>
       </FadeIn>

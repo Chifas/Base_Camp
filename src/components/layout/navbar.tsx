@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
-import { Menu, X, LayoutDashboard, LogOut } from "lucide-react";
+import { Menu, X, LayoutDashboard, LogOut, ShieldCheck } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./theme-toggle";
@@ -24,10 +24,11 @@ export function Navbar() {
   const initials = user?.name
     ? user.name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()
     : "?";
+  const userRole = (user as { role?: string })?.role;
   const dashboardHref =
-    (user as { role?: string })?.role === "PROFESSIONAL"
-      ? "/dashboard/professional"
-      : "/dashboard/client";
+    userRole === "PROFESSIONAL" ? "/dashboard/professional" : "/dashboard/client";
+  const roleLabel =
+    userRole === "ADMIN" ? "Admin" : userRole === "PROFESSIONAL" ? "Profesional" : "Cliente";
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -159,11 +160,7 @@ export function Navbar() {
                         <p className="text-sm font-semibold truncate">{user?.name ?? ""}</p>
                         {isPremium(session) && <PremiumBadge size="sm" />}
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        {(user as { role?: string })?.role === "PROFESSIONAL"
-                          ? "Profesional"
-                          : "Cliente"}
-                      </p>
+                      <p className="text-xs text-muted-foreground">{roleLabel}</p>
                     </div>
                     <div className="py-1">
                       <Link
@@ -175,6 +172,17 @@ export function Navbar() {
                         <LayoutDashboard className="h-4 w-4 text-muted-foreground" />
                         Mi panel
                       </Link>
+                      {userRole === "ADMIN" && (
+                        <Link
+                          href="/admin"
+                          role="menuitem"
+                          onClick={() => setProfileOpen(false)}
+                          className="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-accent transition-colors"
+                        >
+                          <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+                          Administración
+                        </Link>
+                      )}
                       <button
                         role="menuitem"
                         onClick={() => {
@@ -255,11 +263,7 @@ export function Navbar() {
                         <p className="truncate text-sm font-semibold">{user?.name ?? ""}</p>
                         {isPremium(session) && <PremiumBadge size="sm" />}
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        {(user as { role?: string })?.role === "PROFESSIONAL"
-                          ? "Profesional"
-                          : "Cliente"}
-                      </p>
+                      <p className="text-xs text-muted-foreground">{roleLabel}</p>
                     </div>
                   </div>
                   <Link
@@ -270,6 +274,16 @@ export function Navbar() {
                     <LayoutDashboard className="h-4 w-4 text-muted-foreground" />
                     Mi panel
                   </Link>
+                  {userRole === "ADMIN" && (
+                    <Link
+                      href="/admin"
+                      onClick={() => setMobileOpen(false)}
+                      className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent"
+                    >
+                      <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+                      Administración
+                    </Link>
+                  )}
                   <button
                     onClick={() => {
                       setMobileOpen(false);

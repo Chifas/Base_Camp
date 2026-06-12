@@ -19,6 +19,29 @@ export const resetPasswordSchema = z.object({
   password: z.string().min(8, "La contraseña debe tener al menos 8 caracteres"),
 });
 
+// PUT /api/users/me
+export const updateProfileSchema = z.object({
+  name: z.string().min(1, "El nombre es obligatorio").max(100),
+  bio: z.string().max(1000, "La biografía no puede superar 1000 caracteres").optional(),
+});
+
+// POST /api/users/me/password
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, "La contraseña actual es obligatoria"),
+  newPassword: z.string().min(8, "La contraseña debe tener al menos 8 caracteres"),
+});
+
+// POST /api/users/me/email
+export const changeEmailSchema = z.object({
+  newEmail: z.string().email("Email no válido"),
+  password: z.string().min(1, "La contraseña es obligatoria"),
+});
+
+// DELETE /api/users/me
+export const deleteAccountSchema = z.object({
+  password: z.string().optional(),
+});
+
 // POST /api/payments/create-intent
 export const createIntentSchema = z.object({
   professionalId: z.string().min(1, "professionalId es obligatorio"),

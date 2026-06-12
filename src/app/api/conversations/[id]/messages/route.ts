@@ -249,7 +249,7 @@ export async function POST(
     const { createNotification } = await import("@/lib/notifications");
     void createNotification({
       userId: recipientId,
-      type: "SESSION_CONFIRMED" as const, // TODO: add NEW_MESSAGE to NotificationType enum
+      type: "NEW_MESSAGE" as const,
       title: "Nuevo mensaje",
       message: `${senderName ?? "Alguien"} te ha enviado un mensaje`,
       link: `/dashboard/${isClient ? "professional" : "client"}?tab=messages`,

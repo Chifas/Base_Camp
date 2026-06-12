@@ -152,7 +152,7 @@ export async function POST(req: Request) {
 
     void createNotification({
       userId: recipientId,
-      type: "SESSION_CONFIRMED" as const, // reusing type since we don't have a CHAT type
+      type: "NEW_MESSAGE" as const,
       title: "Nuevo mensaje",
       message: `${senderName ?? "Alguien"} te ha enviado un mensaje`,
       link: `/dashboard/${isClient ? "professional" : "client"}`,

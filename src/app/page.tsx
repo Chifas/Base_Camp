@@ -8,7 +8,6 @@ import {
   FeaturedProfessionals,
   FeaturedProfessionalsSkeleton,
 } from "@/components/landing/featured-professionals";
-import { Testimonials } from "@/components/landing/testimonials";
 import { CTA } from "@/components/landing/cta";
 import { getFeaturedProfessionals } from "@/lib/professionals";
 
@@ -41,7 +40,6 @@ export default function HomePage() {
       <Suspense fallback={<FeaturedProfessionalsSkeleton />}>
         <AsyncFeaturedProfessionals />
       </Suspense>
-      <Testimonials />
       <CTA />
     </>
   );

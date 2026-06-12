@@ -51,6 +51,11 @@ export default withAuth(
       }
     }
 
+    // Admin panel — ADMIN role only
+    if (path.startsWith("/admin") && token?.role !== "ADMIN") {
+      return NextResponse.redirect(new URL("/", req.url));
+    }
+
     // Role-based access control for dashboards
     if (path.startsWith("/dashboard/professional") && token?.role !== "PROFESSIONAL") {
       return NextResponse.redirect(new URL("/dashboard/client", req.url));
@@ -82,6 +87,9 @@ export const config = {
     "/session/:path*",
     "/book/:path*",
     "/onboarding/:path*",
+    "/admin/:path*",
+    "/api/users/:path*",
+    "/api/admin/:path*",
     "/api/sessions/:path*",
     "/api/conversations/:path*",
     "/api/reviews/:path*",

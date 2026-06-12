@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import {
   Bell,
   CalendarCheck,
+  MessageSquare,
   Star,
   CreditCard,
   Check,
@@ -43,12 +44,13 @@ interface ApiResponse {
 /*  Filter constants                                                   */
 /* ------------------------------------------------------------------ */
 
-type TypeFilter = "ALL" | "SESSIONS" | "REVIEWS" | "PAYMENTS";
+type TypeFilter = "ALL" | "SESSIONS" | "MESSAGES" | "REVIEWS" | "PAYMENTS";
 type ReadFilter = "ALL" | "UNREAD" | "READ";
 
 const TYPE_FILTERS: { label: string; value: TypeFilter }[] = [
   { label: "Todas", value: "ALL" },
   { label: "Sesiones", value: "SESSIONS" },
+  { label: "Mensajes", value: "MESSAGES" },
   { label: "Reseñas", value: "REVIEWS" },
   { label: "Pagos", value: "PAYMENTS" },
 ];
@@ -64,6 +66,7 @@ const SESSION_TYPES = new Set([
   "SESSION_CANCELLED",
   "SESSION_REMINDER",
 ]);
+const MESSAGE_TYPES = new Set(["NEW_MESSAGE"]);
 const REVIEW_TYPES = new Set(["NEW_REVIEW"]);
 const PAYMENT_TYPES = new Set(["PAYMENT_RECEIVED"]);
 
@@ -73,6 +76,7 @@ const PAYMENT_TYPES = new Set(["PAYMENT_RECEIVED"]);
 
 function getTypeIcon(type: string) {
   if (SESSION_TYPES.has(type)) return CalendarCheck;
+  if (MESSAGE_TYPES.has(type)) return MessageSquare;
   if (REVIEW_TYPES.has(type)) return Star;
   if (PAYMENT_TYPES.has(type)) return CreditCard;
   return Bell;
@@ -80,6 +84,7 @@ function getTypeIcon(type: string) {
 
 function getTypeDotColor(type: string) {
   if (SESSION_TYPES.has(type)) return "bg-blue-500";
+  if (MESSAGE_TYPES.has(type)) return "bg-teal-500";
   if (REVIEW_TYPES.has(type)) return "bg-yellow-500";
   if (PAYMENT_TYPES.has(type)) return "bg-green-500";
   return "bg-primary";
@@ -101,6 +106,7 @@ function formatTimeAgo(dateStr: string) {
 function matchesTypeFilter(type: string, filter: TypeFilter) {
   if (filter === "ALL") return true;
   if (filter === "SESSIONS") return SESSION_TYPES.has(type);
+  if (filter === "MESSAGES") return MESSAGE_TYPES.has(type);
   if (filter === "REVIEWS") return REVIEW_TYPES.has(type);
   if (filter === "PAYMENTS") return PAYMENT_TYPES.has(type);
   return true;

@@ -43,6 +43,17 @@ async function main() {
   });
   console.log("✅ Client user:", clientUser.email);
 
+  // ── Admin user ───────────────────────────────────────────────────────────
+  const adminUser = await prisma.user.create({
+    data: {
+      name: "Admin GuidePath",
+      email: "admin@guidepath.com",
+      password: hashedPassword,
+      role: "ADMIN",
+    },
+  });
+  console.log("✅ Admin user:", adminUser.email);
+
   // ── Professional users + profiles ────────────────────────────────────────
   const profData = [
     {
@@ -242,6 +253,7 @@ async function main() {
   console.log("\n📧 Test accounts (password: guidepath123):");
   console.log("   Client:       cliente@guidepath.com");
   console.log("   Professional: elena@guidepath.com");
+  console.log("   Admin:        admin@guidepath.com");
 }
 
 main()

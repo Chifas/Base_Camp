@@ -51,7 +51,10 @@ The app is **fully functional end-to-end**. All major layers are wired and produ
 | PWA (manifest + service worker) | ✅ Done |
 | CI/CD GitHub Actions (lint, build, types, tests — triggers on `main` + `develop`) | ✅ Done |
 | Unit + integration tests (Vitest) + E2E (Playwright — `e2e/booking.spec.ts`) | ✅ Done |
-| Apple-style landing (aurora hero, trust bar, testimonials, waitlist) | ✅ Done |
+| Apple-style landing (aurora hero, freemium model, categories, waitlist) | ✅ Done |
+| Password recovery flow (forgot/reset password via Resend) | ✅ Done |
+| Client account settings (name, bio, email, password, account deletion) | ✅ Done |
+| Admin panel (`/admin` — metrics, review moderation, user directory) | ✅ Done |
 | Legal pages (privacy + terms) | ✅ Done |
 | Prettier + `eslint-config-prettier` (`npm run format`) | ✅ Done |
 | Dependabot (npm weekly + GitHub Actions monthly, max 5 PRs) | ✅ Done |
@@ -240,6 +243,7 @@ Password for all accounts: `guidepath123`
 | Email | Role | Notes |
 |-------|------|-------|
 | `cliente@guidepath.com` | CLIENT | Ana López |
+| `admin@guidepath.com` | ADMIN | Panel de administración (`/admin`) |
 | `elena@guidepath.com` | PROFESSIONAL | Psicóloga organizacional (PSYCHOLOGIST) |
 | `carlos@guidepath.com` | PROFESSIONAL | Coach ejecutivo ICF (COACH) |
 | `ana.garcia@guidepath.com` | PROFESSIONAL | Mentora de carrera ex-RRHH (CAREER_MENTOR) |
@@ -255,8 +259,21 @@ Also seeds 4 categories (CAREER_MENTOR, COACH, PSYCHOLOGIST, NUTRITIONIST) and o
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
 | POST | `/api/auth/register` | No | Create user account |
+| POST | `/api/auth/forgot-password` | No | Send password reset email (Resend, 1h token) |
+| POST | `/api/auth/reset-password` | No | Reset password with single-use token |
 | GET/PUT | `/api/professionals/me` | Yes (prof) | Own professional profile |
 | POST | `/api/auth/update-role` | Yes | Update user role |
+| GET/PUT/DELETE | `/api/users/me` | Yes | Account settings + account deletion (anonymize) |
+| POST | `/api/users/me/password` | Yes | Change password |
+| POST | `/api/users/me/email` | Yes | Change email (requires re-login) |
+
+### Admin (require ADMIN role)
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/admin/stats` | Platform metrics |
+| GET | `/api/admin/reviews` | Reported reviews moderation queue |
+| PATCH/DELETE | `/api/admin/reviews/[id]` | Dismiss report / delete review (recalcs rating) |
+| GET | `/api/admin/users` | User directory (search, role filter, pagination) |
 
 ### Professionals & categories
 | Method | Path | Auth | Description |

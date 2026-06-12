@@ -169,9 +169,9 @@ Mejoras identificadas y completadas durante la auditoría del codebase.
 > Crecimiento, monetización premium, y escalabilidad.
 
 ### 4.1 Panel de administración
-- [ ] **Dashboard admin**: Métricas de plataforma (usuarios activos, sesiones/día, distribución por categoría, puntos de impacto)
-- [ ] **Gestión de usuarios**: Buscar, suspender, verificar profesionales, cambiar roles
-- [ ] **Moderación de reviews**: Cola de reviews reportadas con aprobar/rechazar/escalar
+- [x] **Dashboard admin**: Métricas de plataforma en `/admin` (usuarios, sesiones, reseñas, lista de espera)
+- [ ] **Gestión de usuarios**: ~~Buscar~~ (directorio con búsqueda y filtro por rol hecho) — falta suspender, verificar profesionales, cambiar roles
+- [x] **Moderación de reviews**: Cola de reviews reportadas con descartar reporte / eliminar (recalcula rating)
 - [ ] **Configuración de plataforma**: Gestionar categorías, comisiones, límites de créditos desde UI
 - [ ] **Categorías como tabla**: Migrar `ProfessionalCategory` enum a modelo `Category` gestionable desde admin
 
