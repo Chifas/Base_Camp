@@ -222,7 +222,7 @@ function LoginContent() {
                   <label htmlFor="password" className="text-sm font-medium text-stone-700 dark:text-stone-300">
                     Contraseña
                   </label>
-                  <Link href="#" className="text-xs text-teal-600 dark:text-teal-400 hover:underline">
+                  <Link href="/auth/forgot-password" className="text-xs text-teal-600 dark:text-teal-400 hover:underline">
                     ¿Olvidaste tu contraseña?
                   </Link>
                 </div>

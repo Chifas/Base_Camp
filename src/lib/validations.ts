@@ -8,6 +8,17 @@ export const registerSchema = z.object({
   role: z.enum(["CLIENT", "PROFESSIONAL"]).optional(),
 });
 
+// POST /api/auth/forgot-password
+export const forgotPasswordSchema = z.object({
+  email: z.string().email("Email no válido"),
+});
+
+// POST /api/auth/reset-password
+export const resetPasswordSchema = z.object({
+  token: z.string().min(1, "Token no válido"),
+  password: z.string().min(8, "La contraseña debe tener al menos 8 caracteres"),
+});
+
 // POST /api/payments/create-intent
 export const createIntentSchema = z.object({
   professionalId: z.string().min(1, "professionalId es obligatorio"),

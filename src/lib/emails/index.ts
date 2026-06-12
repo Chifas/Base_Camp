@@ -10,6 +10,7 @@ export { sessionFollowupHtml, sendSessionFollowupEmail } from "./session-followu
 export { sessionCancelledHtml, sendCancellationEmails } from "./cancellation";
 export { newReviewHtml, sendNewReviewEmail } from "./review";
 export { sendOnboardingEmail, sendWaitlistConfirmationEmail } from "./onboarding";
+export { passwordResetHtml, sendPasswordResetEmail } from "./password-reset";
 export {
   sendPremiumWelcomeEmail,
   sendPremiumTrialEndingEmail,

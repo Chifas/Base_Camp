@@ -12,6 +12,7 @@ export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
   const rootRef = useRef<HTMLDivElement>(null);
   const successRef = useRef<HTMLDivElement>(null);
 
@@ -38,11 +39,25 @@ export default function ForgotPasswordPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
+    setError("");
     setIsLoading(true);
-    // Simulate API call — replace with real email sending logic
-    await new Promise((r) => setTimeout(r, 1000));
-    setIsLoading(false);
-    setSubmitted(true);
+    try {
+      const res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      if (!res.ok) {
+        const json = await res.json();
+        setError(json.error ?? "No se pudo enviar el email. Inténtalo de nuevo.");
+        return;
+      }
+      setSubmitted(true);
+    } catch {
+      setError("Error de conexión. Inténtalo de nuevo.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -85,6 +100,11 @@ export default function ForgotPasswordPage() {
             </div>
           ) : (
             <form className="space-y-5" onSubmit={handleSubmit}>
+              {error && (
+                <p className="rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                  {error}
+                </p>
+              )}
               <div className="space-y-2">
                 <label
                   htmlFor="email"

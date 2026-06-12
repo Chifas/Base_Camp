@@ -38,6 +38,14 @@ export const loginLimiter = () =>
 export const registerLimiter = () =>
   createLimiter("rl:register", Ratelimit.slidingWindow(5, "1 h"));
 
+// POST /api/auth/forgot-password — max 3 per 15min per IP (each request sends an email)
+export const forgotPasswordLimiter = () =>
+  createLimiter("rl:forgot-password", Ratelimit.slidingWindow(3, "15 m"));
+
+// POST /api/auth/reset-password — max 10 per 15min per IP
+export const resetPasswordLimiter = () =>
+  createLimiter("rl:reset-password", Ratelimit.slidingWindow(10, "15 m"));
+
 // POST /api/reviews — max 3 per day per user
 export const reviewLimiter = () =>
   createLimiter("rl:review", Ratelimit.slidingWindow(3, "24 h"));
