@@ -46,18 +46,17 @@ export function Waitlist() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <FadeIn>
           <div className="mx-auto max-w-2xl text-center">
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-medium text-primary">
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-teal-100 px-4 py-2 text-sm font-medium text-teal-700 dark:bg-teal-900/40 dark:text-teal-300">
               <Sparkles className="h-4 w-4" />
-              Lanzamiento próximamente
+              Newsletter quincenal
             </div>
 
-            <h2 className="font-heading text-3xl font-bold tracking-tight sm:text-4xl">
-              Sé el primero en acceder
+            <h2 className="font-display text-3xl font-bold tracking-tight text-stone-900 dark:text-stone-50 sm:text-4xl">
+              Una guía nueva en tu email cada 15 días
             </h2>
-            <p className="mt-4 text-lg text-muted-foreground">
-              Únete a la lista de espera y te avisaremos cuando GuidePath esté
-              disponible. Los primeros usuarios tendrán acceso anticipado y
-              beneficios exclusivos.
+            <p className="mt-4 text-lg text-stone-700 dark:text-stone-300">
+              Artículos, plantillas y conversaciones con profesionales de nuestra red.
+              Sin spam, solo recursos útiles para tu carrera.
             </p>
 
             <AnimatePresence mode="wait">
@@ -72,10 +71,10 @@ export function Waitlist() {
                     <CheckCircle2 className="h-8 w-8 text-green-600 dark:text-green-400" />
                   </div>
                   <p className="text-lg font-semibold">
-                    ¡Estás en la lista!
+                    ¡Te has suscrito!
                   </p>
                   <p className="text-muted-foreground">
-                    Te enviaremos un email cuando sea tu turno.
+                    El primer recurso llega a tu email en menos de 24h.
                   </p>
                 </motion.div>
               ) : (
@@ -125,15 +124,15 @@ export function Waitlist() {
                       {loading ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Uniéndote...
+                          Suscribiéndote...
                         </>
                       ) : (
-                        "Unirme a la lista de espera"
+                        "Suscribirme"
                       )}
                     </Button>
 
                     <p className="mt-3 text-xs text-muted-foreground">
-                      Sin spam. Solo te avisaremos cuando esté listo.
+                      Sin spam. Cancela cuando quieras con un click.
                     </p>
                   </div>
                 </motion.form>

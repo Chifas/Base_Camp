@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import { TrendingUp } from "lucide-react";
 import { gsap, ScrollTrigger, useGSAP } from "@/lib/gsap-config";
 import { TESTIMONIALS } from "@/data/mock";
 
@@ -103,6 +104,16 @@ export function Testimonials() {
               <blockquote className="relative font-display text-base font-medium leading-relaxed text-stone-100">
                 &ldquo;{testimonial.quote}&rdquo;
               </blockquote>
+
+              {/* Quantified result */}
+              {"result" in testimonial && testimonial.result && (
+                <div className="mt-5 flex items-center gap-2 rounded-lg border border-teal-500/30 bg-teal-500/10 px-3 py-2">
+                  <TrendingUp className="h-3.5 w-3.5 shrink-0 text-teal-400" aria-hidden="true" />
+                  <span className="text-xs font-semibold text-teal-300">
+                    {testimonial.result}
+                  </span>
+                </div>
+              )}
 
               {/* Author */}
               <div className="mt-6 flex items-center gap-3">
