@@ -18,7 +18,6 @@ import {
   FeaturedProfessionalsSkeleton,
 } from "@/components/landing/featured-professionals";
 import { Testimonials } from "@/components/landing/testimonials";
-import { CTA } from "@/components/landing/cta";
 import { getFeaturedProfessionals } from "@/lib/professionals";
 
 export const metadata: Metadata = {
@@ -59,7 +58,6 @@ export default function HomePage() {
       <Resources />
       <FaqInline />
       <Waitlist />
-      <CTA />
       <StickyCta />
     </>
   );

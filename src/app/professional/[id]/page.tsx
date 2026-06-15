@@ -92,8 +92,12 @@ export default async function ProfessionalProfilePage({
 
   if (!professional) notFound();
 
-  const initialSaved = authSession?.user?.id
-    ? !!(await prisma.favorite.findUnique({
+  // Non-critical: the saved state just sets the initial heart icon. A DB hiccup
+  // (e.g. favorites table not yet migrated) must not take down the whole profile.
+  let initialSaved = false;
+  if (authSession?.user?.id) {
+    try {
+      initialSaved = !!(await prisma.favorite.findUnique({
         where: {
           userId_professionalId: {
             userId: authSession.user.id,
@@ -101,8 +105,11 @@ export default async function ProfessionalProfilePage({
           },
         },
         select: { id: true },
-      }))
-    : false;
+      }));
+    } catch {
+      initialSaved = false;
+    }
+  }
 
   const name     = professional.user.name ?? "";
   const image    = professional.user.image ?? "";
