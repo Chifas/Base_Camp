@@ -1,8 +1,18 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { Hero } from "@/components/landing/hero";
+import { TrustBar } from "@/components/landing/trust-bar";
+import { Stats } from "@/components/landing/stats";
 import { Categories } from "@/components/landing/categories";
 import { HowItWorks } from "@/components/landing/how-it-works";
+import { FreemiumModel } from "@/components/landing/freemium-model";
+import { UseCases } from "@/components/landing/use-cases";
+import { ProductDemo } from "@/components/landing/product-demo";
+import { Comparison } from "@/components/landing/comparison";
+import { FaqInline } from "@/components/landing/faq-inline";
+import { Resources } from "@/components/landing/resources";
+import { Waitlist } from "@/components/landing/waitlist";
+import { StickyCta } from "@/components/landing/sticky-cta";
 import {
   FeaturedProfessionals,
   FeaturedProfessionalsSkeleton,
@@ -34,13 +44,23 @@ export default function HomePage() {
   return (
     <>
       <Hero />
+      <TrustBar />
+      <Stats />
+      <FreemiumModel />
       <Categories />
+      <UseCases />
+      <ProductDemo />
       <HowItWorks />
       <Suspense fallback={<FeaturedProfessionalsSkeleton />}>
         <AsyncFeaturedProfessionals />
       </Suspense>
       <Testimonials />
+      <Comparison />
+      <Resources />
+      <FaqInline />
+      <Waitlist />
       <CTA />
+      <StickyCta />
     </>
   );
 }

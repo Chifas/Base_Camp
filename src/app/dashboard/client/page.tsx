@@ -16,7 +16,12 @@ import {
   ArrowRight,
   X,
   Loader2,
+  Heart,
+  ExternalLink,
+  RotateCcw,
+  FileText,
 } from "lucide-react";
+import { SessionNotesViewer } from "@/components/shared/session-notes-viewer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -96,10 +101,20 @@ const CATEGORY_LABELS_REVIEW = {
 } as const;
 
 // Must mirror the TabsTrigger values rendered below.
-// "past" was previously misspelled as "history" and "profile" was missing,
-// which silently bounced the URL back to "upcoming" → tabs felt broken.
-const CLIENT_TABS = ["upcoming", "past", "subscription", "referrals", "profile"] as const;
+const CLIENT_TABS = ["upcoming", "past", "saved", "subscription", "referrals", "profile"] as const;
 type ClientTab = typeof CLIENT_TABS[number];
+
+interface SavedProfessional {
+  professionalId: string;
+  name: string;
+  image: string;
+  bio: string;
+  headline: string;
+  category: string;
+  rating: number;
+  reviewCount: number;
+  verified: boolean;
+}
 
 export default function ClientDashboard() {
   const router = useRouter();
@@ -126,9 +141,12 @@ export default function ClientDashboard() {
   const [reviewedSessionIds, setReviewedSessionIds] = useState<Set<string>>(new Set());
   const [feedbackSessionId, setFeedbackSessionId] = useState<string | null>(null);
   const [chatSessionId, setChatSessionId] = useState<string | null>(null);
+  const [notesView, setNotesView] = useState<{ id: string; name: string } | null>(null);
 
   // Credits state
   const [credits, setCredits] = useState<{ used: number; limit: number; remaining: number } | null>(null);
+  const [savedPros, setSavedPros] = useState<SavedProfessional[]>([]);
+  const [loadingSaved, setLoadingSaved] = useState(false);
 
   // Referrals state
   const [referrals, setReferrals] = useState<{ referrals: never[]; stats: { total: 0; completed: 0; pending: 0; totalCredits: 0 } }>({ referrals: [], stats: { total: 0, completed: 0, pending: 0, totalCredits: 0 } });
@@ -194,6 +212,16 @@ export default function ClientDashboard() {
       .catch(() => {});
     fetchReferrals();
   }, [fetchReferrals]);
+
+  useEffect(() => {
+    if (activeTab !== "saved" || loadingSaved || savedPros.length > 0) return;
+    setLoadingSaved(true);
+    fetch("/api/favorites?include=details")
+      .then((r) => r.ok ? r.json() : { data: [] })
+      .then((res: { data: SavedProfessional[] }) => setSavedPros(res.data ?? []))
+      .catch(() => {})
+      .finally(() => setLoadingSaved(false));
+  }, [activeTab, loadingSaved, savedPros.length]);
 
   useEffect(() => {
     const interval = setInterval(() => setNow(Date.now()), 30000);
@@ -310,6 +338,10 @@ export default function ClientDashboard() {
               </TabsTrigger>
               <TabsTrigger value="past">
                 Historial ({pastSessions.length})
+              </TabsTrigger>
+              <TabsTrigger value="saved">
+                <Heart className="mr-1.5 h-3.5 w-3.5" />
+                Guardados
               </TabsTrigger>
               <TabsTrigger value="subscription">Suscripción</TabsTrigger>
               <TabsTrigger value="referrals">Referidos</TabsTrigger>
@@ -488,11 +520,33 @@ export default function ClientDashboard() {
                     {effectivelyCompleted && (
                       <Button
                         size="sm"
+                        variant="outline"
+                        onClick={() => setNotesView({ id: session.id, name: session.professionalName })}
+                      >
+                        <FileText className="mr-2 h-4 w-4" />
+                        Ver notas
+                      </Button>
+                    )}
+                    {effectivelyCompleted && (
+                      <Button
+                        size="sm"
                         variant="ghost"
                         onClick={() => setFeedbackSessionId(session.id)}
                       >
                         <MessageSquare className="mr-2 h-4 w-4" />
                         Feedback beta
+                      </Button>
+                    )}
+                    {effectivelyCompleted && session.professionalId && (
+                      <Button
+                        size="sm"
+                        className="bg-teal-600 hover:bg-teal-700 text-white font-display"
+                        asChild
+                      >
+                        <Link href={`/professional/${session.professionalId}`}>
+                          <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
+                          Reservar de nuevo
+                        </Link>
                       </Button>
                     )}
                   </div>
@@ -502,6 +556,72 @@ export default function ClientDashboard() {
             </div>
             )}
           </TabsContent>
+          {/* ===== Saved professionals ===== */}
+          <TabsContent value="saved" className="mt-6">
+            {loadingSaved ? (
+              <div className="flex items-center justify-center py-16">
+                <Loader2 className="h-8 w-8 animate-spin text-teal-600" />
+              </div>
+            ) : savedPros.length === 0 ? (
+              <div className="rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 p-12 text-center">
+                <Heart className="mx-auto h-12 w-12 text-stone-300 dark:text-stone-700" />
+                <h3 className="mt-4 font-display text-lg font-semibold text-stone-900 dark:text-stone-50">
+                  Aún no has guardado ningún profesional
+                </h3>
+                <p className="mt-2 text-sm text-stone-500 dark:text-stone-400">
+                  Pulsa el corazón en cualquier perfil para guardarlo aquí.
+                </p>
+                <Button className="mt-4 bg-teal-600 hover:bg-teal-700 text-white font-display" asChild>
+                  <Link href="/explore">Explorar profesionales</Link>
+                </Button>
+              </div>
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2">
+                {savedPros.map((pro) => (
+                  <div
+                    key={pro.professionalId}
+                    className="flex flex-col gap-4 rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 p-5 sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-stone-100 dark:bg-stone-800">
+                        {pro.image ? (
+                          <Image src={pro.image} alt={pro.name} fill className="object-cover" sizes="56px" />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center text-sm font-bold text-stone-500">
+                            {pro.name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-semibold text-stone-900 dark:text-stone-50 truncate">{pro.name}</p>
+                        <p className="text-xs text-teal-600 dark:text-teal-400 truncate">{pro.headline}</p>
+                        <div className="mt-1 flex items-center gap-1 text-xs text-stone-500 dark:text-stone-400">
+                          <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                          <span>{pro.rating.toFixed(1)}</span>
+                          <span>({pro.reviewCount})</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex shrink-0 gap-2">
+                      <Button size="sm" variant="outline" asChild>
+                        <Link href={`/professional/${pro.professionalId}`}>
+                          <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
+                          Ver perfil
+                        </Link>
+                      </Button>
+                      <Button size="sm" className="bg-teal-600 hover:bg-teal-700 text-white" asChild>
+                        <Link href={`/professional/${pro.professionalId}`}>
+                          Reservar
+                          <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                        </Link>
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
           {/* ===== Subscription ===== */}
           <TabsContent value="subscription" className="mt-6">
             <SubscriptionTab />
@@ -533,6 +653,15 @@ export default function ClientDashboard() {
           </TabsContent>
         </Tabs>
       </FadeIn>
+
+      {/* Session notes viewer */}
+      {notesView && (
+        <SessionNotesViewer
+          sessionId={notesView.id}
+          professionalName={notesView.name}
+          onClose={() => setNotesView(null)}
+        />
+      )}
 
       {/* Beta feedback modal */}
       {feedbackSessionId && (

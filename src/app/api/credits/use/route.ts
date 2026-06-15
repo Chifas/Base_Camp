@@ -77,7 +77,9 @@ export async function POST(req: Request) {
     const sessionEnd = new Date(requestedDate.getTime() + validDuration * 60 * 1000);
 
     const result = await prisma.$transaction(async (tx) => {
-      // 1. Fetch user and check credits (inside transaction for consistency)
+      // 1. Fetch user and check credits (inside transaction for consistency).
+      //    Serializable isolation level guarantees the read–modify–write
+      //    sequence on freeCreditsUsed cannot race with another booking.
       const user = await tx.user.findUnique({
         where: { id: session.user.id },
         select: {
@@ -209,6 +211,10 @@ export async function POST(req: Request) {
         user,
         creditsRemaining: limits.sessionsPerMonth - (currentUsed + 1),
       };
+    }, {
+      isolationLevel: "Serializable",
+      maxWait: 5_000,
+      timeout: 10_000,
     });
 
     const { dbSession, user, creditsRemaining } = result;
@@ -254,6 +260,17 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
+
+    // Postgres serializable conflict — happens when two bookings race for the
+    // same credit slot. Surface it as a regular conflict so the client retries.
+    const code = (error as { code?: string }).code;
+    if (code === "P2034" || msg.includes("could not serialize access")) {
+      logger.info("Serializable conflict in credits/use — asking client to retry");
+      return NextResponse.json(
+        { error: "Inténtalo de nuevo en unos segundos" },
+        { status: 409 }
+      );
+    }
 
     // Map transaction errors to user-facing responses
     const txErrors: Record<string, { error: string; status: number }> = {

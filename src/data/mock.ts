@@ -305,7 +305,8 @@ export const TESTIMONIALS = [
     name: "Sofía Herrera",
     role: "Senior UX Designer en Cabify",
     image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face",
-    quote: "Llevaba 2 años intentando dar el salto a diseñadora lead sin éxito. En 4 sesiones con mi coach identifiqué exactamente qué me frenaba y cómo comunicar mi valor. Al mes siguiente me ofrecieron el puesto con un 30% más de salario.",
+    quote: "Llevaba 2 años intentando dar el salto a diseñadora lead sin éxito. En 4 sesiones con mi coach identifiqué exactamente qué me frenaba y cómo comunicar mi valor.",
+    result: "Promoción a Lead + 30% de subida en 1 mes",
     rating: 5,
   },
   {
@@ -313,7 +314,8 @@ export const TESTIMONIALS = [
     name: "Alejandro Vidal",
     role: "Engineering Manager en Banco Santander",
     image: "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=100&h=100&fit=crop&crop=face",
-    quote: "Estaba en pleno burnout gestionando un equipo de 12 personas y pensé que la única salida era dimitir. La psicóloga laboral de GuidePath me ayudó a entender las causas reales y a poner límites sanos. Sigo en la empresa y ahora disfruto del trabajo.",
+    quote: "Estaba en pleno burnout gestionando un equipo de 12 personas y pensé que la única salida era dimitir. La psicóloga laboral de GuidePath me ayudó a entender las causas reales y a poner límites sanos.",
+    result: "0 días de baja · Sigue en el puesto",
     rating: 5,
   },
   {
@@ -321,7 +323,8 @@ export const TESTIMONIALS = [
     name: "Carmen Ruiz",
     role: "Product Manager en Factorial",
     image: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=100&h=100&fit=crop&crop=face",
-    quote: "Necesitaba validar si mi roadmap tenía sentido antes de presentarlo al CEO. Reservé una sesión con un ex-CPO en menos de 5 minutos. En 60 minutos reformulé toda la estrategia. Fue la mejor inversión de tiempo que he hecho en mi carrera.",
+    quote: "Necesitaba validar si mi roadmap tenía sentido antes de presentarlo al CEO. Reservé una sesión con un ex-CPO en menos de 5 minutos. En 60 minutos reformulé toda la estrategia.",
+    result: "Roadmap aprobado · OKRs cumplidos al Q",
     rating: 5,
   },
   {
@@ -329,7 +332,8 @@ export const TESTIMONIALS = [
     name: "Raúl Fernández",
     role: "Backend Engineer en Glovo",
     image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face",
-    quote: "Llevaba 6 meses dando vueltas a si cambiar de empresa o pedir una subida. En 3 sesiones con mi mentor aclaré mis objetivos y negocié un 25% más de salario sin cambiar de trabajo. Totalmente recomendable.",
+    quote: "Llevaba 6 meses dando vueltas a si cambiar de empresa o pedir una subida. En 3 sesiones con mi mentor aclaré mis objetivos y negocié.",
+    result: "+25% salario sin cambiar de empresa",
     rating: 5,
   },
   {
@@ -337,7 +341,8 @@ export const TESTIMONIALS = [
     name: "Marta Olivares",
     role: "Diseñadora UX en Zara Digital",
     image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face",
-    quote: "Pasé de 8 meses de búsqueda de empleo frustrante a 3 ofertas en 6 semanas. Mi mentora revisó mi portfolio, mi LinkedIn y mi forma de contar mi experiencia. Pequeños cambios con un impacto brutal.",
+    quote: "Pasé de 8 meses de búsqueda de empleo frustrante a 3 ofertas en 6 semanas. Mi mentora revisó mi portfolio, mi LinkedIn y mi forma de contar mi experiencia.",
+    result: "3 ofertas en 6 semanas",
     rating: 5,
   },
   {
@@ -345,7 +350,8 @@ export const TESTIMONIALS = [
     name: "Javier Pons",
     role: "Founder en startup fintech",
     image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face",
-    quote: "Necesitaba hablar con alguien que hubiera pasado por el caos de levantar una ronda seed. Encontré a un mentor que lo había hecho 3 veces. Una sola sesión me ahorró meses de errores. GuidePath debería existir hace 10 años.",
+    quote: "Necesitaba hablar con alguien que hubiera pasado por el caos de levantar una ronda seed. Encontré a un mentor que lo había hecho 3 veces.",
+    result: "Ronda seed cerrada en 4 meses",
     rating: 5,
   },
   {
@@ -353,7 +359,8 @@ export const TESTIMONIALS = [
     name: "Lucía Serrano",
     role: "Data Scientist en Flywire",
     image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop&crop=face",
-    quote: "Tenía síndrome del impostor a tope antes de mi primera presentación a directivos. Mi coach me ayudó a preparar el discurso y a gestionar los nervios. La presentación salió perfecta y me ganaron el respeto del equipo directivo.",
+    quote: "Tenía síndrome del impostor a tope antes de mi primera presentación a directivos. Mi coach me ayudó a preparar el discurso y a gestionar los nervios.",
+    result: "Presentación al board sin temblores",
     rating: 5,
   },
   {
@@ -361,7 +368,8 @@ export const TESTIMONIALS = [
     name: "Pablo Jiménez",
     role: "Head of Engineering en Holaluz",
     image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face",
-    quote: "Acababa de ser ascendido a Head of Engineering sin haber gestionado equipos antes. GuidePath me conectó con un coach que había hecho exactamente esa transición. Sus consejos prácticos fueron clave para sobrevivir los primeros 6 meses.",
+    quote: "Acababa de ser ascendido a Head of Engineering sin haber gestionado equipos antes. GuidePath me conectó con un coach que había hecho exactamente esa transición.",
+    result: "Equipo de 18 personas estable a los 6 meses",
     rating: 5,
   },
 ];

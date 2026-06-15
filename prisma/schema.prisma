@@ -82,6 +82,7 @@ model User {
   referralsReceived    Referral[]         @relation("ReferralReferred")
   conversations        Conversation[]     @relation("ClientConversations")
   directMessages       DirectMessage[]    @relation("DirectMessageSender")
+  favorites            Favorite[]
 
   @@map("users")
 }
@@ -174,9 +175,124 @@ model ProfessionalProfile {
   certifications  Certification[]
   redemptions     RewardRedemption[]
   conversations   Conversation[]
+  favorites       Favorite[]
+  views           ProfileView[]
+  clientNotes     ClientNote[]
+  templates       MessageTemplate[]
 
   @@index([category])
   @@map("professional_profiles")
+}
+
+// Tracks visits to /professional/[id] for analytics.
+// viewerId is null for anonymous visits.
+model ProfileView {
+  id             String   @id @default(cuid())
+  professionalId String
+  viewerId       String?
+  createdAt      DateTime @default(now())
+
+  professional ProfessionalProfile @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+
+  @@index([professionalId, createdAt])
+  @@map("profile_views")
+}
+
+// Private notes a professional keeps about a specific client.
+// Distinct from SessionNote (per-session, shared with client).
+model ClientNote {
+  id             String   @id @default(cuid())
+  professionalId String
+  clientId       String
+  content        String   @db.Text
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  professional ProfessionalProfile @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+
+  @@unique([professionalId, clientId])
+  @@index([professionalId])
+  @@map("client_notes")
+}
+
+// Reusable message/plan templates the professional can paste into
+// session notes, action plans, or messages.
+model MessageTemplate {
+  id             String   @id @default(cuid())
+  professionalId String
+  name           String
+  content        String   @db.Text
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  professional ProfessionalProfile @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+
+  @@index([professionalId])
+  @@map("message_templates")
+}
+
+model Favorite {
+  id             String   @id @default(cuid())
+  userId         String
+  professionalId String
+  createdAt      DateTime @default(now())
+
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  professional ProfessionalProfile @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, professionalId])
+  @@index([userId])
+  @@map("favorites")
+}
+
+// Notes the professional shares with the client after a session
+// (summary, next steps, resources). Action items hang off this.
+model SessionNote {
+  id          String   @id @default(cuid())
+  sessionId   String   @unique
+  summary     String?  @db.Text
+  nextSteps   String?  @db.Text
+  resources   String[] @default([])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  session     Session       @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  actionItems ActionItem[]
+
+  @@map("session_notes")
+}
+
+// Tasks the professional assigns to the client after a session.
+// `completed` is toggled by the client from their dashboard.
+model ActionItem {
+  id            String   @id @default(cuid())
+  sessionNoteId String
+  content       String
+  completed     Boolean  @default(false)
+  order         Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  sessionNote SessionNote @relation(fields: [sessionNoteId], references: [id], onDelete: Cascade)
+
+  @@index([sessionNoteId])
+  @@map("action_items")
+}
+
+// NPS-style feedback submitted by either party at the end of a call.
+// Each user can submit at most one feedback per session.
+model SessionFeedback {
+  id        String   @id @default(cuid())
+  sessionId String
+  userId    String
+  npsScore  Int
+  comment   String?  @db.Text
+  createdAt DateTime @default(now())
+
+  session Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, userId])
+  @@index([sessionId])
+  @@map("session_feedbacks")
 }
 
 model Session {
@@ -196,6 +312,8 @@ model Session {
   cancelledAt           DateTime?
   cancelledBy           String?
   reminderSent          Boolean       @default(false)
+  followupSent          Boolean       @default(false)
+  deletedAt             DateTime?
   createdAt             DateTime      @default(now())
   updatedAt             DateTime      @updatedAt
 
@@ -205,11 +323,16 @@ model Session {
   rescheduleRequests  RescheduleRequest[]
   messages            Message[]
   betaFeedbacks       BetaFeedback[]
+  note                SessionNote?
+  feedbacks           SessionFeedback[]
 
   @@index([clientId])
   @@index([professionalId])
   @@index([status])
   @@index([scheduledAt])
+  @@index([clientId, status, scheduledAt])
+  @@index([professionalId, status, scheduledAt])
+  @@index([clientId, professionalId, status])
   @@map("sessions")
 }
 

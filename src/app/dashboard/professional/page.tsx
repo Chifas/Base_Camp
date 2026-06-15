@@ -9,14 +9,18 @@ import { DashboardSkeleton } from "@/components/shared/dashboard-skeleton";
 import { DashboardHero } from "@/components/shared/dashboard-hero";
 import { OnboardingTour, type TourStep } from "@/components/shared/onboarding-tour";
 import ProfileCompleteness from "@/components/shared/ProfileCompleteness";
+import { getProfessionalLevel } from "@/lib/professional-level";
 import type { SessionItem, ProfileData, CategoryOption, AvailabilitySlot, CertificationItem } from "./tabs/types";
 
-const SessionsTab    = lazy(() => import("./tabs/sessions-tab"));
+const SessionsTab     = lazy(() => import("./tabs/sessions-tab"));
 const AvailabilityTab = lazy(() => import("./tabs/availability-tab"));
-const ProfileTab     = lazy(() => import("./tabs/profile-tab"));
-const ReviewsTab     = lazy(() => import("./tabs/reviews-tab"));
-const ReferralsTab   = lazy(() => import("./tabs/referrals-tab"));
-const ImpactTab      = lazy(() => import("./tabs/impact-tab"));
+const ProfileTab      = lazy(() => import("./tabs/profile-tab"));
+const ReviewsTab      = lazy(() => import("./tabs/reviews-tab"));
+const ReferralsTab    = lazy(() => import("./tabs/referrals-tab"));
+const ImpactTab       = lazy(() => import("./tabs/impact-tab"));
+const AnalyticsTab    = lazy(() => import("./tabs/analytics-tab"));
+const ClientsTab      = lazy(() => import("./tabs/clients-tab"));
+const TemplatesTab    = lazy(() => import("./tabs/templates-tab"));
 
 const TOUR_STEPS: TourStep[] = [
   { target: null, title: "¡Bienvenido/a a tu panel de profesional!", description: "Te guiamos por los 5 puntos clave de tu espacio. Puedes omitir la guía cuando quieras." },
@@ -26,7 +30,7 @@ const TOUR_STEPS: TourStep[] = [
   { target: '[data-tour="prof-impact"]', title: "Tu impacto social", description: "Ganas +10 puntos por cada sesión completada. Con 100 puntos obtienes una certificación; con 50, haces una donación solidaria." },
 ];
 
-const VALID_TABS = ["sessions", "availability", "profile", "reviews", "referrals", "impact"] as const;
+const VALID_TABS = ["sessions", "analytics", "clients", "templates", "availability", "profile", "reviews", "referrals", "impact"] as const;
 type Tab = typeof VALID_TABS[number];
 
 export default function ProfessionalDashboard() {
@@ -83,12 +87,13 @@ export default function ProfessionalDashboard() {
           // Skip honorific titles like "Dra.", "Dr.", "Sr.", "Sra." when picking the first name.
           const tokens = (profile?.name ?? "").split(" ").filter(Boolean);
           const firstName = (tokens.find((t) => !t.endsWith(".")) ?? tokens[0] ?? "");
+          const level = getProfessionalLevel(completedCount);
           return (
             <DashboardHero
               name={profile?.name ?? "Profesional"}
               avatar={profile?.image ?? null}
               greeting={firstName ? `Hola, ${firstName}` : "Hola"}
-              subtitle={profile?.headline ?? "Completa tu perfil para empezar a recibir reservas."}
+              subtitle={`${level.current.label} · ${completedCount} sesiones completadas${level.next ? ` · ${level.toNext} para ${level.next.label}` : ""}`}
               primaryAction={{
                 label: "Editar perfil",
                 href: "/dashboard/professional?tab=profile",
@@ -148,6 +153,9 @@ export default function ProfessionalDashboard() {
               <TabsTrigger value="sessions" data-tour="prof-sessions">
                 Sesiones ({confirmedCount + pendingCount})
               </TabsTrigger>
+              <TabsTrigger value="analytics">Analytics</TabsTrigger>
+              <TabsTrigger value="clients">Mis clientes</TabsTrigger>
+              <TabsTrigger value="templates">Plantillas</TabsTrigger>
               <TabsTrigger value="availability" data-tour="prof-availability">Disponibilidad</TabsTrigger>
               <TabsTrigger value="profile">Perfil</TabsTrigger>
               <TabsTrigger value="reviews">Reseñas</TabsTrigger>
@@ -159,6 +167,24 @@ export default function ProfessionalDashboard() {
           <TabsContent value="sessions">
             <Suspense fallback={<DashboardSkeleton />}>
               <SessionsTab sessions={sessions} onSessionsChange={setSessions} />
+            </Suspense>
+          </TabsContent>
+
+          <TabsContent value="analytics">
+            <Suspense fallback={<DashboardSkeleton />}>
+              <AnalyticsTab />
+            </Suspense>
+          </TabsContent>
+
+          <TabsContent value="clients">
+            <Suspense fallback={<DashboardSkeleton />}>
+              <ClientsTab />
+            </Suspense>
+          </TabsContent>
+
+          <TabsContent value="templates">
+            <Suspense fallback={<DashboardSkeleton />}>
+              <TemplatesTab />
             </Suspense>
           </TabsContent>
 
