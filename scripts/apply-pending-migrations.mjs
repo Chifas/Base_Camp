@@ -43,9 +43,13 @@ function isLocalStubUrl(url) {
 }
 
 function main() {
-  const url = process.env.DIRECT_URL || process.env.DATABASE_URL;
+  // DDL (CREATE TABLE / ALTER TABLE) must run over the DIRECT connection
+  // (Supabase port 5432), NOT the pgBouncer pooler (port 6543). The pooler
+  // runs in transaction mode and can drop or partially apply DDL silently,
+  // which leaves the schema half-migrated. We force the direct URL here.
+  const directUrl = process.env.DIRECT_URL || process.env.DATABASE_URL;
 
-  if (isLocalStubUrl(url)) {
+  if (isLocalStubUrl(directUrl)) {
     console.log("[migrations] Skipping — no real DATABASE_URL/DIRECT_URL detected.");
     return;
   }
@@ -56,15 +60,21 @@ function main() {
     return;
   }
 
+  // Pass the direct URL to the child process via env so it never lands in argv
+  // (where it could leak into build logs). `prisma db execute --schema` reads
+  // datasource.url from env("DATABASE_URL"), so overriding it routes DDL
+  // through the direct connection.
+  const childEnv = { ...process.env, DATABASE_URL: directUrl };
+
   for (const file of files) {
     const stats = statSync(file);
     if (!stats.isFile()) continue;
 
-    console.log(`[migrations] Applying ${file}…`);
+    console.log(`[migrations] Applying ${file} (direct connection)…`);
     try {
       execSync(
         `npx --no-install prisma db execute --file "${file}" --schema prisma/schema.prisma`,
-        { stdio: "inherit" },
+        { stdio: "inherit", env: childEnv },
       );
       console.log(`[migrations] ✔ ${file}`);
     } catch (err) {

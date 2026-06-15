@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { X, ArrowRight } from "lucide-react";
 
 /**
@@ -9,8 +10,12 @@ import { X, ArrowRight } from "lucide-react";
  * scrolls past the hero. Dismissible per-session.
  */
 export function StickyCta() {
+  const { status } = useSession();
   const [visible, setVisible] = useState(false);
   const [dismissed, setDismissed] = useState(false);
+
+  // Logged-in users go straight to browsing professionals; guests must log in first.
+  const ctaHref = status === "authenticated" ? "/explore" : "/auth/login";
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -58,7 +63,7 @@ export function StickyCta() {
           </p>
         </div>
         <Link
-          href="/explore"
+          href={ctaHref}
           className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-teal-700 px-4 py-2 text-xs font-display font-semibold text-white transition-colors hover:bg-teal-800 sm:text-sm"
         >
           Empezar
